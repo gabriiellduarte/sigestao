@@ -12,22 +12,20 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { Link } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
+import { Pessoa } from '@/types/pessoa';
 
 interface Servidor {
   id?: number;
-  nome: string;
+  ger_pessoas_id: number;
   cpf: string;
   email: string;
-  telefone: string;
-  cargo: string;
-  secretaria: string;
   status: 'ativo' | 'inativo';
-  dataAdmissao: string;
 }
 
 interface CadastroServidoresProps {
   servidor?: Servidor;
+  pessoas: Pessoa[];
   onBack: () => void;
   onSave: (servidor: Servidor) => void;
 }
@@ -45,61 +43,54 @@ const secretarias = [
 
 export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
   servidor,
+  pessoas,
   onBack,
-  onSave
+  onSave,...props
 }) => {
-  const [formData, setFormData] = useState<Servidor>({
-    nome: '',
-    cpf: '',
-    email: '',
-    telefone: '',
-    cargo: '',
-    secretaria: '',
-    status: 'ativo',
-    dataAdmissao: ''
+  const { data, setData, post, put, processing, errors } = useForm({
+    ger_pessoas_id: servidor?.ger_pessoas_id || 0,
+    cpf: servidor?.cpf || '',
+    email: servidor?.email || '',
+    status: servidor?.status || 'ativo'
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (servidor) {
-      setFormData(servidor);
-    }
-  }, [servidor]);
-
-  const handleInputChange = (field: keyof Servidor, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+  const handleInputChange = (field: keyof typeof data, value: string | number) => {
+    setData(field, value);
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
+
+  function atribuiPessoa_CPF(value: number){
+    setData('ger_pessoas_id', value);
+    // Busca a pessoa correspondente e atualiza o CPF
+    console.log(value);
+    const pessoa = pessoas.find(p => p.ger_pessoas_id === value);
+
+    if (pessoa) {
+      setData('cpf', pessoa.ger_pessoas_cpf || '');
+    } else {
+      setData('cpf', '');
+    }
+    
+  }
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.nome.trim()) {
-      newErrors.nome = 'Nome é obrigatório';
+    if (!data.ger_pessoas_id || data.ger_pessoas_id === 0) {
+      newErrors.ger_pessoas_id = 'Pessoa é obrigatório';
     }
-    if (!formData.cpf.trim()) {
+    if (!data.cpf.trim()) {
       newErrors.cpf = 'CPF é obrigatório';
     }
-    if (!formData.email.trim()) {
+    if (!data.email.trim()) {
       newErrors.email = 'Email é obrigatório';
     }
-    if (!formData.telefone.trim()) {
-      newErrors.telefone = 'Telefone é obrigatório';
-    }
-    if (!formData.cargo.trim()) {
-      newErrors.cargo = 'Cargo é obrigatório';
-    }
-    if (!formData.secretaria) {
-      newErrors.secretaria = 'Secretaria é obrigatória';
-    }
-    if (!formData.dataAdmissao) {
-      newErrors.dataAdmissao = 'Data de admissão é obrigatória';
-    }
 
-    setErrors(newErrors);
+    setFormErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -107,10 +98,14 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
     e.preventDefault();
     
     if (validateForm()) {
-      onSave(formData);
+      if (isEditing && servidor) {
+        put(route('administracao.servidores.update', servidor.id));
+      } else {
+        post(route('administracao.servidores.store'));
+      }
     }
   };
-
+  
   const isEditing = !!servidor?.id;
 
   return (
@@ -141,30 +136,39 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="nome">Nome Completo *</Label>
-                <Input
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => handleInputChange('nome', e.target.value)}
-                  placeholder="Digite o nome completo"
-                  className={errors.nome ? 'border-red-500' : ''}
-                />
-                {errors.nome && (
-                  <p className="text-sm text-red-500">{errors.nome}</p>
+                <Label htmlFor="pessoa">Pessoa *</Label>
+                <Select 
+                  value={data.ger_pessoas_id.toString()} 
+                  onValueChange={(value) => atribuiPessoa_CPF(parseInt(value))}
+                >
+                  <SelectTrigger className={formErrors.ger_pessoas_id || errors.ger_pessoas_id ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Selecione a pessoa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pessoas.map((pessoa) => (
+                      <SelectItem key={pessoa.ger_pessoas_id} value={pessoa.ger_pessoas_id.toString()}>
+                        {pessoa.ger_pessoas_nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {(formErrors.ger_pessoas_id || errors.ger_pessoas_id) && (
+                  <p className="text-sm text-red-500">{formErrors.ger_pessoas_id || errors.ger_pessoas_id}</p>
                 )}
+                
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="cpf">CPF *</Label>
                 <Input
                   id="cpf"
-                  value={formData.cpf}
-                  onChange={(e) => handleInputChange('cpf', e.target.value)}
+                  value={data.cpf}
                   placeholder="000.000.000-00"
-                  className={errors.cpf ? 'border-red-500' : ''}
+                  className={formErrors.cpf || errors.cpf ? 'border-red-500' : ''}
+                  disabled
                 />
-                {errors.cpf && (
-                  <p className="text-sm text-red-500">{errors.cpf}</p>
+                {(formErrors.cpf || errors.cpf) && (
+                  <p className="text-sm text-red-500">{formErrors.cpf || errors.cpf}</p>
                 )}
               </div>
 
@@ -173,84 +177,20 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
                 <Input
                   id="email"
                   type="email"
-                  value={formData.email}
+                  value={data.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="email@prefeitura.gov.br"
-                  className={errors.email ? 'border-red-500' : ''}
+                  className={formErrors.email || errors.email ? 'border-red-500' : ''}
                 />
-                {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="telefone">Telefone *</Label>
-                <Input
-                  id="telefone"
-                  value={formData.telefone}
-                  onChange={(e) => handleInputChange('telefone', e.target.value)}
-                  placeholder="(11) 99999-9999"
-                  className={errors.telefone ? 'border-red-500' : ''}
-                />
-                {errors.telefone && (
-                  <p className="text-sm text-red-500">{errors.telefone}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cargo">Cargo *</Label>
-                <Input
-                  id="cargo"
-                  value={formData.cargo}
-                  onChange={(e) => handleInputChange('cargo', e.target.value)}
-                  placeholder="Digite o cargo/função"
-                  className={errors.cargo ? 'border-red-500' : ''}
-                />
-                {errors.cargo && (
-                  <p className="text-sm text-red-500">{errors.cargo}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="secretaria">Secretaria *</Label>
-                <Select
-                  value={formData.secretaria}
-                  onValueChange={(value) => handleInputChange('secretaria', value)}
-                >
-                  <SelectTrigger className={errors.secretaria ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="Selecione a secretaria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {secretarias.map((secretaria) => (
-                      <SelectItem key={secretaria} value={secretaria}>
-                        {secretaria}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.secretaria && (
-                  <p className="text-sm text-red-500">{errors.secretaria}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="dataAdmissao">Data de Admissão *</Label>
-                <Input
-                  id="dataAdmissao"
-                  type="date"
-                  value={formData.dataAdmissao}
-                  onChange={(e) => handleInputChange('dataAdmissao', e.target.value)}
-                  className={errors.dataAdmissao ? 'border-red-500' : ''}
-                />
-                {errors.dataAdmissao && (
-                  <p className="text-sm text-red-500">{errors.dataAdmissao}</p>
+                {(formErrors.email || errors.email) && (
+                  <p className="text-sm text-red-500">{formErrors.email || errors.email}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
                 <Select
-                  value={formData.status}
+                  value={data.status}
                   onValueChange={(value: 'ativo' | 'inativo') => handleInputChange('status', value)}
                 >
                   <SelectTrigger>
@@ -268,7 +208,7 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
               <Button type="button" variant="outline" onClick={onBack} className="w-full md:w-auto">
                 Cancelar
               </Button>
-              <Button type="submit" className="w-full md:w-auto">
+              <Button type="submit" disabled={processing} className="w-full md:w-auto">
                 <Save className="h-4 w-4 mr-2" />
                 {isEditing ? 'Salvar Alterações' : 'Salvar Servidor'}
               </Button>

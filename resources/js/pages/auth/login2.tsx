@@ -194,6 +194,7 @@ export default function Login({ status, canResetPassword}: LoginProps) {
                                 </svg>
                                 {isLoading ? 'Conectando...' : 'Entrar com Google'}
                             </Button>
+                            v2.0.1
                         </div>
                     </CardContent>
                 </Card>

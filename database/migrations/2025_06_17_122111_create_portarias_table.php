@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('doc_portarias', function (Blueprint $table) {
             $table->id('doc_portarias_id');
-            $table->string('doc_portarias_numero');
+            $table->string('doc_portarias_numero')->unique();
             $table->string('doc_portarias_servidor_nome');
             $table->string('doc_portarias_servidor_cpf');
+            $table->enum('doc_portarias_status', ['publicado', 'pendente', 'cancelado']);
             $table->unsignedBigInteger('adm_servidores_id');
             $table->unsignedBigInteger('adm_cargos_id');
             $table->unsignedBigInteger('adm_secretarias_id');

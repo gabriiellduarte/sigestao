@@ -135,7 +135,6 @@ export default function DashboardPortarias({ stats, portariasRecentes, tiposPort
                         duration={2.5}
                         separator="."
                         decimal=","
-                        prefix={card.key === 'totalPortarias' ? 'R$ ' : ''}
                       />
                     </p>
                     <p className={`text-xs md:text-sm ${card.color}`}>{stats[card.key].change}</p>

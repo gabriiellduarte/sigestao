@@ -64,16 +64,16 @@ export default function Index({ auth, secretarias }: Props) {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end space-x-2">
-                                                    <Link
-                                                        href={route('administracao.secretarias.edit', secretaria.adm_secretarias_id)}
-                                                    >
+                                                    <Link href={route('administracao.secretarias.edit', secretaria.adm_secretarias_id)}>
                                                         <Button variant="outline" size="sm">
                                                             <Pencil className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
-                                                    <Button variant="destructive" size="sm">
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    <Link href={route('administracao.secretarias.destroy', secretaria.adm_secretarias_id)} method='put'>
+                                                        <Button variant="destructive" size="sm">
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </Link>
                                                 </div>
                                             </TableCell>
                                         </TableRow>

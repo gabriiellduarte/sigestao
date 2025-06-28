@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, Edit, Trash2, Eye, ChevronDown, FileText, Building } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, ChevronDown, FileText, Building, ExternalLink, PersonStanding, Users, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,198 +18,240 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
-import { Link } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 
 interface Portaria {
-  id: number;
-  servidor: string;
-  tipoPortaria: string;
-  data: string;
-  funcao: string;
-  secretaria: string;
-  status: 'ativa' | 'inativa' | 'pendente';
+  doc_portarias_id: number;
+  doc_portarias_numero: string;
+  doc_portarias_servidor_nome: string;
+  doc_portarias_servidor_cpf: string;
+  adm_servidores_id: number;
+  adm_cargos_id: number;
+  adm_secretarias_id: number;
+  doc_tiposportaria_id: number;
+  doc_portarias_data: string;
+  doc_portarias_descricao?: string;
+  doc_portarias_link_documento?: string;
+  doc_portarias_status: string;
+  doc_portarias_publicadoem?: string | null;
+  servidor?: any;
+  cargo?: any;
+  secretaria?: any;
+  tipoPortaria?: any;
+  user?: any;
 }
 
-interface ListaPortariasProps {
-  onEdit: (portaria: Portaria) => void;
-  onNew: () => void;
+interface PortariasPageProps {
+  portarias: {
+    data: Portaria[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    next_page_url: string | null;
+    prev_page_url: string | null;
+  };
 }
 
-const mockPortarias: Portaria[] = [
-  {
-    id: 1,
-    servidor: 'João Silva Santos',
-    tipoPortaria: 'Nomeação',
-    data: '2024-01-15',
-    funcao: 'Diretor de Educação',
-    secretaria: 'Secretaria de Educação',
-    status: 'ativa'
-  },
-  {
-    id: 2,
-    servidor: 'Maria Oliveira Costa',
-    tipoPortaria: 'Exoneração',
-    data: '2024-01-10',
-    funcao: 'Assessora Jurídica',
-    secretaria: 'Secretaria de Administração',
-    status: 'ativa'
-  },
-  {
-    id: 3,
-    servidor: 'Carlos Pereira Lima',
-    tipoPortaria: 'Designação',
-    data: '2024-01-08',
-    funcao: 'Coordenador de Saúde',
-    secretaria: 'Secretaria de Saúde',
-    status: 'pendente'
-  }
-];
-
-export const ListaPortarias: React.FC<ListaPortariasProps> = ({ onEdit, onNew }) => {
+const ListaPortarias: React.FC = () => {
+  const { portarias } = usePage().props;
   const [searchTerm, setSearchTerm] = useState('');
-  const [portarias] = useState<Portaria[]>(mockPortarias);
 
-  const filteredPortarias = portarias.filter(portaria =>
-    portaria.servidor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    portaria.tipoPortaria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    portaria.funcao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    portaria.secretaria.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPortarias = portarias.data.filter((portaria) => {
+    return (
+      portaria.doc_portarias_servidor_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (portaria.tipoPortaria && portaria.tipoPortaria.doc_tiposportaria_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (portaria.cargo && portaria.cargo.adm_argos_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (portaria.secretaria && portaria.secretaria.nome.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ativa': return 'bg-green-100 text-green-800';
-      case 'inativa': return 'bg-red-100 text-red-800';
-      case 'pendente': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getStatusColor = (portaria: Portaria) => {
+    if (portaria.doc_portarias_status == 'cancelado'){
+      return 'bg-red-100 text-red-800';
+    }else if(portaria.doc_portarias_status == 'publicado'){
+      return 'bg-green-100 text-green-800';
+    }else{
+      return 'bg-yellow-100 text-yellow-800';
+    }
+    
+  };
+
+  const getStatusLabel = (portaria: Portaria) => {
+    if (portaria.doc_portarias_status == 'cancelado'){
+      return 'Cancelada';
+    }else if(portaria.doc_portarias_status == 'publicado'){
+      return 'Publicada';
+    }else{
+      return 'Pendente';
     }
   };
 
   const handleDelete = (id: number) => {
     if (confirm('Deseja realmente excluir esta portaria?')) {
-      console.log('Excluindo portaria:', id);
+      router.delete(route('documentos.portarias.destroy', id));
     }
+  };
+
+  const handleEdit = (id: number) => {
+    router.get(route('documentos.portarias.edit', id));
+  };
+
+  const handlePageChange = (url: string) => {
+    router.visit(url);
   };
 
   return (
     <AppLayout>
-        <div className="space-y-4 md:space-y-6 p-4">
+      <div className="space-y-4 md:space-y-6 p-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
+          <div>
             <h2 className="text-xl md:text-2xl font-bold text-gray-900">Portarias</h2>
             <p className="text-sm md:text-base text-gray-600">Gerencie as portarias do município</p>
-            </div>
-            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+          </div>
+          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+            <Link href={route('documentos.portarias.dashboard')}>
+              <Button className="w-full md:w-auto">
+                <Gauge className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
+            </Link>
             <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full md:w-auto">
-                            <ChevronDown className="h-4 w-4 mr-2" />
-                            Outros
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem asChild>
-                            <Link href={route('documentos.tiposdeportaria.index')} className="flex items-center">
-                                <FileText className="h-4 w-4 mr-2" />
-                                Tipos de Portaria
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link href={route('administracao.secretarias.index')} className="flex items-center">
-                                <Building className="h-4 w-4 mr-2" />
-                                Secretarias
-                            </Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                <Link href={route('documentos.portarias.create')}>
-                    <Button className="w-full md:w-auto">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Nova Portaria
-                    </Button>
-                </Link>
-                
-            </div>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full md:w-auto">
+                  <ChevronDown className="h-4 w-4 mr-2" />
+                  Outros
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href={route('documentos.tiposdeportaria.index')} className="flex items-center">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Tipos de Portaria
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={route('administracao.secretarias.index')} className="flex items-center">
+                    <Building className="h-4 w-4 mr-2" />
+                    Secretarias
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={route('administracao.servidores.index')} className="flex items-center">
+                    <Users className="h-4 w-4 mr-2" />
+                    Servidores
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Link href={route('documentos.portarias.create')}>
+              <Button className="w-full md:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Portaria
+              </Button>
+            </Link>
+          </div>
         </div>
-
         <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-                placeholder="Buscar por servidor, tipo, função ou secretaria..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+              placeholder="Buscar por servidor, tipo, função ou secretaria..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
             />
-            </div>
+          </div>
         </div>
-
         <div className="bg-white rounded-lg border overflow-hidden">
-            <div className="overflow-x-auto">
+          <div className="overflow-x-auto">
             <Table>
-                <TableHeader>
+              <TableHeader>
                 <TableRow>
-                    <TableHead className="min-w-[200px]">Servidor</TableHead>
-                    <TableHead className="min-w-[120px]">Tipo</TableHead>
-                    <TableHead className="min-w-[100px]">Data</TableHead>
-                    <TableHead className="min-w-[150px]">Função</TableHead>
-                    <TableHead className="min-w-[180px]">Secretaria</TableHead>
-                    <TableHead className="min-w-[100px]">Status</TableHead>
-                    <TableHead className="w-[120px]">Ações</TableHead>
+                  <TableHead className="min-w-[120px]">Número</TableHead>
+                  <TableHead className="min-w-[200px]">Servidor</TableHead>
+                  <TableHead className="min-w-[120px]">CPF</TableHead>
+                  <TableHead className="min-w-[120px]">Tipo</TableHead>
+                  <TableHead className="min-w-[100px]">Data</TableHead>
+                  <TableHead className="min-w-[150px]">Cargo</TableHead>
+                  <TableHead className="min-w-[180px]">Secretaria</TableHead>
+                  <TableHead className="min-w-[100px]">Status</TableHead>
+                  <TableHead className="w-[120px]">Ações</TableHead>
                 </TableRow>
-                </TableHeader>
-                <TableBody>
+              </TableHeader>
+              <TableBody>
                 {filteredPortarias.map((portaria) => (
-                    <TableRow key={portaria.id}>
-                    <TableCell className="font-medium">{portaria.servidor}</TableCell>
-                    <TableCell>{portaria.tipoPortaria}</TableCell>
-                    <TableCell>{new Date(portaria.data).toLocaleDateString('pt-BR')}</TableCell>
-                    <TableCell>{portaria.funcao}</TableCell>
-                    <TableCell>{portaria.secretaria}</TableCell>
+                  <TableRow key={portaria.doc_portarias_id}>
+                    <TableCell>{portaria.doc_portarias_numero}</TableCell>
+                    <TableCell className="font-medium">{portaria.doc_portarias_servidor_nome}</TableCell>
+                    <TableCell>{portaria.doc_portarias_servidor_cpf}</TableCell>
+                    <TableCell>{portaria.tipo_portaria ? portaria.tipo_portaria.doc_tiposportaria_nome : '-'}</TableCell>
+                    <TableCell>{new Date(portaria.doc_portarias_data).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell>{portaria.cargo ? portaria.cargo.adm_cargos_nome : '-'}</TableCell>
+                    <TableCell>{portaria.secretaria ? portaria.secretaria.adm_secretarias_nome : '-'}</TableCell>
                     <TableCell>
-                        <Badge className={getStatusColor(portaria.status)}>
-                        {portaria.status.charAt(0).toUpperCase() + portaria.status.slice(1)}
-                        </Badge>
+                      <Badge className={getStatusColor(portaria)}>
+                        {getStatusLabel(portaria)}
+                      </Badge>
                     </TableCell>
                     <TableCell>
-                        <div className="flex space-x-1">
-                        <Button
+                      <div className="flex space-x-1">
+                        {portaria.doc_portarias_link_documento && (
+                          <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => console.log('Visualizar:', portaria.id)}
+                            onClick={() => window.open(portaria.doc_portarias_link_documento, '_blank')}
+                            title="Visualizar documento"
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(portaria.doc_portarias_id)}
                         >
-                            <Eye className="h-4 w-4" />
+                          <Edit className="h-4 w-4" />
                         </Button>
                         <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onEdit(portaria)}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(portaria.doc_portarias_id)}
+                          className="text-red-600 hover:text-red-700"
                         >
-                            <Edit className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(portaria.id)}
-                            className="text-red-600 hover:text-red-700"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                        </div>
+                      </div>
                     </TableCell>
-                    </TableRow>
+                  </TableRow>
                 ))}
-                </TableBody>
+              </TableBody>
             </Table>
-            </div>
+          </div>
         </div>
-
+        {/* Paginação */}
+        <div className="flex justify-center mt-4">
+          <nav className="inline-flex -space-x-px">
+            {portarias.prev_page_url && (
+              <Button variant="outline" size="sm" onClick={() => handlePageChange(portarias.prev_page_url!)}>
+                Anterior
+              </Button>
+            )}
+            <span className="px-3 py-2 text-gray-700">Página {portarias.current_page} de {portarias.last_page}</span>
+            {portarias.next_page_url && (
+              <Button variant="outline" size="sm" onClick={() => handlePageChange(portarias.next_page_url!)}>
+                Próxima
+              </Button>
+            )}
+          </nav>
+        </div>
         {filteredPortarias.length === 0 && (
-            <div className="text-center py-8">
+          <div className="text-center py-8">
             <p className="text-gray-500">Nenhuma portaria encontrada.</p>
-            </div>
+          </div>
         )}
-        </div>
+      </div>
     </AppLayout>
   );
 };

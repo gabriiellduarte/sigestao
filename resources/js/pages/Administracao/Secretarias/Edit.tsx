@@ -23,11 +23,7 @@ export default function Edit({ auth, secretaria }: Props) {
                         </p>
                     </div>
 
-                    <Card>
-                        <CardContent className="pt-6">
-                            <Form secretaria={secretaria} isEditing={true} />
-                        </CardContent>
-                    </Card>
+                    <Form secretaria={secretaria} isEditing={true} />
                 </div>
             </div>
         </AppLayout>

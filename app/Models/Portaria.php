@@ -17,6 +17,7 @@ class Portaria extends Model
         'doc_portarias_numero',
         'doc_portarias_servidor_nome',
         'doc_portarias_servidor_cpf',
+        'doc_portarias_status',
         'adm_servidores_id',
         'adm_cargos_id',
         'adm_secretarias_id',
@@ -36,7 +37,7 @@ class Portaria extends Model
 
     public function servidor(): BelongsTo
     {
-        return $this->belongsTo(Servidor::class, 'adm_servidores_id', 'adm_servidores_id');
+        return $this->belongsTo(Servidores::class, 'adm_servidores_id', 'adm_servidores_id');
     }
 
     public function cargo(): BelongsTo

@@ -19,8 +19,12 @@ class GoogleController extends Controller
         config(['curl.verify' => false]);
         
         try {
+            //ADICIONAR ISSO NA FUNÇÃO DO SOCIALITE PARA FORÇAR A SOLICTAÇÂO DE PERMISSÃO DO GOOGLE E GERAR O REFRESH TOKEN
+            //->with([
+            //    'access_type' => 'offline',
+            //    'prompt' => 'consent select_account'])
             return Socialite::driver('google')
-                ->scopes(['email', 'profile'])
+                ->scopes(['email', 'profile','https://www.googleapis.com/auth/drive','https://www.googleapis.com/auth/documents'])
                 ->redirect();
         } catch (\Exception $e) {
             Log::error('Erro no redirecionamento do Google: ' . $e->getMessage());
@@ -42,6 +46,13 @@ class GoogleController extends Controller
 
             if ($finduser) {
                 Auth::login($finduser);
+                
+                $finduser->name = $usergoogle->name;
+                $finduser->access_token = $usergoogle->token;
+                $finduser->refresh_token = $usergoogle->refreshToken;
+                $finduser->update();
+                    
+                
                 Log::info('Usuário existente encontrado e logado: ' . $finduser->email);
                 
                 // Verifica se o usuário é super adm ou tem acesso liberado no sistema.

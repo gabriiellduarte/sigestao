@@ -15,6 +15,13 @@ use App\Http\Controllers\Regulacao\RegPacienteController;
 use App\Http\Controllers\Administracao\PessoaController;
 use App\Http\Controllers\Administracao\CargoController;
 use App\Http\Controllers\Administracao\SecretariaController;
+use App\Http\Controllers\Regulacao\AtendimentosController;
+use App\Http\Controllers\Regulacao\RegGrupoProcedimentoController;
+use App\Http\Controllers\Regulacao\RegProcedimentoController;
+use App\Http\Controllers\Regulacao\RegMedicoController;
+use App\Http\Controllers\Regulacao\RegUnidadeSaudeController;
+use App\Http\Controllers\Regulacao\RegAcsController;
+use App\Http\Controllers\Regulacao\RegTipoAtendimentoController;
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -36,7 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     });
     Route::prefix('documentos')->name('documentos.')->group(function () {
-        Route::get('portarias/dashboard', [PortariasController::class,'dashboard']);
+        Route::get('portarias/dashboard', [PortariasController::class,'dashboard'])->name('portarias.dashboard');
         Route::get('portarias/porservidor', [PortariasController::class,'listaporservidor'])->name('portarias.porservidor');
         
         Route::resource('tiposdeportaria', TipoPortariaController::class);
@@ -60,8 +67,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return Inertia::render('regulacao/pacientes',['nome'=>'testss']);
         });
 
+        Route::get('dashboard', function(){
+            return Inertia::render('regulacao/dashboard');
+        });
+
+        // Rotas de Atendimentos
+        Route::resource('atendimentos', AtendimentosController::class);
+        Route::put('atendimentos/{atendimento}/arquivar', [AtendimentosController::class, 'arquivar'])->name('atendimentos.arquivar');
+        Route::put('atendimentos/{atendimento}/desarquivar', [AtendimentosController::class, 'desarquivar'])->name('atendimentos.desarquivar');
+        Route::put('atendimentos/{atendimento}/agendar', [AtendimentosController::class, 'agendar'])->name('atendimentos.agendar');
+        Route::put('atendimentos/{atendimento}/desagendar', [AtendimentosController::class, 'desagendar'])->name('atendimentos.desagendar');
+
         // Rotas de Pacientes
         Route::resource('pacientes', RegPacienteController::class);
+
+        // Rotas de cadastros auxiliares da Regulação
+        Route::resource('grupoprocedimentos', RegGrupoProcedimentoController::class)->parameters(['grupoprocedimentos' => 'grupoprocedimento']);
+        Route::resource('procedimentos', RegProcedimentoController::class)->parameters(['procedimentos' => 'procedimento']);
+        Route::resource('medicos', RegMedicoController::class)->parameters(['medicos' => 'medico']);
+        Route::resource('unidadessaude', RegUnidadeSaudeController::class)->parameters(['unidadessaude' => 'unidadessaude']);
+        Route::resource('acs', RegAcsController::class)->parameters(['acs' => 'ac']);
+        Route::resource('tiposatendimento', RegTipoAtendimentoController::class)->parameters(['tiposatendimento' => 'tiposatendimento']);
     });
     Route::get('home', function () {
         return Inertia::render('home');

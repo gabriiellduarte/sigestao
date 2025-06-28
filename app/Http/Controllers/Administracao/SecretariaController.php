@@ -24,10 +24,8 @@ class SecretariaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'abreviacao' => 'required|string|max:10',
-            'descricao' => 'nullable|string|max:1000',
-            'status' => 'required|boolean',
+            'adm_secretarias_nome' => 'required|string|max:255',
+            'adm_secretarias_status' => 'required|boolean',
         ]);
 
         Secretaria::create($validated);
@@ -46,10 +44,8 @@ class SecretariaController extends Controller
     public function update(Request $request, Secretaria $secretaria)
     {
         $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'abreviacao' => 'required|string|max:10',
-            'descricao' => 'nullable|string|max:1000',
-            'status' => 'required|boolean',
+            'adm_secretarias_nome' => 'required|string|max:255',
+            'adm_secretarias_status' => 'required|boolean'
         ]);
 
         $secretaria->update($validated);

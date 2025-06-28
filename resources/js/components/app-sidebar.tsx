@@ -34,6 +34,12 @@ const mainNavItems: NavItem[] = [
         permissions: 'acessar sistema',
         children: [
             {
+                title: 'Servidores',
+                href: '/administracao/servidores',
+                icon: UserCircle,
+                permissions: 'acessar sistema'
+            },
+            {
                 title: 'Pessoas',
                 href: '/administracao/pessoas',
                 icon: UserCircle,
@@ -65,6 +71,11 @@ const mainNavItems: NavItem[] = [
         permissions: 'acessar sistema',
         children: [
             {
+                title: 'Dashboard',
+                href: '/regulacao/dashboard',
+                permissions: 'acessar sistema'
+            },
+            {
                 title: 'Lista de Atendimentos',
                 href: '/regulacao/listaatendimentos',
                 permissions: 'acessar sistema'
@@ -72,6 +83,36 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Pacientes',
                 href: '/regulacao/pacientes',
+                permissions: 'acessar sistema'
+            },
+            {
+                title: 'Grupos de Procedimentos',
+                href: '/regulacao/grupoprocedimentos',
+                permissions: 'acessar sistema'
+            },
+            {
+                title: 'Procedimentos',
+                href: '/regulacao/procedimentos',
+                permissions: 'acessar sistema'
+            },
+            {
+                title: 'Médicos',
+                href: '/regulacao/medicos',
+                permissions: 'acessar sistema'
+            },
+            {
+                title: 'Unidades de Saúde',
+                href: '/regulacao/unidadessaude',
+                permissions: 'acessar sistema'
+            },
+            {
+                title: 'ACS',
+                href: '/regulacao/acs',
+                permissions: 'acessar sistema'
+            },
+            {
+                title: 'Tipos de Atendimento',
+                href: '/regulacao/tiposatendimento',
                 permissions: 'acessar sistema'
             }
         ]

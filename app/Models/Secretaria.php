@@ -9,13 +9,13 @@ class Secretaria extends Model
 {
     use HasFactory;
 
-    protected $table = 'ger_secretarias';
+    protected $table = 'adm_secretarias';
+    protected $primaryKey = 'adm_secretarias_id';
 
     protected $fillable = [
-        'nome',
-        'abreviacao',
-        'descricao',
-        'status',
+        'adm_secretarias_nome',
+        'adm_secretarias_abreviacao',
+        'adm_secretarias_status',
     ];
 
     protected $casts = [

@@ -18,11 +18,7 @@ export default function Create({ auth }: PageProps) {
                         </p>
                     </div>
 
-                    <Card>
-                        <CardContent className="pt-6">
-                            <Form />
-                        </CardContent>
-                    </Card>
+                    <Form />
                 </div>
             </div>
         </AppLayout>

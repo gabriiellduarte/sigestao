@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Filter, Eye, Edit, Trash2, Plus, Calendar, User, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
 interface Atendimento {
   id: number;
@@ -113,13 +113,12 @@ export default function NovoAtendimento({ ...props }){
             <p className="text-gray-600 mt-2">Gerencie os atendimentos de regulação municipal</p>
           </div>
           
-          <button 
-            onClick={() => router.visit(route('atendimento.novo'))}
-            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Novo Atendimento</span>
-          </button>
+          <Link href={route('regulacao.atendimento.novo')}>
+            <button className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+              <Plus className="h-5 w-5" />
+              <span>Novo Atendimento</span>
+            </button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
