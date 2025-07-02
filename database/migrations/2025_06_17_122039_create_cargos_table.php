@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('adm_cargos', function (Blueprint $table) {
             $table->id('adm_cargos_id');
-            $table->string('adm_argos_nome');
+            $table->string('adm_cargos_nome');
             $table->string('adm_cargos_abreviacao')->nullable();
             $table->timestamps();
             $table->softDeletes();

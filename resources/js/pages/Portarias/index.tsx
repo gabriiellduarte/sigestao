@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Search, Plus, Edit, Trash2, Eye, ChevronDown, FileText, Building, ExternalLink, PersonStanding, Users, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,15 +54,20 @@ interface PortariasPageProps {
 }
 
 const ListaPortarias: React.FC = () => {
-  const { portarias } = usePage().props;
+  const { portarias } = (usePage().props as any).portarias ? (usePage().props as any) : { portarias: { data: [] } };
   const [searchTerm, setSearchTerm] = useState('');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState<string|null>(null);
+  const [importSuccess, setImportSuccess] = useState<string|null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredPortarias = portarias.data.filter((portaria) => {
+  const filteredPortarias = portarias.data.filter((portaria: Portaria) => {
     return (
-      portaria.doc_portarias_servidor_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (portaria.tipoPortaria && portaria.tipoPortaria.doc_tiposportaria_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (portaria.cargo && portaria.cargo.adm_argos_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (portaria.secretaria && portaria.secretaria.nome.toLowerCase().includes(searchTerm.toLowerCase()))
+      (portaria.doc_portarias_servidor_nome && portaria.doc_portarias_servidor_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (portaria.tipoPortaria && portaria.tipoPortaria.doc_tiposportaria_nome && portaria.tipoPortaria.doc_tiposportaria_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (portaria.cargo && portaria.cargo.adm_cargos_nome && portaria.cargo.adm_cargos_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (portaria.secretaria && portaria.secretaria.adm_secretarias_nome && portaria.secretaria.adm_secretarias_nome.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -99,6 +104,65 @@ const ListaPortarias: React.FC = () => {
 
   const handlePageChange = (url: string) => {
     router.visit(url);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImportError(null);
+    setImportSuccess(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith('.xlsx')) {
+      setImportError('O arquivo deve ser do tipo XLSX.');
+      return;
+    }
+    setImportLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      await router.post(route('documentos.portarias.import'), formData, {
+        forceFormData: true,
+        onSuccess: () => {
+          setImportSuccess('Importação realizada com sucesso!');
+          setShowImportModal(false);
+        },
+        onError: (errors: any) => {
+          setImportError(errors?.file || 'Erro ao importar arquivo.');
+        },
+        onFinish: () => setImportLoading(false),
+      });
+    } catch (e) {
+      setImportError('Erro inesperado ao importar.');
+      setImportLoading(false);
+    }
+  };
+
+  const handleImport = async () => {
+    setImportError(null);
+    setImportSuccess(null);
+    if (!fileInputRef.current?.files?.length) {
+      setImportError('Selecione um arquivo XLSX para importar.');
+      return;
+    }
+    setImportLoading(true);
+    const file = fileInputRef.current.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      await router.post(route('documentos.portarias.import'), formData, {
+        forceFormData: true,
+        onSuccess: () => {
+          setImportSuccess('Importação realizada com sucesso!');
+          setShowImportModal(false);
+        },
+        onError: (errors: any) => {
+          setImportError(errors?.file || 'Erro ao importar arquivo.');
+        },
+        onFinish: () => setImportLoading(false),
+      });
+    } catch (e) {
+      setImportError('Erro inesperado ao importar.');
+      setImportLoading(false);
+    }
   };
 
   return (
@@ -150,6 +214,9 @@ const ListaPortarias: React.FC = () => {
                 Nova Portaria
               </Button>
             </Link>
+            <Button className="w-full md:w-auto" variant="secondary" onClick={() => setShowImportModal(true)}>
+              Importar Portarias
+            </Button>
           </div>
         </div>
         <div className="flex flex-col md:flex-row gap-4">
@@ -180,12 +247,12 @@ const ListaPortarias: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPortarias.map((portaria) => (
+                {filteredPortarias.map((portaria: Portaria) => (
                   <TableRow key={portaria.doc_portarias_id}>
                     <TableCell>{portaria.doc_portarias_numero}</TableCell>
                     <TableCell className="font-medium">{portaria.doc_portarias_servidor_nome}</TableCell>
                     <TableCell>{portaria.doc_portarias_servidor_cpf}</TableCell>
-                    <TableCell>{portaria.tipo_portaria ? portaria.tipo_portaria.doc_tiposportaria_nome : '-'}</TableCell>
+                    <TableCell>{portaria.tipoPortaria ? portaria.tipoPortaria.doc_tiposportaria_nome : '-'}</TableCell>
                     <TableCell>{new Date(portaria.doc_portarias_data).toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell>{portaria.cargo ? portaria.cargo.adm_cargos_nome : '-'}</TableCell>
                     <TableCell>{portaria.secretaria ? portaria.secretaria.adm_secretarias_nome : '-'}</TableCell>
@@ -249,6 +316,22 @@ const ListaPortarias: React.FC = () => {
         {filteredPortarias.length === 0 && (
           <div className="text-center py-8">
             <p className="text-gray-500">Nenhuma portaria encontrada.</p>
+          </div>
+        )}
+        {showImportModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+              <h3 className="text-lg font-bold mb-4">Importar Portarias</h3>
+              <input ref={fileInputRef} type="file" accept=".xlsx" className="mb-4" />
+              {importError && <div className="text-red-600 mb-2 text-sm">{importError}</div>}
+              {importSuccess && <div className="text-green-600 mb-2 text-sm">{importSuccess}</div>}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowImportModal(false)} disabled={importLoading}>Cancelar</Button>
+                <Button onClick={handleImport} disabled={importLoading}>
+                  {importLoading ? 'Importando...' : 'Importar'}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>

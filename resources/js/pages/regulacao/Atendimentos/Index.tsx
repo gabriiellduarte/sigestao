@@ -21,7 +21,8 @@ import {
   Building,
   Stethoscope,
   AlertTriangle,
-  FileText
+  FileText,
+  Hash
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { Link, router } from '@inertiajs/react';
@@ -46,16 +47,16 @@ interface Atendimento {
     reg_proc_id: number;
     reg_proc_nome: string;
   };
-  grupoProcedimento: {
+  grupo_procedimento: {
     reg_gpro_id: number;
     reg_gpro_nome: string;
   };
-  tipoAtendimento: {
+  tipo_atendimento: {
     reg_tipo_id: number;
     reg_tipo_nome: string;
     reg_tipo_peso: number;
   };
-  unidadeSaude: {
+  unidade_saude: {
     reg_uni_id: number;
     reg_uni_nome: string;
   } | null;
@@ -119,12 +120,20 @@ export default function Index({ atendimentos }: IndexProps) {
             <h1 className="text-3xl font-bold text-blue-800">Atendimentos</h1>
             <p className="text-gray-600">Gerenciamento de atendimentos de regulação</p>
           </div>
-          <Link href={route('regulacao.atendimentos.create')}>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Atendimento
-            </Button>
-          </Link>
+          <div className="flex items-center space-x-2">
+            <Link href={route('regulacao.atendimentos.espera')}>
+              <Button variant="outline" className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100">
+                <Hash className="h-4 w-4 mr-2" />
+                Lista de Espera
+              </Button>
+            </Link>
+            <Link href={route('regulacao.atendimentos.create')}>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Atendimento
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <Card>
@@ -167,12 +176,12 @@ export default function Index({ atendimentos }: IndexProps) {
                       <TableCell>
                         <div>
                           <div className="font-medium">{atendimento.procedimento.reg_proc_nome}</div>
-                          <div className="text-sm text-gray-500">{atendimento.grupoProcedimento.reg_gpro_nome}</div>
+                          <div className="text-sm text-gray-500">{atendimento.grupo_procedimento.reg_gpro_nome}</div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {atendimento.tipoAtendimento.reg_tipo_nome}
+                          {atendimento.tipo_atendimento.reg_tipo_nome}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -184,10 +193,10 @@ export default function Index({ atendimentos }: IndexProps) {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {atendimento.unidadeSaude ? (
+                        {atendimento.unidade_saude ? (
                           <div className="flex items-center">
                             <Building className="h-4 w-4 mr-1 text-gray-400" />
-                            <span className="text-sm">{atendimento.unidadeSaude.reg_uni_nome}</span>
+                            <span className="text-sm">{atendimento.unidade_saude.reg_uni_nome}</span>
                           </div>
                         ) : (
                           <span className="text-gray-400 text-sm">-</span>

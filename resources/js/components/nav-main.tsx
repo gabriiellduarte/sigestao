@@ -52,8 +52,8 @@ export function NavMain({ items = [], ...props }: { items: NavItem[] }) {
     }, [page.url, items]);
 
     const filteredItems = items.filter(item => hasPermission(item.permissions));
-    console.log(items);
-    console.log('page', page);
+    console.info(items);
+    console.info('page', page);
     return (
         <SidebarGroup className="px-2 py-0">
             <SidebarGroupLabel>Módulos</SidebarGroupLabel>
@@ -61,22 +61,33 @@ export function NavMain({ items = [], ...props }: { items: NavItem[] }) {
                 {filteredItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                         <div className="flex items-center justify-between">
-                            <SidebarMenuButton 
-                                asChild 
-                                isActive={page.url.startsWith(item.href)} 
-                                tooltip={{ children: item.title }}
-                            >
-                                <Link href={item.href} prefetch>
+                            {item.children && item.children.length > 0 ? (
+                                <SidebarMenuButton
+                                    isActive={page.url.startsWith(item.href)}
+                                    tooltip={{ children: item.title }}
+                                    onClick={() => toggleExpand(item.title)}
+                                >
                                     {item.icon && <item.icon />}
                                     <span>{item.title}</span>
-                                </Link>
-                            </SidebarMenuButton>
+                                </SidebarMenuButton>
+                            ) : (
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={page.url.startsWith(item.href)}
+                                    tooltip={{ children: item.title }}
+                                >
+                                    <Link href={item.href} prefetch>
+                                        {item.icon && <item.icon />}
+                                        <span>{item.title}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            )}
                             {item.children && item.children.length > 0 && (
                                 <button
                                     onClick={() => toggleExpand(item.title)}
                                     className="p-1 hover:bg-accent rounded-md"
                                 >
-                                    <ChevronDown 
+                                    <ChevronDown
                                         className={`h-4 w-4 transition-transform ${
                                             expandedItems[item.title] ? 'rotate-180' : ''
                                         }`}
@@ -90,8 +101,8 @@ export function NavMain({ items = [], ...props }: { items: NavItem[] }) {
                                     .filter(child => hasPermission(child.permissions))
                                     .map((child) => (
                                         <SidebarMenuItem key={child.title}>
-                                            <SidebarMenuButton 
-                                                asChild 
+                                            <SidebarMenuButton
+                                                asChild
                                                 isActive={page.url.startsWith(child.href)}
                                                 tooltip={{ children: child.title }}
                                             >

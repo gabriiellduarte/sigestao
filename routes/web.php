@@ -49,7 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('tiposdeportaria', TipoPortariaController::class);
 
         Route::resource('portarias', PortariasController::class);
-        
+        Route::post('portarias/import', [PortariasController::class, 'import'])->name('portarias.import');
 
     });
 
@@ -72,12 +72,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Rotas de Atendimentos
+        Route::get('atendimentos/espera', [AtendimentosController::class, 'espera'])->name('atendimentos.espera');
+
         Route::resource('atendimentos', AtendimentosController::class);
         Route::put('atendimentos/{atendimento}/arquivar', [AtendimentosController::class, 'arquivar'])->name('atendimentos.arquivar');
         Route::put('atendimentos/{atendimento}/desarquivar', [AtendimentosController::class, 'desarquivar'])->name('atendimentos.desarquivar');
         Route::put('atendimentos/{atendimento}/agendar', [AtendimentosController::class, 'agendar'])->name('atendimentos.agendar');
         Route::put('atendimentos/{atendimento}/desagendar', [AtendimentosController::class, 'desagendar'])->name('atendimentos.desagendar');
-
         // Rotas de Pacientes
         Route::resource('pacientes', RegPacienteController::class);
 

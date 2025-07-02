@@ -12,9 +12,8 @@ class ServidoresController extends Controller
 {
     public function index()
     {
-        // Buscar servidores com dados da pessoa relacionada
-        $servidores = Servidores::with('pessoa')
-            ->paginate(10);
+        // Buscar todos os servidores com dados da pessoa relacionada
+        $servidores = Servidores::with('pessoa')->get();
 
         return Inertia::render('Administracao/Servidores/index', [
             'servidores' => $servidores

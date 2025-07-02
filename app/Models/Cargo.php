@@ -12,7 +12,7 @@ class Cargo extends Model
     protected $table = 'adm_cargos';
     protected $primaryKey = 'adm_cargos_id';
     protected $fillable = [
-        'adm_argos_nome',
+        'adm_cargos_nome',
         'adm_cargos_abreviacao',
     ];
 }

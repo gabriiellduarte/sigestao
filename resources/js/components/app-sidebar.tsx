@@ -77,7 +77,7 @@ const mainNavItems: NavItem[] = [
             },
             {
                 title: 'Lista de Atendimentos',
-                href: '/regulacao/listaatendimentos',
+                href: '/regulacao/atendimentos',
                 permissions: 'acessar sistema'
             },
             {

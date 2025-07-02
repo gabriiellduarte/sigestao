@@ -1,15 +1,18 @@
 para importar o servidores eu importei esse sql para a tabela ger_pessoas
 
 SELECT sm.nome, sm.CPF, sm.DTNASC, 
-sm.ENDERECO, sm.ENDNUM, sm.BAIRRO,
-REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(sm.FONE, '(', ''), ')', ''), '-', ''), ' ', ''), '.', '') AS FONE,
-sm.SEXO, sm.NOMEMAE
+       sm.ENDERECO, sm.ENDNUM, sm.BAIRRO,
+       REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(sm.FONE, '(', ''), ')', ''), '-', ''), ' ', ''), '.', '') AS FONE,
+       sm.SEXO, sm.NOMEMAE
 FROM SFP001MAI sm
-WHERE sm.CPF IN (
-    SELECT CPF
+JOIN (
+    SELECT MIN(MATRICULA) AS ID
     FROM SFP001MAI
     GROUP BY CPF
-    HAVING COUNT(*) = 1
-)
+) primeiros ON sm.MATRICULA = primeiros.ID
 
-depois vinculei na tabela ger_Servidor usando os inserts
+depois vinculei na tabela adm_Servidores usando os inserts
+
+INSERT INTO adm_servidores (ger_pessoas_id)
+SELECT 
+  sm.ger_pessoas_id FROM ger_pessoas sm;

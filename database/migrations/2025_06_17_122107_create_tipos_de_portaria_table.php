@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('doc_tipos_portaria');
+        Schema::dropIfExists('doc_tiposportaria');
     }
 };

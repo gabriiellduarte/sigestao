@@ -27,10 +27,33 @@ interface AtendimentoFormData {
   reg_ate_pos_inicial: number | null;
   reg_ate_prioridade: boolean;
   reg_ate_retroativo: boolean;
-  [key: string]: any; // Adicionar índice de assinatura para satisfazer FormDataType
+  [key: string]: any;
 }
 
-interface CreateProps {
+interface Atendimento {
+  reg_ate_id: number;
+  reg_ate_protocolo: string;
+  reg_ate_prioridade: boolean;
+  reg_ate_datendimento: string;
+  reg_ate_drequerente: string;
+  reg_ate_obs: string | null;
+  reg_ate_arquivado: boolean;
+  reg_ate_agendado: boolean;
+  reg_ate_pos_atual: number | null;
+  reg_ate_pos_inicial: number | null;
+  reg_ate_protoc_solicitante: string | null;
+  reg_ate_retroativo: boolean;
+  ger_pessoas_id: number;
+  reg_proc_id: number;
+  reg_gpro_id: number;
+  reg_tipo_id: number;
+  reg_uni_id: number | null;
+  reg_med_id: number | null;
+  reg_acs_id: number | null;
+}
+
+interface EditProps {
+  atendimento: Atendimento;
   pessoas: Pessoa[];
   gruposProcedimentos: Array<{ reg_gpro_id: number; reg_gpro_nome: string }>;
   procedimentos: Array<{ reg_proc_id: number; reg_proc_nome: string; reg_gpro_id: number }>;
@@ -40,7 +63,8 @@ interface CreateProps {
   tiposAtendimento: Array<{ reg_tipo_id: number; reg_tipo_nome: string; reg_tipo_peso: number }>;
 }
 
-export default function Create({ 
+export default function Edit({ 
+  atendimento,
   pessoas, 
   gruposProcedimentos, 
   procedimentos, 
@@ -48,34 +72,43 @@ export default function Create({
   unidadesSaude, 
   acs, 
   tiposAtendimento 
-}: CreateProps) {
-  // Função para obter data e hora atual no formato datetime-local
-  const getCurrentDateTime = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
+}: EditProps) {
+  // Função para formatar data para datetime-local
+  const formatDateTimeForInput = (dateString: string) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  const { data, setData, post, processing, errors } = useForm<AtendimentoFormData>({
-    ger_pessoas_id: 0,
-    reg_proc_id: 0,
-    reg_gpro_id: 0,
-    reg_tipo_id: 0,
-    reg_ate_datendimento: getCurrentDateTime(),
-    reg_ate_drequerente: '',
-    reg_ate_obs: '',
-    reg_uni_id: null,
-    reg_med_id: null,
-    reg_ate_protoc_solicitante: '',
-    reg_acs_id: null,
-    reg_ate_pos_atual: null,
-    reg_ate_pos_inicial: null,
-    reg_ate_prioridade: false,
-    reg_ate_retroativo: false,
+  // Função para formatar data para date
+  const formatDateForInput = (dateString: string) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const { data, setData, put, processing, errors } = useForm<AtendimentoFormData>({
+    ger_pessoas_id: atendimento.ger_pessoas_id,
+    reg_proc_id: atendimento.reg_proc_id,
+    reg_gpro_id: atendimento.reg_gpro_id,
+    reg_tipo_id: atendimento.reg_tipo_id,
+    reg_ate_datendimento: formatDateTimeForInput(atendimento.reg_ate_datendimento),
+    reg_ate_drequerente: formatDateForInput(atendimento.reg_ate_drequerente),
+    reg_ate_obs: atendimento.reg_ate_obs || '',
+    reg_uni_id: atendimento.reg_uni_id,
+    reg_med_id: atendimento.reg_med_id,
+    reg_ate_protoc_solicitante: atendimento.reg_ate_protoc_solicitante || '',
+    reg_acs_id: atendimento.reg_acs_id,
+    reg_ate_pos_atual: atendimento.reg_ate_pos_atual,
+    reg_ate_pos_inicial: atendimento.reg_ate_pos_inicial,
+    reg_ate_prioridade: atendimento.reg_ate_prioridade,
+    reg_ate_retroativo: atendimento.reg_ate_retroativo,
   });
 
   const [procedimentosFiltrados, setProcedimentosFiltrados] = useState(procedimentos);
@@ -96,7 +129,7 @@ export default function Create({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    post(route('regulacao.atendimentos.store'));
+    put(route('regulacao.atendimentos.update', atendimento.reg_ate_id));
   };
 
   return (
@@ -111,8 +144,8 @@ export default function Create({
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-blue-800">Novo Atendimento</h1>
-              <p className="text-gray-600">Cadastro de solicitação de atendimento</p>
+              <h1 className="text-3xl font-bold text-blue-800">Editar Atendimento</h1>
+              <p className="text-gray-600">Protocolo: {atendimento.reg_ate_protocolo}</p>
             </div>
           </div>
         </div>
@@ -326,8 +359,6 @@ export default function Create({
                   )}
                 </div>
 
-                
-
                 {/* ACS */}
                 <div className="space-y-2">
                   <Label htmlFor="reg_acs_id">ACS</Label>
@@ -351,10 +382,8 @@ export default function Create({
                   )}
                 </div>
 
-                
-
                 {/* Posição Atual */}
-                <div className="space-y-2 hidden">
+                <div className="space-y-2">
                   <Label htmlFor="reg_ate_pos_atual">Posição Atual</Label>
                   <Input
                     id="reg_ate_pos_atual"
@@ -370,7 +399,7 @@ export default function Create({
                 </div>
 
                 {/* Posição Inicial */}
-                <div className="space-y-2 hidden">
+                <div className="space-y-2">
                   <Label htmlFor="reg_ate_pos_inicial">Posição Inicial</Label>
                   <Input
                     id="reg_ate_pos_inicial"
@@ -402,7 +431,7 @@ export default function Create({
                 </div>
 
                 {/* Retroativo */}
-                <div className="space-y-2 hidden">
+                <div className="space-y-2">
                   <Label htmlFor="reg_ate_retroativo">Retroativo</Label>
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -442,7 +471,7 @@ export default function Create({
                 </Link>
                 <Button type="submit" disabled={processing} className="bg-blue-600 hover:bg-blue-700">
                   <Save className="h-4 w-4 mr-2" />
-                  {processing ? 'Salvando...' : 'Salvar Atendimento'}
+                  {processing ? 'Salvando...' : 'Atualizar Atendimento'}
                 </Button>
               </div>
             </form>

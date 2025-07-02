@@ -50,7 +50,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('ger_pessoas_id');
             $table->unsignedBigInteger('reg_proc_id');
             $table->unsignedBigInteger('reg_gpro_id');
-            $table->string('reg_ate_protocolo',16);
+            $table->string('reg_ate_protocolo',16)->nullable();
             $table->boolean('reg_ate_prioridade')->default(false);
             $table->unsignedBigInteger('reg_tipo_id');
             $table->dateTime('reg_ate_datendimento');

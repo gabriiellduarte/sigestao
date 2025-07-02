@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Secretaria;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
 
 class PortariasController extends Controller
 {
@@ -156,7 +158,7 @@ class PortariasController extends Controller
 
         // Gerar documento no Google Docs
         $user = Auth::user();
-        $templateId = '1D-wczn9PkD7QStim_NbHQ44yDhXiq9as4HI9em5gFfw'; // ID do template
+        $templateId = '1e_CAQ3B1dGyUwWbuA0HDtvaLr3QttSszCwvQc5PNuBU'; // ID do template
         $dados = [
             'tipo' => optional($portaria->tipoPortaria)->doc_tiposportaria_nome ?? '',
             'nome' => $portaria->doc_portarias_servidor_nome,
@@ -252,5 +254,88 @@ class PortariasController extends Controller
         return Inertia::render('Portarias/listaporservidor', [
             'cargos' => Cargo::all()
         ]);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx',
+        ]);
+        
+
+        //$mapping = json_decode($request->input('mapping', '{}'), true);
+        //if (!is_array($mapping) || empty($mapping)) {
+        //    return response()->json(['file' => 'Mapeamento de colunas inválido ou ausente.'], 422);
+        //}
+
+        try {
+            $path = $request->file('file')->getRealPath();
+            $data = Excel::toArray([], $path);
+            $rows = $data[0] ?? [];
+            $header = $rows[0] ?? [];
+            unset($rows[0]);
+
+            // Verifica se todos os campos obrigatórios do banco estão mapeados
+            $required = [
+                'numero', 'servidor_nome', 'servidor_cpf', 'status', 'servidores_id', 'cargos_id', 'secretarias_id', 'tiposportaria_id', 'data'
+            ];
+            //foreach ($required as $field) {
+            //    if (empty($mapping[$field])) {
+            //        return response()->json(['file' => "Campo obrigatório não mapeado: $field"], 422);
+            //    }
+            //}
+
+            foreach ($rows as $row) {
+                $rowAssoc = array_combine($header, $row);
+                if (!$rowAssoc) continue;
+                $portaria = Portaria::where('doc_portarias_numero', $rowAssoc['numero'])->first();
+                if($portaria){
+                    continue;
+                }
+                // Remover pontuações do CPF
+                if (isset($rowAssoc['CPF'])) {
+                    $rowAssoc['CPF'] = preg_replace('/[^0-9]/', '', $rowAssoc['CPF']);
+                }
+                // Buscar ou criar o cargo pelo nome
+                $cargo = Cargo::where('adm_cargos_nome', $rowAssoc['Cargo'])->first();
+                if (!$cargo) {
+                    $cargo = Cargo::create([
+                        'adm_cargos_nome' => $rowAssoc['Cargo'],
+                        'adm_cargos_abreviacao' => '', // ou defina conforme necessário
+                    ]);
+                }
+                $cargoId = $cargo->adm_cargos_id;
+
+                $servidor = Servidores::with('pessoa')
+                ->whereHas('pessoa',function($query) use ($rowAssoc){
+                    $query->where('ger_pessoas_cpf', $rowAssoc['CPF']);
+                })->first();
+                if(!$servidor){
+                    
+                }
+                try {
+                    Portaria::create([
+                        'doc_portarias_numero' => $rowAssoc['numero'],
+                        'doc_portarias_servidor_nome' => $rowAssoc['Nome'],
+                        'doc_portarias_servidor_cpf' => $rowAssoc['CPF'],
+                        'doc_portarias_status' => 'publicado',
+                        'adm_servidores_id' => $servidor->adm_servidores_id,
+                        'adm_cargos_id' => $cargoId,
+                        'adm_secretarias_id' => $rowAssoc['Secretaria'],
+                        'doc_tiposportaria_id' => $rowAssoc['Tipo'],
+                        'doc_portarias_data' => $rowAssoc['PortariaData'],
+                        // Remover uso de $mapping pois não está definido
+                        'doc_portarias_descricao' => $rowAssoc['Descricao'],
+                        'doc_portarias_link_documento' => $rowAssoc['LinkDocumento'],
+                        'user_id' => Auth::id(),
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Erro ao importar portaria: '.$rowAssoc['numero'].' ' . $e->getMessage());
+                }
+            }
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['file' => 'Erro ao processar o arquivo: ' . $e->getMessage()], 422);
+        }
     }
 } 

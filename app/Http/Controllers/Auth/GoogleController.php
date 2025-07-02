@@ -42,12 +42,16 @@ class GoogleController extends Controller
             $usergoogle = Socialite::driver('google')->stateless()->user();
             Log::info('Usuário do Google recebido: ' . json_encode($usergoogle));
 
-            $finduser = User::where('google_id', $usergoogle->id)->first();
+            $finduser = User::where('email', $usergoogle->email)->first();
 
+
+            //VERISCAR PARA AJUSTAR - DÁ PRA MELHORAR AQUI
             if ($finduser) {
-                Auth::login($finduser);
-                
-                $finduser->name = $usergoogle->name;
+                Auth::login(user: $finduser);
+                $emailsepara = explode('@',string: $usergoogle->getEmail())[0];
+                $finduser->avatar = $usergoogle->getAvatar();
+                $finduser->user = $emailsepara;
+                $finduser->google_id = $usergoogle->id;
                 $finduser->access_token = $usergoogle->token;
                 $finduser->refresh_token = $usergoogle->refreshToken;
                 $finduser->update();
@@ -95,7 +99,7 @@ class GoogleController extends Controller
                 }
             }
 
-            return redirect()->intended('/');
+            return redirect()->intended('/dashboard');
         } catch (\Exception $e) {
             Log::error('Erro no callback do Google: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());

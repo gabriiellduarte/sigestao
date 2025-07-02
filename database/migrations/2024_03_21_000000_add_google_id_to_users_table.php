@@ -23,6 +23,9 @@ class AddGoogleIdToUsersTable extends Migration
             $table->dropColumn('google_id');
             $table->dropColumn('avatar');
             $table->dropColumn('user');
+            $table->dropColumn('access_token');
+            $table->dropColumn('refresh_token');
+
         });
     }
 } 

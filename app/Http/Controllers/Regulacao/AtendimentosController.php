@@ -31,7 +31,7 @@ class AtendimentosController extends Controller
         ->orderBy('created_at', 'desc')
         ->paginate(15);
 
-        return Inertia::render('Regulacao/Atendimentos/Index', [
+        return Inertia::render('regulacao/Atendimentos/ListaEspera', [
             'atendimentos' => $atendimentos
         ]);
     }
@@ -49,7 +49,7 @@ class AtendimentosController extends Controller
         $acs = RegAcs::orderBy('reg_acs_nome')->get();
         $tiposAtendimento = RegTipoAtendimento::orderBy('reg_tipo_peso')->get();
 
-        return Inertia::render('Regulacao/Atendimentos/Create', [
+        return Inertia::render('regulacao/Atendimentos/Create', [
             'pessoas' => $pessoas,
             'gruposProcedimentos' => $gruposProcedimentos,
             'procedimentos' => $procedimentos,
@@ -85,7 +85,6 @@ class AtendimentosController extends Controller
             'ger_pessoas_id' => $request->ger_pessoas_id,
             'reg_proc_id' => $request->reg_proc_id,
             'reg_gpro_id' => $request->reg_gpro_id,
-            'reg_ate_protocolo' => $protocolo,
             'reg_ate_prioridade' => $request->reg_ate_prioridade ?? false,
             'reg_tipo_id' => $request->reg_tipo_id,
             'reg_ate_datendimento' => $request->reg_ate_datendimento,
@@ -103,6 +102,10 @@ class AtendimentosController extends Controller
             'reg_ate_agendado' => false,
         ]);
 
+        $id = $atendimento->reg_ate_id;
+        $protocolo = $id.date('dmY');
+        $atendimento->update(['reg_ate_protocolo'=>$protocolo]);
+
         return redirect()->route('regulacao.atendimentos.index')
             ->with('success', 'Atendimento criado com sucesso! Protocolo: ' . $protocolo);
     }
@@ -111,7 +114,8 @@ class AtendimentosController extends Controller
     {
         $atendimento->load([
             'pessoa',
-            'procedimento.grupoProcedimento',
+            'procedimento',
+            'grupoProcedimento',
             'tipoAtendimento',
             'unidadeSaude',
             'medico',
@@ -119,7 +123,7 @@ class AtendimentosController extends Controller
             'usuario'
         ]);
 
-        return Inertia::render('Regulacao/Atendimentos/Show', [
+        return Inertia::render('regulacao/Atendimentos/Show', [
             'atendimento' => $atendimento
         ]);
     }
@@ -137,7 +141,7 @@ class AtendimentosController extends Controller
         $acs = RegAcs::orderBy('reg_acs_nome')->get();
         $tiposAtendimento = RegTipoAtendimento::orderBy('reg_tipo_peso')->get();
 
-        return Inertia::render('Regulacao/Atendimentos/Edit', [
+        return Inertia::render('regulacao/Atendimentos/Edit', [
             'atendimento' => $atendimento,
             'pessoas' => $pessoas,
             'gruposProcedimentos' => $gruposProcedimentos,
@@ -195,6 +199,27 @@ class AtendimentosController extends Controller
 
         return redirect()->route('regulacao.atendimentos.index')
             ->with('success', 'Atendimento excluído com sucesso!');
+    }
+
+    public function espera()
+    {
+        $atendimentos = RegAtendimento::with([
+            'pessoa',
+            'procedimento',
+            'grupoProcedimento',
+            'tipoAtendimento',
+            'unidadeSaude',
+            'medico',
+            'acs'
+        ])
+        ->where('reg_ate_arquivado', false)
+        ->orderBy('reg_ate_prioridade', 'desc')
+        ->orderBy('created_at', 'asc')
+        ->paginate(50);
+
+        return Inertia::render('regulacao/Atendimentos/ListaEspera', [
+            'atendimentos' => $atendimentos
+        ]);
     }
 
     public function arquivar(RegAtendimento $atendimento)

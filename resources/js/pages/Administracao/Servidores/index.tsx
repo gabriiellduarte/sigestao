@@ -30,33 +30,17 @@ interface Servidor {
   pessoa: Pessoa;
 }
 
-interface Pagination {
-  current_page: number;
-  last_page: number;
-  per_page: number;
-  total: number;
-  next_page_url: string | null;
-  prev_page_url: string | null;
-}
-
 interface ServidoresPageProps extends PageProps {
-  servidores: {
-    data: Servidor[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    next_page_url: string | null;
-    prev_page_url: string | null;
-  };
+  servidores: Servidor[];
+  [key: string]: any;
 }
 
 const ListaServidores: React.FC = () => {
   const { servidores } = usePage<ServidoresPageProps>().props;
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filtro local (pode ser substituído por filtro backend depois)
-  const filteredServidores = servidores.data.filter((servidor) => {
+  // Filtro local em todos os dados
+  const filteredServidores = servidores.filter((servidor) => {
     const pessoa = servidor.pessoa;
     return (
       pessoa.ger_pessoas_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -82,10 +66,6 @@ const ListaServidores: React.FC = () => {
 
   const handleEdit = (id: number) => {
     router.get(route('administracao.servidores.edit', id));
-  };
-
-  const handlePageChange = (url: string) => {
-    router.visit(url);
   };
 
   return (
@@ -163,22 +143,6 @@ const ListaServidores: React.FC = () => {
               </TableBody>
             </Table>
           </div>
-        </div>
-        {/* Paginação */}
-        <div className="flex justify-center mt-4">
-          <nav className="inline-flex -space-x-px">
-            {servidores.prev_page_url && (
-              <Button variant="outline" size="sm" onClick={() => handlePageChange(servidores.prev_page_url!)}>
-                Anterior
-              </Button>
-            )}
-            <span className="px-3 py-2 text-gray-700">Página {servidores.current_page} de {servidores.last_page}</span>
-            {servidores.next_page_url && (
-              <Button variant="outline" size="sm" onClick={() => handlePageChange(servidores.next_page_url!)}>
-                Próxima
-              </Button>
-            )}
-          </nav>
         </div>
         {filteredServidores.length === 0 && (
           <div className="text-center py-8">
