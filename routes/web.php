@@ -25,7 +25,7 @@ use App\Http\Controllers\Regulacao\RegTipoAtendimentoController;
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::redirect('/', 'settings/profile');
+    Route::redirect('/', destination: 'settings/profile');
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $permissoes = $user->getAllPermissions();
@@ -40,7 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('secretarias', SecretariaController::class);
         Route::resource('localidades', LocalidadeController::class);
         Route::resource('servidores', ServidoresController::class);
-
+        Route::get('servidores-search', [ServidoresController::class, 'search'])->name('servidores.search');
     });
     Route::prefix('documentos')->name('documentos.')->group(function () {
         Route::get('portarias/dashboard', [PortariasController::class,'dashboard'])->name('portarias.dashboard');

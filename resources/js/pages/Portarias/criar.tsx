@@ -24,7 +24,8 @@ interface Pessoa {
 
 interface Servidor {
   adm_servidores_id: number;
-  pessoa: Pessoa;
+  ger_pessoas_nome: string;
+  ger_pessoas_cpf: string;
 }
 
 interface Cargo {
@@ -74,7 +75,7 @@ function gerarDescricao(tipo: string, nome: string, cpf: string, cargo: string, 
 }
 
 const CadastroPortarias: React.FC = () => {
-  const { portaria, servidores, cargos, secretarias, tipos, next_numero_portaria } = usePage<PortariasFormPageProps>().props;
+  const { portaria, cargos, secretarias, tipos, next_numero_portaria } = usePage<PortariasFormPageProps>().props;
   const isEditing = !!portaria;
 
   const hoje = new Date().toISOString().slice(0, 10);
@@ -97,13 +98,40 @@ const CadastroPortarias: React.FC = () => {
     doc_portarias_link_documento: portaria?.doc_portarias_link_documento || '',
   });
 
+  // Adicionar estados para busca dinâmica de servidores
+  const [servidores, setServidores] = useState<Servidor[]>([]);
+  const [buscaServidor, setBuscaServidor] = useState('');
+  const [loadingServidores, setLoadingServidores] = useState(false);
+
+  // Função para buscar servidores
+  const buscarServidores = async (termo: string) => {
+    setLoadingServidores(true);
+    try {
+      const response = await fetch(`/administracao/servidores-search?term=${encodeURIComponent(termo)}`);
+      const data = await response.json();
+      setServidores(data);
+    } catch (e) {
+      setServidores([]);
+    }
+    setLoadingServidores(false);
+  };
+
+  // Buscar servidores ao abrir o select ou ao digitar
+  useEffect(() => {
+    if (buscaServidor.length >= 6) {
+      buscarServidores(buscaServidor);
+    } else {
+      setServidores([]);
+    }
+  }, [buscaServidor]);
+
   // Preencher nome e CPF ao selecionar servidor
   useEffect(() => {
     if (data.adm_servidores_id) {
       const servidor = servidores.find(s => s.adm_servidores_id === Number(data.adm_servidores_id));
       if (servidor) {
-        setData('doc_portarias_servidor_nome', servidor.pessoa.ger_pessoas_nome);
-        setData('doc_portarias_servidor_cpf', servidor.pessoa.ger_pessoas_cpf);
+        setData('doc_portarias_servidor_nome', servidor.ger_pessoas_nome);
+        setData('doc_portarias_servidor_cpf', servidor.ger_pessoas_cpf);
       }
     } else {
       setData('doc_portarias_servidor_nome', '');
@@ -189,11 +217,25 @@ const CadastroPortarias: React.FC = () => {
                       <SelectValue placeholder="Selecione o servidor" />
                     </SelectTrigger>
                     <SelectContent>
+                      <div className="p-2">
+                        <Input
+                          placeholder="Buscar servidor por nome ou CPF"
+                          value={buscaServidor}
+                          onChange={e => setBuscaServidor(e.target.value)}
+                          autoFocus
+                        />
+                      </div>
+                      {loadingServidores && (
+                        <div className="p-2 text-sm text-gray-500">Carregando...</div>
+                      )}
                       {servidores.map(servidor => (
                         <SelectItem key={servidor.adm_servidores_id} value={String(servidor.adm_servidores_id)}>
-                          {servidor.pessoa.ger_pessoas_nome}
+                          {servidor.ger_pessoas_nome} ({servidor.ger_pessoas_cpf})
                         </SelectItem>
                       ))}
+                      {!loadingServidores && servidores.length === 0 && buscaServidor && (
+                        <div className="p-2 text-sm text-gray-500">Nenhum servidor encontrado</div>
+                      )}
                     </SelectContent>
                   </Select>
                   {errors.adm_servidores_id && (

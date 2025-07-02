@@ -119,7 +119,7 @@ class PortariasController extends Controller
 
     public function create()
     {
-        $servidores = Servidores::with('pessoa')->get();
+        //$servidores = Servidores::with('pessoa')->get();
         $cargos = Cargo::all();
         $secretarias = Secretaria::all();
         $tipos = TipoPortaria::where('doc_tiposportaria_status', true)->get();
@@ -130,7 +130,7 @@ class PortariasController extends Controller
         $numeroFormatado = $proximoNumero . '.' . $hoje->format('d') . '.' . $hoje->format('m') . '/' . $hoje->format('Y');
         
         return Inertia::render('Portarias/criar', [
-            'servidores' => $servidores,
+            //'servidores' => $servidores,
             'cargos' => $cargos,
             'secretarias' => $secretarias,
             'tipos' => $tipos,

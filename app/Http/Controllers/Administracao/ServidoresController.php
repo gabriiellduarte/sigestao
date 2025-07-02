@@ -70,4 +70,25 @@ class ServidoresController extends Controller
         return redirect()->route('administracao.servidores.index')
             ->with('success', 'Servidor excluído com sucesso!');
     }
+
+    public function search(Request $request)
+    {
+        $term = $request->input('term');
+        $query = Servidores::with('pessoa');
+        if ($term) {
+            $query->whereHas('pessoa', function ($q) use ($term) {
+                $q->where('ger_pessoas_nome', 'like', "%$term%")
+                  ->orWhere('ger_pessoas_cpf', 'like', "%$term%") ;
+            });
+        }
+        $servidores = $query->limit(20)->get();
+        $result = $servidores->map(function ($servidor) {
+            return [
+                'adm_servidores_id' => $servidor->adm_servidores_id,
+                'ger_pessoas_nome' => $servidor->pessoa->ger_pessoas_nome,
+                'ger_pessoas_cpf' => $servidor->pessoa->ger_pessoas_cpf,
+            ];
+        });
+        return response()->json($result);
+    }
 }
