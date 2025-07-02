@@ -30,7 +30,7 @@ interface Servidor {
 
 interface Cargo {
   adm_cargos_id: number;
-  adm_argos_nome: string;
+  adm_cargos_nome: string;
 }
 
 interface Secretaria {
@@ -146,7 +146,7 @@ const CadastroPortarias: React.FC = () => {
     const tipo = tipos.find(t => t.doc_tiposportaria_id === data.doc_tiposportaria_id)?.doc_tiposportaria_nome || '';
     const nome = data.doc_portarias_servidor_nome;
     const cpf = data.doc_portarias_servidor_cpf;
-    const cargo = cargos.find(c => c.adm_cargos_id === data.adm_cargos_id)?.adm_argos_nome || '';
+    const cargo = cargos.find(c => c.adm_cargos_id === data.adm_cargos_id)?.adm_cargos_nome || '';
     const secretaria = secretarias.find(s => s.adm_secretarias_id === data.adm_secretarias_id)?.adm_secretarias_nome || '';
     const descricao = gerarDescricao(tipo, nome, cpf, cargo, secretaria);
     if (!isEditing || !portaria?.doc_portarias_descricao) {
@@ -281,7 +281,7 @@ const CadastroPortarias: React.FC = () => {
                     <SelectContent>
                       {cargos.map(cargo => (
                         <SelectItem key={cargo.adm_cargos_id} value={String(cargo.adm_cargos_id)}>
-                          {cargo.adm_argos_nome}
+                          {cargo.adm_cargos_nome}
                         </SelectItem>
                       ))}
                     </SelectContent>

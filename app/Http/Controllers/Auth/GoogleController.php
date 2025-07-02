@@ -23,7 +23,8 @@ class GoogleController extends Controller
             //->with([
             //    'access_type' => 'offline',
             //    'prompt' => 'consent select_account'])
-            return Socialite::driver('google')
+            return Socialite::driver('google')->with([
+                    'access_type' => 'offline'])
                 ->scopes(['email', 'profile','https://www.googleapis.com/auth/drive','https://www.googleapis.com/auth/documents'])
                 ->redirect();
         } catch (\Exception $e) {
@@ -47,7 +48,7 @@ class GoogleController extends Controller
 
             //VERISCAR PARA AJUSTAR - DÁ PRA MELHORAR AQUI
             if ($finduser) {
-                Auth::login(user: $finduser);
+                
                 $emailsepara = explode('@',string: $usergoogle->getEmail())[0];
                 $finduser->avatar = $usergoogle->getAvatar();
                 $finduser->user = $emailsepara;
@@ -56,7 +57,7 @@ class GoogleController extends Controller
                 $finduser->refresh_token = $usergoogle->refreshToken;
                 $finduser->update();
                     
-                
+                Auth::login(user: $finduser);
                 Log::info('Usuário existente encontrado e logado: ' . $finduser->email);
                 
                 // Verifica se o usuário é super adm ou tem acesso liberado no sistema.

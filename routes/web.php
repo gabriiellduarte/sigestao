@@ -25,7 +25,7 @@ use App\Http\Controllers\Regulacao\RegTipoAtendimentoController;
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::redirect('/', destination: 'settings/profile');
+    Route::redirect('/', destination: 'dashboard');
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $permissoes = $user->getAllPermissions();
