@@ -24,11 +24,20 @@ class CargoController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'adm_argos_nome' => 'required|string|max:100',
+            'adm_cargos_nome' => 'required|string|max:100',
             'adm_cargos_abreviacao' => 'required|string|max:100',
         ]);
 
-        Cargo::create($validated);
+        $cargo = Cargo::create($validated);
+
+        // Se for requisição AJAX/Inertia, retorna JSON
+        if ($request->wantsJson() || $request->ajax()) {
+            
+            return response()->json([
+                'success' => true,
+                'cargo' => $cargo
+            ]);
+        }
 
         return redirect()->route('administracao.cargos.index')
             ->with('success', 'Cargo cadastrado com sucesso!');
@@ -44,7 +53,7 @@ class CargoController extends Controller
     public function update(Request $request, Cargo $cargo)
     {
         $validated = $request->validate([
-            'adm_argos_nome' => 'required|string|max:100',
+            'adm_cargos_nome' => 'required|string|max:100',
             'adm_cargos_abreviacao' => 'required|string|max:100',
         ]);
 

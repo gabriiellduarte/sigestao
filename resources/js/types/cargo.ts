@@ -8,7 +8,7 @@ export interface Cargo {
 }
 
 export interface CargoFormData {
-    adm_argos_nome: string;
+    adm_cargos_nome: string;
     adm_cargos_abreviacao: string | null;
     [key: string]: any;
 } 

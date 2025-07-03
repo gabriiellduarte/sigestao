@@ -16,6 +16,7 @@ import { Link, useForm, usePage, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import Modal from '@/components/Modal';
 
 interface Pessoa {
   ger_pessoas_id: number;
@@ -82,14 +83,18 @@ function gerarDescricao(tipo: string, nome: string, cpf: string, cargo: string, 
 }
 
 const CadastroPortarias: React.FC = () => {
-  const page = usePage();
-  const { portaria, cargos, secretarias, tipos, next_numero_portaria } = page.props;
-  const flash = page.props.flash;
+  const page = usePage<PortariasFormPageProps>();
+  const { portaria, cargos, secretarias, tipos, next_numero_portaria, flash } = page.props;
   const isEditing = !!portaria;
 
   const hoje = new Date().toISOString().slice(0, 10);
 
   const [excluirGoogleDocs, setExcluirGoogleDocs] = useState(false);
+  const [showModalCargo, setShowModalCargo] = useState(false);
+  const [novoCargoNome, setNovoCargoNome] = useState('');
+  const [novoCargoAbreviacao, setNovoCargoAbreviacao] = useState('');
+  const [salvandoCargo, setSalvandoCargo] = useState(false);
+  const [erroCargo, setErroCargo] = useState('');
 
   const { data, setData, post, put, processing, errors, reset } = useForm<PortariaFormData>({
     doc_portarias_numero: isEditing
@@ -235,6 +240,56 @@ const CadastroPortarias: React.FC = () => {
     }
   };
 
+  // Função para cadastrar cargo rápido
+  const cadastrarCargoRapido = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSalvandoCargo(true);
+    setErroCargo('');
+    try {
+      const formData = new FormData();
+      formData.append('adm_cargos_nome', novoCargoNome);
+      formData.append('adm_cargos_abreviacao', novoCargoAbreviacao);
+
+      const response = await fetch('/administracao/cargos', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (data && data.cargo) {
+        if (Array.isArray(cargos)) {
+          cargos.push(data.cargo);
+        }
+        setData('adm_cargos_id', data.cargo.adm_cargos_id);
+        setShowModalCargo(false);
+        setNovoCargoNome('');
+        setNovoCargoAbreviacao('');
+        setSalvandoCargo(false);
+        setErroCargo('');
+        toast.success('Cargo cadastrado com sucesso!');
+      } else {
+        setErroCargo('Erro ao cadastrar cargo');
+        setSalvandoCargo(false);
+      }
+    } catch (err) {
+      setErroCargo('Erro ao cadastrar cargo');
+      setSalvandoCargo(false);
+    }
+  };
+
+  const [buscaCargo, setBuscaCargo] = useState('');
+
+  // Função para filtrar cargos
+  const cargosFiltrados = Array.isArray(cargos)
+    ? cargos.filter(cargo =>
+        cargo.adm_cargos_nome.toLowerCase().includes(buscaCargo.toLowerCase())
+      )
+    : [];
+
   return (
     <AppLayout>
       <div className="space-y-4 md:space-y-6 p-4">
@@ -342,21 +397,37 @@ const CadastroPortarias: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="adm_cargos_id">Cargo *</Label>
-                  <Select
-                    value={data.adm_cargos_id ? String(data.adm_cargos_id) : ''}
-                    onValueChange={value => setData('adm_cargos_id', Number(value))}
-                  >
-                    <SelectTrigger className={errors.adm_cargos_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione o cargo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cargos.map(cargo => (
-                        <SelectItem key={cargo.adm_cargos_id} value={String(cargo.adm_cargos_id)}>
-                          {cargo.adm_cargos_nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2 items-center">
+                    <Select
+                      value={data.adm_cargos_id ? String(data.adm_cargos_id) : ''}
+                      onValueChange={value => setData('adm_cargos_id', Number(value))}
+                    >
+                      <SelectTrigger className={errors.adm_cargos_id ? 'border-red-500' : ''}>
+                        <SelectValue placeholder="Selecione o cargo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="p-2">
+                          <Input
+                            placeholder="Buscar cargo"
+                            value={buscaCargo}
+                            onChange={e => setBuscaCargo(e.target.value)}
+                            autoFocus
+                          />
+                        </div>
+                        {cargosFiltrados.map(cargo => (
+                          <SelectItem key={cargo.adm_cargos_id} value={String(cargo.adm_cargos_id)}>
+                            {cargo.adm_cargos_nome}
+                          </SelectItem>
+                        ))}
+                        {cargosFiltrados.length === 0 && (
+                          <div className="p-2 text-sm text-gray-500">Nenhum cargo encontrado</div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowModalCargo(true)}>
+                      + Novo
+                    </Button>
+                  </div>
                   {errors.adm_cargos_id && (
                     <p className="text-sm text-red-500">{errors.adm_cargos_id}</p>
                   )}
@@ -482,6 +553,23 @@ const CadastroPortarias: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+      <Modal show={showModalCargo} onClose={() => setShowModalCargo(false)} title="Novo Cargo">
+        <form onSubmit={cadastrarCargoRapido} className="space-y-4">
+          <div>
+            <Label htmlFor="novoCargoNome">Nome do Cargo</Label>
+            <Input id="novoCargoNome" value={novoCargoNome} onChange={e => setNovoCargoNome(e.target.value)} required />
+          </div>
+          <div>
+            <Label htmlFor="novoCargoAbreviacao">Abreviação</Label>
+            <Input id="novoCargoAbreviacao" value={novoCargoAbreviacao} onChange={e => setNovoCargoAbreviacao(e.target.value)} />
+          </div>
+          {erroCargo && <p className="text-sm text-red-500">{erroCargo}</p>}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setShowModalCargo(false)}>Cancelar</Button>
+            <Button type="submit" disabled={salvandoCargo}>{salvandoCargo ? 'Salvando...' : 'Salvar'}</Button>
+          </div>
+        </form>
+      </Modal>
     </AppLayout>
   );
 };

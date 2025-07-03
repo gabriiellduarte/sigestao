@@ -53,7 +53,7 @@ export default function Index({ auth, cargos }: Props) {
                                 <TableBody>
                                     {cargos.map((cargo) => (
                                         <TableRow key={cargo.adm_cargos_id}>
-                                            <TableCell>{cargo.adm_argos_nome}</TableCell>
+                                            <TableCell>{cargo.adm_cargos_nome}</TableCell>
                                             <TableCell>{cargo.adm_cargos_abreviacao}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end space-x-2">
