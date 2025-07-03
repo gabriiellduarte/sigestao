@@ -25,7 +25,12 @@ class GoogleController extends Controller
             //    'prompt' => 'consent select_account'])
             return Socialite::driver('google')->with([
                     'access_type' => 'offline'])
-                ->scopes(['email', 'profile','https://www.googleapis.com/auth/drive','https://www.googleapis.com/auth/documents'])
+                ->scopes(
+                [
+                    'email', 
+                    'profile',
+                    'https://www.googleapis.com/auth/drive',
+                    'https://www.googleapis.com/auth/documents'])
                 ->redirect();
         } catch (\Exception $e) {
             Log::error('Erro no redirecionamento do Google: ' . $e->getMessage());
@@ -35,6 +40,7 @@ class GoogleController extends Controller
 
     public function handleGoogleCallback()
     {
+        $tempermissao = false;
         try {
             Log::info('Iniciando callback do Google');
             Log::info('URL de callback: ' . request()->fullUrl());
@@ -48,9 +54,9 @@ class GoogleController extends Controller
 
             //VERISCAR PARA AJUSTAR - DÁ PRA MELHORAR AQUI
             // Verifica se o usuário é super adm ou tem acesso liberado no sistema.
-            $tempermissao = $finduser->hasAnyPermission(['Super Administrador','Acesso Liberado']);
+            
             if ($finduser) {
-                
+                $tempermissao = $finduser->hasAnyPermission(['Super Administrador','Acesso Liberado']);
                 $emailsepara = explode('@',string: $usergoogle->getEmail())[0];
                 $finduser->avatar = $usergoogle->getAvatar();
                 $finduser->user = $emailsepara;
@@ -90,6 +96,7 @@ class GoogleController extends Controller
                     $newUser['avatar'] = $usergoogle->getAvatar();
                     $newUser->save();
                 }
+                $tempermissao = $newUser->hasAnyPermission(['Super Administrador','Acesso Liberado']);
                 
                 Auth::login($newUser);
 

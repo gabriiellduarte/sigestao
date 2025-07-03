@@ -83,7 +83,6 @@ const CadastroPortarias: React.FC = () => {
 
   const hoje = new Date().toISOString().slice(0, 10);
 
-  const [descricaoEditada, setDescricaoEditada] = useState(false);
   const [excluirGoogleDocs, setExcluirGoogleDocs] = useState(false);
 
   const { data, setData, post, put, processing, errors, reset } = useForm<PortariaFormData>({
@@ -97,7 +96,9 @@ const CadastroPortarias: React.FC = () => {
     adm_cargos_id: portaria?.adm_cargos_id || '',
     adm_secretarias_id: portaria?.adm_secretarias_id || '',
     doc_tiposportaria_id: portaria?.doc_tiposportaria_id || '',
-    doc_portarias_data: portaria?.doc_portarias_data || hoje,
+    doc_portarias_data: isEditing && portaria?.doc_portarias_data
+      ? new Date(portaria.doc_portarias_data).toISOString().slice(0, 10)
+      : hoje,
     doc_portarias_descricao: portaria?.doc_portarias_descricao || '',
     doc_portarias_link_documento: portaria?.doc_portarias_link_documento || '',
   });
@@ -174,16 +175,13 @@ const CadastroPortarias: React.FC = () => {
 
   // Atualizar descrição automaticamente
   useEffect(() => {
-    if (descricaoEditada) return;
     const tipo = tipos.find(t => t.doc_tiposportaria_id === data.doc_tiposportaria_id)?.doc_tiposportaria_nome || '';
     const nome = data.doc_portarias_servidor_nome;
     const cpf = data.doc_portarias_servidor_cpf;
     const cargo = cargos.find(c => c.adm_cargos_id === data.adm_cargos_id)?.adm_cargos_nome || '';
     const secretaria = secretarias.find(s => s.adm_secretarias_id === data.adm_secretarias_id)?.adm_secretarias_nome || '';
     const descricao = gerarDescricao(tipo, nome, cpf, cargo, secretaria);
-    if (!isEditing || !portaria?.doc_portarias_descricao) {
-      setData('doc_portarias_descricao', descricao);
-    }
+    setData('doc_portarias_descricao', descricao);
     // eslint-disable-next-line
   }, [data.doc_tiposportaria_id, data.doc_portarias_servidor_nome, data.doc_portarias_servidor_cpf, data.adm_cargos_id, data.adm_secretarias_id]);
 
@@ -417,10 +415,7 @@ const CadastroPortarias: React.FC = () => {
                   <Textarea
                     id="doc_portarias_descricao"
                     value={data.doc_portarias_descricao}
-                    onChange={e => {
-                      setData('doc_portarias_descricao', e.target.value);
-                      setDescricaoEditada(true);
-                    }}
+                    onChange={e => setData('doc_portarias_descricao', e.target.value)}
                     placeholder="Descrição da portaria"
                   />
                   {errors.doc_portarias_descricao && (

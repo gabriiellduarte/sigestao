@@ -238,13 +238,12 @@ class PortariasController extends Controller
         DB::beginTransaction();
         try {
             $validated = $request->validate([
-                'doc_portarias_numero' => 'required|string|max:255',
                 'doc_portarias_servidor_nome' => 'required|string|max:255',
                 'doc_portarias_servidor_cpf' => 'required|string|max:20',
                 'doc_portarias_status' => 'required|string|max:30',
                 'adm_servidores_id' => 'required|exists:adm_servidores,adm_servidores_id',
                 'adm_cargos_id' => 'required|exists:adm_cargos,adm_cargos_id',
-                'adm_secretarias_id' => 'required|exists:adm_secretarias_id',
+                'adm_secretarias_id' => 'required|exists:adm_secretarias,adm_secretarias_id',
                 'doc_tiposportaria_id' => 'required|exists:doc_tiposportaria,doc_tiposportaria_id',
                 'doc_portarias_data' => 'required|date',
                 'doc_portarias_descricao' => 'nullable|string',
@@ -254,6 +253,19 @@ class PortariasController extends Controller
             $portaria = Portaria::findOrFail($id);
             $portaria->update($validated);
 
+            // Antes de criar o novo documento, excluir o antigo se existir
+            if ($portaria->doc_portarias_link_documento) {
+                try {
+                    if (preg_match('/\/d\/([a-zA-Z0-9-_]+)/', $portaria->doc_portarias_link_documento, $matches)) {
+                        $docId = $matches[1];
+                        $user = Auth::user();
+                        $googleDocs = new GoogleDocsService($user->access_token, $user->refresh_token);
+                        $googleDocs->excluirDocumento($docId);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Erro ao excluir Google Docs antigo (update): ' . $e->getMessage());
+                }
+            }
             // Gerar documento no Google Docs após update
             $user = Auth::user();
             $templateId = '1D-wczn9PkD7QStim_NbHQ44yDhXiq9as4HI9em5gFfw'; // ID do template
@@ -266,10 +278,9 @@ class PortariasController extends Controller
                 'numero' => $portaria->doc_portarias_numero,
                 'data' => $portaria->doc_portarias_data,
                 'ano' => $portaria->doc_portarias_data->format('Y'),
-                'mes' => $portaria->doc_portarias_data->format('F'),
+                'mes' => $portaria->doc_portarias_data->translatedFormat('F'),
                 'dia' => $portaria->doc_portarias_data->format('d'),
-                'mesupper' => $portaria->doc_portarias_data->format('F')->upper(),
-                'mesliteral' => $this->getMesLiteral($portaria->doc_portarias_data),
+                'mesupper' => strtoupper($portaria->doc_portarias_data->translatedFormat('F')),
                 'diaLiteral' => $this->getDiaLiteral($portaria->doc_portarias_data),
                 // Adicione outros campos se necessário
             ];
@@ -280,14 +291,14 @@ class PortariasController extends Controller
             } catch (\Exception $e) {
                 DB::rollBack();
                 \Log::error('Usuario:'.$user->id.' Erro ao gerar documento Google Docs (update): ' . $e->getMessage());
-                return redirect()->back()->with('error', 'Erro ao gerar o documento da portaria. Nenhuma alteração foi salva. Detalhe: ' . $e->getMessage());
+                return redirect()->back()->with('erro', 'Erro ao gerar o documento da portaria. Nenhuma alteração foi salva. Detalhe: ' . $e->getMessage());
             }
             DB::commit();
             return redirect()->route('documentos.portarias.index')
-                ->with('success', 'Portaria atualizada com sucesso!');
+                ->with('sucesso', 'Portaria atualizada com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Erro ao atualizar portaria: ' . $e->getMessage());
+            return redirect()->back()->with('erro', 'Erro ao atualizar portaria: ' . $e->getMessage());
         }
     }
 
