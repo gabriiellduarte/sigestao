@@ -32,7 +32,8 @@ export default function Login({ status, canResetPassword}: LoginProps) {
         password: '',
         remember: false,
     });
-
+    const props = usePage().props;
+    console.info('props',props);
     const [customErrors, setCustomErrors] = useState<{ email?: string }>({});
 
     const { flash } = usePage<FlashProps>().props;

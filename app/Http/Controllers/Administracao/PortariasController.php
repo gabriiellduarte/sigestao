@@ -104,11 +104,28 @@ class PortariasController extends Controller
         return $cores[$tipo] ?? 'bg-gray-500';
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $portarias = Portaria::with(['servidor.pessoa', 'cargo', 'secretaria', 'tipoPortaria', 'user'])
-            ->orderByDesc('doc_portarias_data')
-            ->paginate(10);
+        $query = Portaria::with(['servidor.pessoa', 'cargo', 'secretaria', 'tipoPortaria', 'user'])
+            ->orderByDesc('doc_portarias_data');
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('doc_portarias_servidor_nome', 'like', "%$search%")
+                  ->orWhereHas('tipoPortaria', function($q2) use ($search) {
+                      $q2->where('doc_tiposportaria_nome', 'like', "%$search%");
+                  })
+                  ->orWhereHas('cargo', function($q2) use ($search) {
+                      $q2->where('adm_cargos_nome', 'like', "%$search%");
+                  })
+                  ->orWhereHas('secretaria', function($q2) use ($search) {
+                      $q2->where('adm_secretarias_nome', 'like', "%$search%");
+                  });
+            });
+        }
+
+        $portarias = $query->paginate(10)->withQueryString();
 
         return Inertia::render('Portarias/index', [
             'portarias' => $portarias

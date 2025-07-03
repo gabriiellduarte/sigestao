@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Eye, ChevronDown, FileText, Building, ExternalLink, PersonStanding, Users, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,14 +62,13 @@ const ListaPortarias: React.FC = () => {
   const [importSuccess, setImportSuccess] = useState<string|null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredPortarias = portarias.data.filter((portaria: Portaria) => {
-    return (
-      (portaria.doc_portarias_servidor_nome && portaria.doc_portarias_servidor_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (portaria.tipo_portaria && portaria.tipo_portaria.doc_tiposportaria_nome && portaria.tipo_portaria.doc_tiposportaria_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (portaria.cargo && portaria.cargo.adm_cargos_nome && portaria.cargo.adm_cargos_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (portaria.secretaria && portaria.secretaria.adm_secretarias_nome && portaria.secretaria.adm_secretarias_nome.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  });
+  // Buscar no backend ao digitar
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      router.get(route('documentos.portarias.index', { search: searchTerm }), undefined, { preserveState: true, replace: true });
+    }, 400);
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
 
   const getStatusColor = (portaria: Portaria) => {
     if (portaria.doc_portarias_status == 'cancelado'){
@@ -241,7 +240,7 @@ const ListaPortarias: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPortarias.map((portaria: Portaria) => (
+                {portarias.data.map((portaria: Portaria) => (
                   <TableRow key={portaria.doc_portarias_id}>
                     <TableCell>{portaria.doc_portarias_numero}</TableCell>
                     <TableCell className="font-medium">{portaria.doc_portarias_servidor_nome}</TableCell>
@@ -300,7 +299,7 @@ const ListaPortarias: React.FC = () => {
             )}
           </nav>
         </div>
-        {filteredPortarias.length === 0 && (
+        {portarias.data.length === 0 && (
           <div className="text-center py-8">
             <p className="text-gray-500">Nenhuma portaria encontrada.</p>
           </div>

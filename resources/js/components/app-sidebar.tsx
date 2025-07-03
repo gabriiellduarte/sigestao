@@ -25,7 +25,7 @@ const mainNavItems: NavItem[] = [
         title: 'Portarias',
         href: '/documentos/portarias',
         icon: ScrollText,
-        permissions: 'gerenciar usuários'
+        permissions: 'portarias.visualizar'
     },
     {
         title: 'Administração',
@@ -68,7 +68,7 @@ const mainNavItems: NavItem[] = [
         title: 'Regulação',
         href: 'regulacao',
         icon: ClipboardListIcon,
-        permissions: 'acessar sistema',
+        permissions: 'regulacao.visualizar',
         children: [
             {
                 title: 'Dashboard',

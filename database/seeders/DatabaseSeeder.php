@@ -67,5 +67,49 @@ class DatabaseSeeder extends Seeder
                 'adm_secretarias_status' => 1,
             ]);
         }
+
+        // 4. Cria função e permissões para REGULAÇÃO
+        $permissoesRegulacao = [
+            ['name' => 'regulacao.visualizar', 'descricao' => 'Visualizar Regulação'],
+            ['name' => 'regulacao.criar', 'descricao' => 'Criar Regulação'],
+            ['name' => 'regulacao.editar', 'descricao' => 'Editar Regulação'],
+            ['name' => 'regulacao.excluir', 'descricao' => 'Excluir Regulação'],
+            ['name' => 'regulacao.agendar_pacientes', 'descricao' => 'Agendar Pacientes'],
+            ['name' => 'regulacao.criar_vagas', 'descricao' => 'Criar Vagas'],
+        ];
+        foreach ($permissoesRegulacao as $perm) {
+            Permission::firstOrCreate(['name' => $perm['name']], [
+                'descricao' => $perm['descricao'],
+                'guard_name' => 'web',
+            ]);
+        }
+        $roleRegulacao = Role::firstOrCreate([
+            'name' => 'regulacao',
+        ], [
+            'descricao' => 'Função para Regulação',
+            'guard_name' => 'web',
+        ]);
+        $roleRegulacao->syncPermissions(array_column($permissoesRegulacao, 'name'));
+
+        // 5. Cria função e permissões para PORTARIAS
+        $permissoesPortarias = [
+            ['name' => 'portarias.visualizar', 'descricao' => 'Visualizar Portarias'],
+            ['name' => 'portarias.criar', 'descricao' => 'Criar Portarias'],
+            ['name' => 'portarias.editar', 'descricao' => 'Editar Portarias'],
+            ['name' => 'portarias.excluir', 'descricao' => 'Excluir Portarias'],
+        ];
+        foreach ($permissoesPortarias as $perm) {
+            Permission::firstOrCreate(['name' => $perm['name']], [
+                'descricao' => $perm['descricao'],
+                'guard_name' => 'web',
+            ]);
+        }
+        $rolePortarias = Role::firstOrCreate([
+            'name' => 'portarias',
+        ], [
+            'descricao' => 'Função para Portarias',
+            'guard_name' => 'web',
+        ]);
+        $rolePortarias->syncPermissions(array_column($permissoesPortarias, 'name'));
     }
 }

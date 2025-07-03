@@ -47,6 +47,8 @@ class GoogleController extends Controller
 
 
             //VERISCAR PARA AJUSTAR - DÁ PRA MELHORAR AQUI
+            // Verifica se o usuário é super adm ou tem acesso liberado no sistema.
+            $tempermissao = $finduser->hasAnyPermission(['Super Administrador','Acesso Liberado']);
             if ($finduser) {
                 
                 $emailsepara = explode('@',string: $usergoogle->getEmail())[0];
@@ -59,16 +61,14 @@ class GoogleController extends Controller
                 }
                 $finduser->update();
                     
-                Auth::login(user: $finduser);
-                Log::info('Usuário existente encontrado e logado: ' . $finduser->email);
-                
-                // Verifica se o usuário é super adm ou tem acesso liberado no sistema.
-                $tempermissao = $finduser->hasAnyPermission(['Super Administrador','Acesso Liberado']);
                 if (!$tempermissao) {
-                    Auth::logout();
+                    //Auth::logout();
                     Log::info('Usuário não tem permissão para acessar o sistema: ' . $finduser->email);
                     return redirect()->route('login')
                         ->with('message', 'Seu acesso está pendente de liberação pelo administrador. Por favor, aguarde.');
+                }else{
+                    Auth::login(user: $finduser);
+                    Log::info('Usuário existente encontrado e logado: ' . $finduser->email);
                 }
             } else {
                 $emailsepara = explode('@',string: $usergoogle->getEmail())[0];
@@ -92,13 +92,15 @@ class GoogleController extends Controller
                 }
                 
                 Auth::login($newUser);
-                
-                // Verifica se o novo usuário tem permissão para acessar o sistema
-                if (!$newUser->hasAllRoles(Role::all())) {
-                    Auth::logout();
+
+                if($tempermissao){
+                    Auth::login($finduser);
+                    Log::info('Usuário existente encontrado e logado: ' . $finduser->email);
+                }else{
+                    //Auth::logout();
                     Log::info('Novo usuário não tem permissão para acessar o sistema: ' . $newUser->email);
                     return redirect()->route('login')
-                        ->with('error', 'Seu acesso está pendente de liberação pelo administrador. Por favor, aguarde.');
+                        ->with('erro', 'Seu acesso está pendente de liberação pelo administrador. Por favor, aguarde.');
                 }
             }
 
@@ -111,7 +113,7 @@ class GoogleController extends Controller
             Log::error('Request Input: ' . json_encode(request()->all()));
             
             return redirect()->route('login')
-                ->with('error', 'Erro ao fazer login com Google. Por favor, tente novamente.');
+                ->with('erro', 'Erro ao fazer login com Google. Por favor, tente novamente.');
         }
     }
 } 
