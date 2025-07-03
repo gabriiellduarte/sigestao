@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TipoPortaria;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
 
 class TipoPortariaController extends Controller
 {
@@ -26,12 +27,14 @@ class TipoPortariaController extends Controller
     {
         $request->validate([
             'doc_tiposportaria_nome' => 'required|string',
-            'doc_tiposportaria_status' => 'boolean'
+            'doc_tiposportaria_status' => 'boolean',
+            'doc_tiposportaria_iddocumento' => 'string',
         ]);
 
         TipoPortaria::create([
             'doc_tiposportaria_nome' => $request->doc_tiposportaria_nome,
-            'doc_tiposportaria_status' => $request->doc_tiposportaria_status ?? true
+            'doc_tiposportaria_status' => $request->doc_tiposportaria_status ?? true,
+            'doc_tiposportaria_iddocumento' => $request->doc_tiposportaria_iddocumento,
         ]);
 
         return redirect()->route('documentos.tiposdeportaria.index')
@@ -46,20 +49,28 @@ class TipoPortariaController extends Controller
         ]);
     }
 
-    public function update(Request $request, TipoPortaria $tipoPortaria)
+    public function update(Request $request, $id)
     {
+        $tipoportaria = TipoPortaria::find($id);
         $request->validate([
-            'doc_tiposportaria_nome' => 'required|string|max:255|unique:doc_tiposportaria,doc_tiposportaria_nome,' . $tipoPortaria->doc_tiposportaria_id . ',doc_tiposportaria_id',
-            'doc_tiposportaria_status' => 'boolean'
+            'doc_tiposportaria_nome' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('doc_tiposportaria', 'doc_tiposportaria_nome')->ignore($id, 'doc_tiposportaria_id'),
+            ],
+            'doc_tiposportaria_status' => 'boolean',
+            'doc_tiposportaria_iddocumento' => 'string',
         ]);
 
-        $tipoPortaria->update([
+        $tipoportaria->update([
             'doc_tiposportaria_nome' => $request->doc_tiposportaria_nome,
-            'doc_tiposportaria_status' => $request->doc_tiposportaria_status
+            'doc_tiposportaria_status' => $request->doc_tiposportaria_status,
+            'doc_tiposportaria_iddocumento' => $request->doc_tiposportaria_iddocumento,
         ]);
 
         return redirect()->route('documentos.tiposdeportaria.index')
-            ->with('success', 'Tipo de portaria atualizado com sucesso!');
+            ->with('sucesso', 'Tipo de portaria atualizado com sucesso!');
     }
 
     public function destroy(TipoPortaria $tipoPortaria)

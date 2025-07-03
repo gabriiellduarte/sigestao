@@ -69,6 +69,49 @@ class GoogleDocsService
         ]);
         $this->docsService->documents->batchUpdate($documentId, $batchUpdateRequest);
 
+        // --- NOVO BLOCO: Aplicar negrito na descrição ---
+        $descricao = $dados['descricao'] ?? null;
+        /*
+        if ($descricao) {
+            $document = $this->docsService->documents->get($documentId);
+            $content = $document->getBody()->getContent();
+            $startIndex = null;
+            $endIndex = null;
+
+            foreach ($content as $element) {
+                if (isset($element['paragraph']['elements'])) {
+                    foreach ($element['paragraph']['elements'] as $el) {
+                        $textRun = $el['textRun']['content'] ?? '';
+                        $pos = mb_strpos($textRun, $descricao);
+                        if ($pos !== false) {
+                            $startIndex = $el['startIndex'] + $pos;
+                            $endIndex = $startIndex + mb_strlen($descricao);
+                            break 2;
+                        }
+                    }
+                }
+            }
+
+            if ($startIndex !== null && $endIndex !== null) {
+                $boldRequest = new Google_Service_Docs_Request([
+                    'updateTextStyle' => [
+                        'range' => [
+                            'startIndex' => $startIndex,
+                            'endIndex' => $endIndex,
+                        ],
+                        'textStyle' => [
+                            'bold' => true,
+                        ],
+                        'fields' => 'bold',
+                    ]
+                ]);
+                $this->docsService->documents->batchUpdate($documentId, new Google_Service_Docs_BatchUpdateDocumentRequest([
+                    'requests' => [$boldRequest],
+                ]));
+            }
+        }*/
+        // --- FIM DO BLOCO ---
+
         // 4. Retornar o link do documento
         return 'https://docs.google.com/document/d/' . $documentId . '/edit';
     }

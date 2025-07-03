@@ -16,6 +16,7 @@ export default function Form({ tipoPortaria, isEditing = false, ...props }: Prop
   const { data, setData, post, put, processing, errors } = useForm<TipoPortariaFormData>({
     doc_tiposportaria_nome: tipoPortaria?.doc_tiposportaria_nome || '',
     doc_tiposportaria_status: tipoPortaria?.doc_tiposportaria_status ?? true,
+    doc_tiposportaria_iddocumento: tipoPortaria?.doc_tiposportaria_iddocumento || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,9 +46,25 @@ export default function Form({ tipoPortaria, isEditing = false, ...props }: Prop
               onChange={(e) => setData('doc_tiposportaria_nome', e.target.value)}
               placeholder="Ex: Nomeação, Exoneração, Designação"
               className={errors.doc_tiposportaria_nome ? 'border-red-500' : ''}
+              required
             />
             {errors.doc_tiposportaria_nome && (
               <p className="text-sm text-red-500">{errors.doc_tiposportaria_nome}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="doc_tiposportaria_iddocumento">ID do modelo de Documento (Google Docs)</Label>
+            <Input
+              id="doc_tiposportaria_iddocumento"
+              value={data.doc_tiposportaria_iddocumento || ''}
+              onChange={e => setData('doc_tiposportaria_iddocumento', e.target.value)}
+              placeholder="ID do documento do Google Docs (opcional)"
+              className={errors.doc_tiposportaria_iddocumento ? 'border-red-500' : ''}
+              required
+            />
+            {errors.doc_tiposportaria_iddocumento && (
+              <p className="text-sm text-red-500">{errors.doc_tiposportaria_iddocumento}</p>
             )}
           </div>
 

@@ -183,7 +183,9 @@ class PortariasController extends Controller
 
             // Gerar documento no Google Docs
             $user = Auth::user();
-            $templateId = '1e_CAQ3B1dGyUwWbuA0HDtvaLr3QttSszCwvQc5PNuBU'; // ID do template
+            // Buscar o templateId do tipo de portaria
+            $tipoPortaria = TipoPortaria::find($portaria->doc_tiposportaria_id);
+            $templateId = $tipoPortaria && $tipoPortaria->doc_tiposportaria_iddocumento ? $tipoPortaria->doc_tiposportaria_iddocumento : '1e_CAQ3B1dGyUwWbuA0HDtvaLr3QttSszCwvQc5PNuBU'; // fallback
             $dados = [
                 'tipo' => optional($portaria->tipoPortaria)->doc_tiposportaria_nome ?? '',
                 'nome' => $portaria->doc_portarias_servidor_nome,
@@ -195,6 +197,7 @@ class PortariasController extends Controller
                 'ano' => $portaria->doc_portarias_data->format('Y'),
                 'mes' => $portaria->doc_portarias_data->translatedFormat('F'),
                 'dia' => $portaria->doc_portarias_data->format('d'),
+                'descricao' =>$portaria->doc_portarias_descricao,
                 'mesupper' => strtoupper($portaria->doc_portarias_data->translatedFormat('F')),
                 'diaLiteral' => $this->getDiaLiteral($portaria->doc_portarias_data),
                 // Adicione outros campos se necessário
@@ -266,9 +269,10 @@ class PortariasController extends Controller
                     \Log::error('Erro ao excluir Google Docs antigo (update): ' . $e->getMessage());
                 }
             }
-            // Gerar documento no Google Docs após update
             $user = Auth::user();
-            $templateId = '1D-wczn9PkD7QStim_NbHQ44yDhXiq9as4HI9em5gFfw'; // ID do template
+            // Buscar o templateId do tipo de portaria
+            $tipoPortaria = TipoPortaria::find($portaria->doc_tiposportaria_id);
+            $templateId = $tipoPortaria && $tipoPortaria->doc_tiposportaria_iddocumento ? $tipoPortaria->doc_tiposportaria_iddocumento : '1D-wczn9PkD7QStim_NbHQ44yDhXiq9as4HI9em5gFfw'; // fallback
             $dados = [
                 'tipo' => optional($portaria->tipoPortaria)->doc_tiposportaria_nome ?? '',
                 'nome' => $portaria->doc_portarias_servidor_nome,
@@ -280,6 +284,7 @@ class PortariasController extends Controller
                 'ano' => $portaria->doc_portarias_data->format('Y'),
                 'mes' => $portaria->doc_portarias_data->translatedFormat('F'),
                 'dia' => $portaria->doc_portarias_data->format('d'),
+                'descricao' =>$portaria->doc_portarias_descricao,
                 'mesupper' => strtoupper($portaria->doc_portarias_data->translatedFormat('F')),
                 'diaLiteral' => $this->getDiaLiteral($portaria->doc_portarias_data),
                 // Adicione outros campos se necessário

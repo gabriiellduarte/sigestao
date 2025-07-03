@@ -15,7 +15,8 @@ class TipoPortaria extends Model
 
     protected $fillable = [
         'doc_tiposportaria_nome',
-        'doc_tiposportaria_status'
+        'doc_tiposportaria_status',
+        'doc_tiposportaria_iddocumento',
     ];
 
     protected $casts = [
