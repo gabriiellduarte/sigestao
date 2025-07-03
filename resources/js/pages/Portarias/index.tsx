@@ -37,7 +37,7 @@ interface Portaria {
   servidor?: any;
   cargo?: any;
   secretaria?: any;
-  tipoPortaria?: any;
+  tipo_portaria?: any;
   user?: any;
 }
 
@@ -65,7 +65,7 @@ const ListaPortarias: React.FC = () => {
   const filteredPortarias = portarias.data.filter((portaria: Portaria) => {
     return (
       (portaria.doc_portarias_servidor_nome && portaria.doc_portarias_servidor_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (portaria.tipoPortaria && portaria.tipoPortaria.doc_tiposportaria_nome && portaria.tipoPortaria.doc_tiposportaria_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (portaria.tipo_portaria && portaria.tipo_portaria.doc_tiposportaria_nome && portaria.tipo_portaria.doc_tiposportaria_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (portaria.cargo && portaria.cargo.adm_cargos_nome && portaria.cargo.adm_cargos_nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (portaria.secretaria && portaria.secretaria.adm_secretarias_nome && portaria.secretaria.adm_secretarias_nome.toLowerCase().includes(searchTerm.toLowerCase()))
     );
@@ -89,12 +89,6 @@ const ListaPortarias: React.FC = () => {
       return 'Publicada';
     }else{
       return 'Pendente';
-    }
-  };
-
-  const handleDelete = (id: number) => {
-    if (confirm('Deseja realmente excluir esta portaria?')) {
-      router.delete(route('documentos.portarias.destroy', id));
     }
   };
 
@@ -252,7 +246,7 @@ const ListaPortarias: React.FC = () => {
                     <TableCell>{portaria.doc_portarias_numero}</TableCell>
                     <TableCell className="font-medium">{portaria.doc_portarias_servidor_nome}</TableCell>
                     <TableCell>{portaria.doc_portarias_servidor_cpf}</TableCell>
-                    <TableCell>{portaria.tipoPortaria ? portaria.tipoPortaria.doc_tiposportaria_nome : '-'}</TableCell>
+                    <TableCell>{portaria.tipo_portaria ? portaria.tipo_portaria.doc_tiposportaria_nome : '-'}</TableCell>
                     <TableCell>{new Date(portaria.doc_portarias_data).toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell>{portaria.cargo ? portaria.cargo.adm_cargos_nome : '-'}</TableCell>
                     <TableCell>{portaria.secretaria ? portaria.secretaria.adm_secretarias_nome : '-'}</TableCell>
@@ -281,14 +275,7 @@ const ListaPortarias: React.FC = () => {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(portaria.doc_portarias_id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        
                       </div>
                     </TableCell>
                   </TableRow>

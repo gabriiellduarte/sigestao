@@ -103,4 +103,12 @@ class GoogleDocsService
         
         return $pastaDia->getId();
     }
+
+    /**
+     * Exclui um documento do Google Drive pelo ID
+     */
+    public function excluirDocumento($documentId)
+    {
+        return $this->driveService->files->delete($documentId);
+    }
 } 

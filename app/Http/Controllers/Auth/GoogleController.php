@@ -54,7 +54,9 @@ class GoogleController extends Controller
                 $finduser->user = $emailsepara;
                 $finduser->google_id = $usergoogle->id;
                 $finduser->access_token = $usergoogle->token;
-                $finduser->refresh_token = $usergoogle->refreshToken;
+                if($usergoogle->refreshToken){
+                    $finduser->refresh_token = $usergoogle->refreshToken;
+                }
                 $finduser->update();
                     
                 Auth::login(user: $finduser);

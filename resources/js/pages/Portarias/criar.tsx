@@ -15,6 +15,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Link, useForm, usePage, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 interface Pessoa {
   ger_pessoas_id: number;
@@ -75,12 +76,15 @@ function gerarDescricao(tipo: string, nome: string, cpf: string, cargo: string, 
 }
 
 const CadastroPortarias: React.FC = () => {
-  const { portaria, cargos, secretarias, tipos, next_numero_portaria } = usePage<PortariasFormPageProps>().props;
+  const page = usePage();
+  const { portaria, cargos, secretarias, tipos, next_numero_portaria } = page.props;
+  const flash = page.props.flash;
   const isEditing = !!portaria;
 
   const hoje = new Date().toISOString().slice(0, 10);
 
   const [descricaoEditada, setDescricaoEditada] = useState(false);
+  const [excluirGoogleDocs, setExcluirGoogleDocs] = useState(false);
 
   const { data, setData, post, put, processing, errors, reset } = useForm<PortariaFormData>({
     doc_portarias_numero: isEditing
@@ -103,42 +107,70 @@ const CadastroPortarias: React.FC = () => {
   const [buscaServidor, setBuscaServidor] = useState('');
   const [loadingServidores, setLoadingServidores] = useState(false);
 
-  // Função para buscar servidores
+  // Função para buscar servidores (agora retorna os resultados)
   const buscarServidores = async (termo: string) => {
     setLoadingServidores(true);
     try {
       const response = await fetch(`/administracao/servidores-search?term=${encodeURIComponent(termo)}`);
       const data = await response.json();
-      setServidores(data);
+      setLoadingServidores(false);
+      return data;
     } catch (e) {
-      setServidores([]);
+      setLoadingServidores(false);
+      return [];
     }
-    setLoadingServidores(false);
   };
 
-  // Buscar servidores ao abrir o select ou ao digitar
+  // Buscar servidores ao digitar, garantindo que o selecionado sempre aparece
   useEffect(() => {
     if (buscaServidor.length >= 6) {
-      buscarServidores(buscaServidor);
+      buscarServidores(buscaServidor).then((resultados) => {
+        if (data.adm_servidores_id && !resultados.some((s: any) => s.adm_servidores_id === data.adm_servidores_id)) {
+          setServidores([
+            {
+              adm_servidores_id: Number(data.adm_servidores_id),
+              ger_pessoas_nome: data.doc_portarias_servidor_nome,
+              ger_pessoas_cpf: data.doc_portarias_servidor_cpf
+            },
+            ...resultados
+          ]);
+        } else {
+          setServidores(resultados);
+        }
+      });
     } else {
-      setServidores([]);
-    }
-  }, [buscaServidor]);
-
-  // Preencher nome e CPF ao selecionar servidor
-  useEffect(() => {
-    if (data.adm_servidores_id) {
-      const servidor = servidores.find(s => s.adm_servidores_id === Number(data.adm_servidores_id));
-      if (servidor) {
-        setData('doc_portarias_servidor_nome', servidor.ger_pessoas_nome);
-        setData('doc_portarias_servidor_cpf', servidor.ger_pessoas_cpf);
+      if (data.adm_servidores_id) {
+        setServidores([{
+          adm_servidores_id: Number(data.adm_servidores_id),
+          ger_pessoas_nome: data.doc_portarias_servidor_nome,
+          ger_pessoas_cpf: data.doc_portarias_servidor_cpf
+        }]);
+      } else {
+        setServidores([]);
       }
-    } else {
-      setData('doc_portarias_servidor_nome', '');
-      setData('doc_portarias_servidor_cpf', '');
+    }
+  }, [buscaServidor, data.adm_servidores_id, data.doc_portarias_servidor_nome, data.doc_portarias_servidor_cpf]);
+
+  // Garante que o servidor selecionado aparece no select em modo de edição
+  useEffect(() => {
+    if (isEditing && data.adm_servidores_id) {
+      fetch(`/administracao/servidores-search?term=${data.doc_portarias_servidor_nome}`)
+        .then(res => res.json())
+        .then(res => {
+          const encontrado = res.find((s: any) => s.adm_servidores_id === data.adm_servidores_id);
+          if (encontrado) {
+            setServidores([encontrado]);
+          } else {
+            setServidores([{
+              adm_servidores_id: Number(data.adm_servidores_id),
+              ger_pessoas_nome: data.doc_portarias_servidor_nome,
+              ger_pessoas_cpf: data.doc_portarias_servidor_cpf
+            }]);
+          }
+        });
     }
     // eslint-disable-next-line
-  }, [data.adm_servidores_id]);
+  }, []);
 
   // Atualizar descrição automaticamente
   useEffect(() => {
@@ -155,12 +187,47 @@ const CadastroPortarias: React.FC = () => {
     // eslint-disable-next-line
   }, [data.doc_tiposportaria_id, data.doc_portarias_servidor_nome, data.doc_portarias_servidor_cpf, data.adm_cargos_id, data.adm_secretarias_id]);
 
+  // Preencher nome e CPF ao selecionar servidor
+  useEffect(() => {
+    if (data.adm_servidores_id) {
+      const servidor = servidores.find(s => s.adm_servidores_id === Number(data.adm_servidores_id));
+      if (servidor) {
+        setData('doc_portarias_servidor_nome', servidor.ger_pessoas_nome);
+        setData('doc_portarias_servidor_cpf', servidor.ger_pessoas_cpf);
+      }
+    } else {
+      setData('doc_portarias_servidor_nome', '');
+      setData('doc_portarias_servidor_cpf', '');
+    }
+    // eslint-disable-next-line
+  }, [data.adm_servidores_id, servidores]);
+
+  // Toast de erro e sucesso global
+  useEffect(() => {
+    if (flash && flash.error) {
+      toast.error(flash.error);
+    }
+    if (flash && flash.success) {
+      toast.success(flash.success);
+    }
+  }, [flash]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditing) {
       put(route('documentos.portarias.update', portaria.doc_portarias_id));
     } else {
       post(route('documentos.portarias.store'));
+    }
+  };
+
+  // Função para excluir portaria
+  const handleDelete = () => {
+    if (!portaria?.doc_portarias_id) return;
+    if (window.confirm('Tem certeza que deseja excluir esta portaria?')) {
+      router.delete(route('documentos.portarias.destroy', portaria.doc_portarias_id), {
+        data: { excluir_google_docs: excluirGoogleDocs },
+      });
     }
   };
 
@@ -396,6 +463,21 @@ const CadastroPortarias: React.FC = () => {
                 </Button>
               </div>
             </form>
+            {isEditing && (
+              <div className="flex flex-col md:flex-row justify-between items-center gap-2 pt-4 border-t mt-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={excluirGoogleDocs}
+                    onChange={e => setExcluirGoogleDocs(e.target.checked)}
+                  />
+                  Excluir também o arquivo do Google Docs
+                </label>
+                <Button type="button" variant="destructive" onClick={handleDelete} className="w-full md:w-auto">
+                  Excluir Portaria
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
