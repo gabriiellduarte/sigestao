@@ -107,7 +107,7 @@ class AtendimentosController extends Controller
         $atendimento->update(['reg_ate_protocolo'=>$protocolo]);
 
         return redirect()->route('regulacao.atendimentos.index')
-            ->with('success', 'Atendimento criado com sucesso! Protocolo: ' . $protocolo);
+            ->with('sucesso', 'Atendimento criado com sucesso! Protocolo: ' . $protocolo);
     }
 
     public function show(RegAtendimento $atendimento)
@@ -190,7 +190,7 @@ class AtendimentosController extends Controller
         ]);
 
         return redirect()->route('regulacao.atendimentos.index')
-            ->with('success', 'Atendimento atualizado com sucesso!');
+            ->with('sucesso', 'Atendimento atualizado com sucesso!');
     }
 
     public function destroy(RegAtendimento $atendimento)
@@ -198,7 +198,7 @@ class AtendimentosController extends Controller
         $atendimento->delete();
 
         return redirect()->route('regulacao.atendimentos.index')
-            ->with('success', 'Atendimento excluído com sucesso!');
+            ->with('sucesso', 'Atendimento excluído com sucesso!');
     }
 
     public function espera()
@@ -227,7 +227,7 @@ class AtendimentosController extends Controller
         $atendimento->update(['reg_ate_arquivado' => true]);
 
         return redirect()->route('regulacao.atendimentos.index')
-            ->with('success', 'Atendimento arquivado com sucesso!');
+            ->with('sucesso', 'Atendimento arquivado com sucesso!');
     }
 
     public function desarquivar(RegAtendimento $atendimento)
@@ -235,7 +235,7 @@ class AtendimentosController extends Controller
         $atendimento->update(['reg_ate_arquivado' => false]);
 
         return redirect()->route('regulacao.atendimentos.index')
-            ->with('success', 'Atendimento desarquivado com sucesso!');
+            ->with('sucesso', 'Atendimento desarquivado com sucesso!');
     }
 
     public function agendar(RegAtendimento $atendimento)
@@ -243,7 +243,7 @@ class AtendimentosController extends Controller
         $atendimento->update(['reg_ate_agendado' => true]);
 
         return redirect()->route('regulacao.atendimentos.index')
-            ->with('success', 'Atendimento agendado com sucesso!');
+            ->with('sucesso', 'Atendimento agendado com sucesso!');
     }
 
     public function desagendar(RegAtendimento $atendimento)
@@ -251,6 +251,6 @@ class AtendimentosController extends Controller
         $atendimento->update(['reg_ate_agendado' => false]);
 
         return redirect()->route('regulacao.atendimentos.index')
-            ->with('success', 'Agendamento cancelado com sucesso!');
+            ->with('sucesso', 'Agendamento cancelado com sucesso!');
     }
 } 

@@ -49,7 +49,7 @@ class RegPacienteController extends Controller
         RegPaciente::create($validated);
 
         return redirect()->route('regulacao.pacientes.index')
-            ->with('success', 'Paciente cadastrado com sucesso!');
+            ->with('sucesso', 'Paciente cadastrado com sucesso!');
     }
 
     public function edit(RegPaciente $paciente)
@@ -81,7 +81,7 @@ class RegPacienteController extends Controller
         $paciente->update($validated);
 
         return redirect()->route('regulacao.pacientes.index')
-            ->with('success', 'Paciente atualizado com sucesso!');
+            ->with('sucesso', 'Paciente atualizado com sucesso!');
     }
 
     public function destroy(RegPaciente $paciente)
@@ -89,6 +89,6 @@ class RegPacienteController extends Controller
         $paciente->delete();
 
         return redirect()->route('regulacao.pacientes.index')
-            ->with('success', 'Paciente excluído com sucesso!');
+            ->with('sucesso', 'Paciente excluído com sucesso!');
     }
 } 

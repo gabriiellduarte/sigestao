@@ -27,7 +27,7 @@ class RegTipoAtendimentoController extends Controller
             'reg_tipo_peso' => 'required|integer'
         ]);
         RegTipoAtendimento::create($request->all());
-        return redirect()->route('regulacao.tiposatendimento.index')->with('success', 'Tipo de Atendimento criado com sucesso.');
+        return redirect()->route('regulacao.tiposatendimento.index')->with('sucesso', 'Tipo de Atendimento criado com sucesso.');
     }
 
     public function edit(RegTipoAtendimento $tiposatendimento)
@@ -42,12 +42,12 @@ class RegTipoAtendimentoController extends Controller
             'reg_tipo_peso' => 'required|integer'
         ]);
         $tiposatendimento->update($request->all());
-        return redirect()->route('regulacao.tiposatendimento.index')->with('success', 'Tipo de Atendimento atualizado com sucesso.');
+        return redirect()->route('regulacao.tiposatendimento.index')->with('sucesso', 'Tipo de Atendimento atualizado com sucesso.');
     }
 
     public function destroy(RegTipoAtendimento $tiposatendimento)
     {
         $tiposatendimento->delete();
-        return redirect()->route('regulacao.tiposatendimento.index')->with('success', 'Tipo de Atendimento excluído com sucesso.');
+        return redirect()->route('regulacao.tiposatendimento.index')->with('sucesso', 'Tipo de Atendimento excluído com sucesso.');
     }
 } 

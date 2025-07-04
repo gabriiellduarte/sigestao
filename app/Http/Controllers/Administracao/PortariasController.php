@@ -331,10 +331,10 @@ class PortariasController extends Controller
         $portaria->delete();
         if ($erroGoogle) {
             return redirect()->route('documentos.portarias.index')
-                ->with('error', 'Portaria excluída, mas houve erro ao excluir o arquivo do Google Docs: ' . $mensagemErroGoogle);
+                ->with('erro', 'Portaria excluída, mas houve erro ao excluir o arquivo do Google Docs: ' . $mensagemErroGoogle);
         }
         return redirect()->route('documentos.portarias.index')
-            ->with('success', 'Portaria excluída com sucesso!');
+            ->with('sucesso', 'Portaria excluída com sucesso!');
     }
 
     public function listaporservidor() {

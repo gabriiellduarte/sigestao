@@ -10,6 +10,8 @@ import { Calendar, User, Building, Stethoscope, AlertTriangle, Save, ArrowLeft, 
 import AppLayout from '@/layouts/app-layout';
 import { Link, useForm } from '@inertiajs/react';
 import { Pessoa } from '@/types/pessoa';
+import Modal from '@/components/Modal';
+import { toast } from 'sonner';
 
 interface AtendimentoFormData {
   ger_pessoas_id: number;
@@ -78,7 +80,62 @@ export default function Create({
     reg_ate_retroativo: false,
   });
 
+  // Estados para busca dinâmica de pacientes
+  const [pacientesFiltrados, setPacientesFiltrados] = useState<Pessoa[]>([]);
+  const [buscaPaciente, setBuscaPaciente] = useState('');
+  const [loadingPacientes, setLoadingPacientes] = useState(false);
+
+  // Estados para modal de cadastro rápido de paciente
+  const [showModalPaciente, setShowModalPaciente] = useState(false);
+  const [novoPacienteNome, setNovoPacienteNome] = useState('');
+  const [novoPacienteCpf, setNovoPacienteCpf] = useState('');
+  const [salvandoPaciente, setSalvandoPaciente] = useState(false);
+  const [erroPaciente, setErroPaciente] = useState('');
+
   const [procedimentosFiltrados, setProcedimentosFiltrados] = useState(procedimentos);
+
+  // Função para buscar pacientes
+  const buscarPacientes = async (termo: string) => {
+    setLoadingPacientes(true);
+    try {
+      const response = await fetch(`/administracao/pessoas-search?term=${encodeURIComponent(termo)}`);
+      const data = await response.json();
+      setLoadingPacientes(false);
+      return data;
+    } catch (e) {
+      setLoadingPacientes(false);
+      return [];
+    }
+  };
+
+  // Buscar pacientes ao digitar, garantindo que o selecionado sempre aparece
+  useEffect(() => {
+    if (buscaPaciente.length >= 3) {
+      buscarPacientes(buscaPaciente).then((resultados) => {
+        if (data.ger_pessoas_id && !resultados.some((p: any) => p.ger_pessoas_id === data.ger_pessoas_id)) {
+          const pacienteSelecionado = pessoas.find(p => p.ger_pessoas_id === data.ger_pessoas_id);
+          if (pacienteSelecionado) {
+            setPacientesFiltrados([pacienteSelecionado, ...resultados]);
+          } else {
+            setPacientesFiltrados(resultados);
+          }
+        } else {
+          setPacientesFiltrados(resultados);
+        }
+      });
+    } else {
+      if (data.ger_pessoas_id) {
+        const pacienteSelecionado = pessoas.find(p => p.ger_pessoas_id === data.ger_pessoas_id);
+        if (pacienteSelecionado) {
+          setPacientesFiltrados([pacienteSelecionado]);
+        } else {
+          setPacientesFiltrados([]);
+        }
+      } else {
+        setPacientesFiltrados([]);
+      }
+    }
+  }, [buscaPaciente, data.ger_pessoas_id, pessoas]);
 
   // Filtrar procedimentos quando grupo é selecionado
   useEffect(() => {
@@ -93,6 +150,47 @@ export default function Create({
       setProcedimentosFiltrados(procedimentos);
     }
   }, [data.reg_gpro_id, procedimentos]);
+
+  // Função para cadastrar paciente rápido
+  const cadastrarPacienteRapido = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSalvandoPaciente(true);
+    setErroPaciente('');
+    try {
+      const formData = new FormData();
+      formData.append('ger_pessoas_nome', novoPacienteNome);
+      formData.append('ger_pessoas_cpf', novoPacienteCpf);
+
+      const response = await fetch('/administracao/pessoas', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+        },
+        body: formData
+      });
+
+      const responseData = await response.json();
+      if (responseData && responseData.pessoa) {
+        // Adicionar nova pessoa à lista
+        pessoas.push(responseData.pessoa);
+        setPacientesFiltrados([responseData.pessoa]);
+        setData('ger_pessoas_id', responseData.pessoa.ger_pessoas_id);
+        setShowModalPaciente(false);
+        setNovoPacienteNome('');
+        setNovoPacienteCpf('');
+        setSalvandoPaciente(false);
+        setErroPaciente('');
+        toast.success('Paciente cadastrado com sucesso!');
+      } else {
+        setErroPaciente('Erro ao cadastrar paciente');
+        setSalvandoPaciente(false);
+      }
+    } catch (err) {
+      setErroPaciente('Erro ao cadastrar paciente');
+      setSalvandoPaciente(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,22 +228,41 @@ export default function Create({
                 {/* Paciente */}
                 <div className="space-y-2 col-span-2">
                   <Label htmlFor="paciente">Paciente *</Label>
-                  <Select 
-                    value={data.ger_pessoas_id.toString()} 
-                    onValueChange={(value) => setData('ger_pessoas_id', parseInt(value))}
-                  >
-                    <SelectTrigger className={errors.ger_pessoas_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione o paciente" />
-                    </SelectTrigger>
-                
-                    <SelectContent>
-                      {pessoas.map((pessoa) => (
-                        <SelectItem key={pessoa.ger_pessoas_id} value={pessoa.ger_pessoas_id.toString()}>
-                          {pessoa.ger_pessoas_nome} - {pessoa.ger_pessoas_cpf}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2 items-center">
+                    <Select 
+                      value={data.ger_pessoas_id.toString()} 
+                      onValueChange={(value) => setData('ger_pessoas_id', parseInt(value))}
+                    >
+                      <SelectTrigger className={errors.ger_pessoas_id ? 'border-red-500' : ''}>
+                        <SelectValue placeholder="Selecione o paciente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="p-2">
+                          <Input
+                            placeholder="Buscar paciente"
+                            value={buscaPaciente}
+                            onChange={e => setBuscaPaciente(e.target.value)}
+                            autoFocus
+                          />
+                        </div>
+                        {loadingPacientes ? (
+                          <div className="p-2 text-sm text-gray-500">Carregando pacientes...</div>
+                        ) : (
+                          pacientesFiltrados.map((pessoa) => (
+                            <SelectItem key={pessoa.ger_pessoas_id} value={pessoa.ger_pessoas_id.toString()}>
+                              {pessoa.ger_pessoas_nome} - {pessoa.ger_pessoas_cpf}
+                            </SelectItem>
+                          ))
+                        )}
+                        {pacientesFiltrados.length === 0 && buscaPaciente && !loadingPacientes && (
+                          <div className="p-2 text-sm text-gray-500">Nenhum paciente encontrado</div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowModalPaciente(true)}>
+                      + Novo
+                    </Button>
+                  </div>
                   {errors.ger_pessoas_id && (
                     <p className="text-sm text-red-500">{errors.ger_pessoas_id}</p>
                   )}
@@ -326,8 +443,6 @@ export default function Create({
                   )}
                 </div>
 
-                
-
                 {/* ACS */}
                 <div className="space-y-2">
                   <Label htmlFor="reg_acs_id">ACS</Label>
@@ -350,8 +465,6 @@ export default function Create({
                     <p className="text-sm text-red-500">{errors.reg_acs_id}</p>
                   )}
                 </div>
-
-                
 
                 {/* Posição Atual */}
                 <div className="space-y-2 hidden">
@@ -448,6 +561,39 @@ export default function Create({
             </form>
           </CardContent>
         </Card>
+
+        {/* Modal de Cadastro Rápido de Paciente */}
+        <Modal show={showModalPaciente} onClose={() => setShowModalPaciente(false)} title="Novo Paciente">
+          <form onSubmit={cadastrarPacienteRapido} className="space-y-4">
+            <div>
+              <Label htmlFor="novoPacienteNome">Nome do Paciente</Label>
+              <Input 
+                id="novoPacienteNome" 
+                value={novoPacienteNome} 
+                onChange={e => setNovoPacienteNome(e.target.value)} 
+                required 
+              />
+            </div>
+            <div>
+              <Label htmlFor="novoPacienteCpf">CPF</Label>
+              <Input 
+                id="novoPacienteCpf" 
+                value={novoPacienteCpf} 
+                onChange={e => setNovoPacienteCpf(e.target.value)} 
+                required 
+              />
+            </div>
+            {erroPaciente && <p className="text-sm text-red-500">{erroPaciente}</p>}
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setShowModalPaciente(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={salvandoPaciente}>
+                {salvandoPaciente ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
       </div>
     </AppLayout>
   );

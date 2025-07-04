@@ -38,7 +38,7 @@ class TipoPortariaController extends Controller
         ]);
 
         return redirect()->route('documentos.tiposdeportaria.index')
-            ->with('success', 'Tipo de portaria criado com sucesso!');
+            ->with('sucesso', 'Tipo de portaria criado com sucesso!');
     }
 
     public function edit($id)
@@ -77,12 +77,12 @@ class TipoPortariaController extends Controller
     {
         // Verificar se há portarias usando este tipo
         if ($tipoPortaria->portarias()->count() > 0) {
-            return back()->with('error', 'Não é possível excluir este tipo de portaria pois existem portarias vinculadas a ele.');
+            return back()->with('erro', 'Não é possível excluir este tipo de portaria pois existem portarias vinculadas a ele.');
         }
 
         $tipoPortaria->delete();
 
         return redirect()->route('documentos.tiposdeportaria.index')
-            ->with('success', 'Tipo de portaria excluído com sucesso!');
+            ->with('sucesso', 'Tipo de portaria excluído com sucesso!');
     }
 } 

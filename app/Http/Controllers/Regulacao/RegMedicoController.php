@@ -24,7 +24,7 @@ class RegMedicoController extends Controller
     {
         $request->validate(['reg_med_nome' => 'required|string|max:255|unique:reg_medicos,reg_med_nome']);
         RegMedico::create($request->all());
-        return redirect()->route('regulacao.medicos.index')->with('success', 'Médico criado com sucesso.');
+        return redirect()->route('regulacao.medicos.index')->with('sucesso', 'Médico criado com sucesso.');
     }
 
     public function edit(RegMedico $medico)
@@ -36,12 +36,12 @@ class RegMedicoController extends Controller
     {
         $request->validate(['reg_med_nome' => 'required|string|max:255|unique:reg_medicos,reg_med_nome,' . $medico->reg_med_id . ',reg_med_id']);
         $medico->update($request->all());
-        return redirect()->route('regulacao.medicos.index')->with('success', 'Médico atualizado com sucesso.');
+        return redirect()->route('regulacao.medicos.index')->with('sucesso', 'Médico atualizado com sucesso.');
     }
 
     public function destroy(RegMedico $medico)
     {
         $medico->delete();
-        return redirect()->route('regulacao.medicos.index')->with('success', 'Médico excluído com sucesso.');
+        return redirect()->route('regulacao.medicos.index')->with('sucesso', 'Médico excluído com sucesso.');
     }
 } 

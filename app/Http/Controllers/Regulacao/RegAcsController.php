@@ -24,7 +24,7 @@ class RegAcsController extends Controller
     {
         $request->validate(['reg_acs_nome' => 'required|string|max:255|unique:reg_acs,reg_acs_nome']);
         RegAcs::create($request->all());
-        return redirect()->route('regulacao.acs.index')->with('success', 'ACS criado com sucesso.');
+        return redirect()->route('regulacao.acs.index')->with('sucesso', 'ACS criado com sucesso.');
     }
 
     public function edit(RegAcs $ac)
@@ -36,12 +36,12 @@ class RegAcsController extends Controller
     {
         $request->validate(['reg_acs_nome' => 'required|string|max:255|unique:reg_acs,reg_acs_nome,' . $ac->reg_acs_id . ',reg_acs_id']);
         $ac->update($request->all());
-        return redirect()->route('regulacao.acs.index')->with('success', 'ACS atualizado com sucesso.');
+        return redirect()->route('regulacao.acs.index')->with('sucesso', 'ACS atualizado com sucesso.');
     }
 
     public function destroy(RegAcs $ac)
     {
         $ac->delete();
-        return redirect()->route('regulacao.acs.index')->with('success', 'ACS excluído com sucesso.');
+        return redirect()->route('regulacao.acs.index')->with('sucesso', 'ACS excluído com sucesso.');
     }
 } 

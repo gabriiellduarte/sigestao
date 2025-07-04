@@ -29,7 +29,7 @@ class RegProcedimentoController extends Controller
             'reg_gpro_id' => 'required|exists:reg_gprocedimentos,reg_gpro_id'
         ]);
         RegProcedimento::create($request->all());
-        return redirect()->route('regulacao.procedimentos.index')->with('success', 'Procedimento criado com sucesso.');
+        return redirect()->route('regulacao.procedimentos.index')->with('sucesso', 'Procedimento criado com sucesso.');
     }
 
     public function edit(RegProcedimento $procedimento)
@@ -48,12 +48,12 @@ class RegProcedimentoController extends Controller
             'reg_gpro_id' => 'required|exists:reg_gprocedimentos,reg_gpro_id'
         ]);
         $procedimento->update($request->all());
-        return redirect()->route('regulacao.procedimentos.index')->with('success', 'Procedimento atualizado com sucesso.');
+        return redirect()->route('regulacao.procedimentos.index')->with('sucesso', 'Procedimento atualizado com sucesso.');
     }
 
     public function destroy(RegProcedimento $procedimento)
     {
         $procedimento->delete();
-        return redirect()->route('regulacao.procedimentos.index')->with('success', 'Procedimento excluído com sucesso.');
+        return redirect()->route('regulacao.procedimentos.index')->with('sucesso', 'Procedimento excluído com sucesso.');
     }
 } 

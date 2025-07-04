@@ -34,7 +34,7 @@ class GoogleController extends Controller
                 ->redirect();
         } catch (\Exception $e) {
             Log::error('Erro no redirecionamento do Google: ' . $e->getMessage());
-            return redirect()->route('login')->with('error', 'Erro ao iniciar autenticação com Google: ' . $e->getMessage());
+            return redirect()->route('login')->with('erro', 'Erro ao iniciar autenticação com Google: ' . $e->getMessage());
         }
     }
 

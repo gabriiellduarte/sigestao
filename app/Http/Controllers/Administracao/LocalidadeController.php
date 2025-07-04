@@ -40,7 +40,7 @@ class LocalidadeController extends Controller
         Localidade::create($validated);
 
         return redirect()->route('administracao.localidades.index')
-            ->with('success', 'Localidade criada com sucesso.');
+            ->with('sucesso', 'Localidade criada com sucesso.');
     }
 
     public function edit(Localidade $localidade)
@@ -60,7 +60,7 @@ class LocalidadeController extends Controller
         $localidade->update($validated);
 
         return redirect()->route('administracao.localidades.index')
-            ->with('success', 'Localidade atualizada com sucesso.');
+            ->with('sucesso', 'Localidade atualizada com sucesso.');
     }
 
     public function destroy(Localidade $localidade)
@@ -68,6 +68,6 @@ class LocalidadeController extends Controller
         $localidade->delete();
 
         return redirect()->route('administracao.localidades.index')
-            ->with('success', 'Localidade excluída com sucesso.');
+            ->with('sucesso', 'Localidade excluída com sucesso.');
     }
 } 

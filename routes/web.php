@@ -36,6 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Rotas de Administração
     Route::prefix('administracao')->name('administracao.')->group(function () {
         Route::resource('pessoas', PessoaController::class);
+        Route::get('pessoas-search', [PessoaController::class, 'search'])->name('pessoas.search');
         Route::resource('cargos', CargoController::class);
         Route::resource('secretarias', SecretariaController::class);
         Route::resource('localidades', LocalidadeController::class);

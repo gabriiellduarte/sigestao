@@ -24,7 +24,7 @@ class RegGrupoProcedimentoController extends Controller
     {
         $request->validate(['reg_gpro_nome' => 'required|string|max:255|unique:reg_gprocedimentos,reg_gpro_nome']);
         RegGrupoProcedimento::create($request->all());
-        return redirect()->route('regulacao.grupoprocedimentos.index')->with('success', 'Grupo de Procedimento criado com sucesso.');
+        return redirect()->route('regulacao.grupoprocedimentos.index')->with('sucesso', 'Grupo de Procedimento criado com sucesso.');
     }
 
     public function edit(RegGrupoProcedimento $grupoprocedimento)
@@ -36,15 +36,15 @@ class RegGrupoProcedimentoController extends Controller
     {
         $request->validate(['reg_gpro_nome' => 'required|string|max:255|unique:reg_gprocedimentos,reg_gpro_nome,' . $grupoprocedimento->reg_gpro_id . ',reg_gpro_id']);
         $grupoprocedimento->update($request->all());
-        return redirect()->route('regulacao.grupoprocedimentos.index')->with('success', 'Grupo de Procedimento atualizado com sucesso.');
+        return redirect()->route('regulacao.grupoprocedimentos.index')->with('sucesso', 'Grupo de Procedimento atualizado com sucesso.');
     }
 
     public function destroy(RegGrupoProcedimento $grupoprocedimento)
     {
         if ($grupoprocedimento->procedimentos()->exists()) {
-            return redirect()->route('regulacao.grupoprocedimentos.index')->with('error', 'Não é possível excluir. Existem procedimentos associados a este grupo.');
+            return redirect()->route('regulacao.grupoprocedimentos.index')->with('erro', 'Não é possível excluir. Existem procedimentos associados a este grupo.');
         }
         $grupoprocedimento->delete();
-        return redirect()->route('regulacao.grupoprocedimentos.index')->with('success', 'Grupo de Procedimento excluído com sucesso.');
+        return redirect()->route('regulacao.grupoprocedimentos.index')->with('sucesso', 'Grupo de Procedimento excluído com sucesso.');
     }
 } 

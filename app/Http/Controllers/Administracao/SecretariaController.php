@@ -31,7 +31,7 @@ class SecretariaController extends Controller
         Secretaria::create($validated);
 
         return redirect()->route('administracao.secretarias.index')
-            ->with('success', 'Secretaria cadastrada com sucesso!');
+            ->with('sucesso', 'Secretaria cadastrada com sucesso!');
     }
 
     public function edit(Secretaria $secretaria)
@@ -51,7 +51,7 @@ class SecretariaController extends Controller
         $secretaria->update($validated);
 
         return redirect()->route('administracao.secretarias.index')
-            ->with('success', 'Secretaria atualizada com sucesso!');
+            ->with('sucesso', 'Secretaria atualizada com sucesso!');
     }
 
     public function destroy(Secretaria $secretaria)
@@ -59,6 +59,6 @@ class SecretariaController extends Controller
         $secretaria->delete();
 
         return redirect()->route('administracao.secretarias.index')
-            ->with('success', 'Secretaria excluída com sucesso!');
+            ->with('sucesso', 'Secretaria excluída com sucesso!');
     }
 } 

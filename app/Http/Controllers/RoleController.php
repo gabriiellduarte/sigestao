@@ -51,7 +51,7 @@ class RoleController extends Controller
         $role->permissions()->sync($validated['permissions']);
 
         return redirect()->route('roles.index')
-            ->with('success', 'Função criada com sucesso.');
+            ->with('sucesso', 'Função criada com sucesso.');
     }
 
     /**
@@ -94,7 +94,7 @@ class RoleController extends Controller
         $role->permissions()->sync($validated['permissions']);
 
         return redirect()->route('roles.index')
-            ->with('success', 'Função atualizada com sucesso.');
+            ->with('sucesso', 'Função atualizada com sucesso.');
     }
 
     /**
@@ -105,6 +105,6 @@ class RoleController extends Controller
         $role->delete();
 
         return redirect()->route('roles.index')
-            ->with('success', 'Função excluída com sucesso.');
+            ->with('sucesso', 'Função excluída com sucesso.');
     }
 }

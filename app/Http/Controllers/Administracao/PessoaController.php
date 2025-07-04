@@ -42,7 +42,7 @@ class PessoaController extends Controller
         Pessoa::create($validated);
 
         return redirect()->route('administracao.pessoas.index')
-            ->with('success', 'Pessoa cadastrada com sucesso!');
+            ->with('sucesso', 'Pessoa cadastrada com sucesso!');
     }
 
     public function edit(Pessoa $pessoa)
@@ -72,7 +72,7 @@ class PessoaController extends Controller
         $pessoa->update($validated);
 
         return redirect()->route('administracao.pessoas.index')
-            ->with('success', 'Pessoa atualizada com sucesso!');
+            ->with('sucesso', 'Pessoa atualizada com sucesso!');
     }
 
     public function destroy(Pessoa $pessoa)
@@ -80,6 +80,17 @@ class PessoaController extends Controller
         $pessoa->delete();
 
         return redirect()->route('administracao.pessoas.index')
-            ->with('success', 'Pessoa excluída com sucesso!');
+            ->with('sucesso', 'Pessoa excluída com sucesso!');
+    }
+
+    public function search(Request $request)
+    {
+        $term = $request->get('term');
+        $pessoas = Pessoa::where('ger_pessoas_nome', 'like', "%{$term}%")
+            ->orWhere('ger_pessoas_cpf', 'like', "%{$term}%")
+            ->limit(10)
+            ->get(['ger_pessoas_id', 'ger_pessoas_nome', 'ger_pessoas_cpf']);
+        
+        return response()->json($pessoas);
     }
 } 

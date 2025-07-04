@@ -24,7 +24,7 @@ class RegUnidadeSaudeController extends Controller
     {
         $request->validate(['reg_uni_nome' => 'required|string|max:255|unique:reg_unidadessaude,reg_uni_nome']);
         RegUnidadeSaude::create($request->all());
-        return redirect()->route('regulacao.unidadessaude.index')->with('success', 'Unidade de Saúde criada com sucesso.');
+        return redirect()->route('regulacao.unidadessaude.index')->with('sucesso', 'Unidade de Saúde criada com sucesso.');
     }
 
     public function edit(RegUnidadeSaude $unidadessaude)
@@ -36,12 +36,12 @@ class RegUnidadeSaudeController extends Controller
     {
         $request->validate(['reg_uni_nome' => 'required|string|max:255|unique:reg_unidadessaude,reg_uni_nome,' . $unidadessaude->reg_uni_id . ',reg_uni_id']);
         $unidadessaude->update($request->all());
-        return redirect()->route('regulacao.unidadessaude.index')->with('success', 'Unidade de Saúde atualizada com sucesso.');
+        return redirect()->route('regulacao.unidadessaude.index')->with('sucesso', 'Unidade de Saúde atualizada com sucesso.');
     }
 
     public function destroy(RegUnidadeSaude $unidadessaude)
     {
         $unidadessaude->delete();
-        return redirect()->route('regulacao.unidadessaude.index')->with('success', 'Unidade de Saúde excluída com sucesso.');
+        return redirect()->route('regulacao.unidadessaude.index')->with('sucesso', 'Unidade de Saúde excluída com sucesso.');
     }
 } 

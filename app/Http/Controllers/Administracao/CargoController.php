@@ -40,7 +40,7 @@ class CargoController extends Controller
         }
 
         return redirect()->route('administracao.cargos.index')
-            ->with('success', 'Cargo cadastrado com sucesso!');
+            ->with('sucesso', 'Cargo cadastrado com sucesso!');
     }
 
     public function edit(Cargo $cargo)
@@ -60,7 +60,7 @@ class CargoController extends Controller
         $cargo->update($validated);
 
         return redirect()->route('administracao.cargos.index')
-            ->with('success', 'Cargo atualizado com sucesso!');
+            ->with('sucesso', 'Cargo atualizado com sucesso!');
     }
 
     public function destroy(Cargo $cargo)
@@ -68,6 +68,6 @@ class CargoController extends Controller
         $cargo->delete();
 
         return redirect()->route('administracao.cargos.index')
-            ->with('success', 'Cargo excluído com sucesso!');
+            ->with('sucesso', 'Cargo excluído com sucesso!');
     }
 } 

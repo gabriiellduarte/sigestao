@@ -37,7 +37,7 @@ class ServidoresController extends Controller
         Servidores::create($validated);
 
         return redirect()->route('administracao.servidores.index')
-            ->with('success', 'Servidor cadastrado com sucesso!');
+            ->with('sucesso', 'Servidor cadastrado com sucesso!');
     }
 
     public function edit($id)
@@ -60,7 +60,7 @@ class ServidoresController extends Controller
         $servidor->update($validated);
 
         return redirect()->route('administracao.servidores.index')
-            ->with('success', 'Servidor atualizado com sucesso!');
+            ->with('sucesso', 'Servidor atualizado com sucesso!');
     }
 
     public function destroy($id)
@@ -68,7 +68,7 @@ class ServidoresController extends Controller
         $servidor = Servidores::findOrFail($id);
         $servidor->delete();
         return redirect()->route('administracao.servidores.index')
-            ->with('success', 'Servidor excluído com sucesso!');
+            ->with('sucesso', 'Servidor excluído com sucesso!');
     }
 
     public function search(Request $request)

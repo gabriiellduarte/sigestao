@@ -102,7 +102,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         if ($user->id === auth()->id()) {
-            return redirect()->back()->with('error', 'Não é possível excluir seu próprio usuário!');
+            return redirect()->back()->with('erro', 'Não é possível excluir seu próprio usuário!');
         }
 
         $user->delete();
