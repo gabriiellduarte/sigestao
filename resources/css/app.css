@@ -181,3 +181,74 @@
     }
 }
 
+/* Estilos para impressão do comprovante */
+@media print {
+    @page {
+        margin: 0;
+        size: A5;
+        orientation: landscape;
+    }
+    
+    body {
+        margin: 0;
+        padding: 0;
+        background: white !important;
+    }
+    
+    .comprovante-atendimento {
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 20mm !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+    
+    /* Ocultar elementos desnecessários na impressão */
+    .print\\:hidden {
+        display: none !important;
+    }
+    
+    /* Garantir que o texto seja legível */
+    .comprovante-atendimento * {
+        color: black !important;
+        background: white !important;
+    }
+    
+    /* Ajustar cores dos badges para impressão */
+    .comprovante-atendimento .bg-red-100 {
+        background-color: #fee2e2 !important;
+        color: #991b1b !important;
+    }
+    
+    .comprovante-atendimento .bg-green-100 {
+        background-color: #dcfce7 !important;
+        color: #166534 !important;
+    }
+    
+    .comprovante-atendimento .bg-blue-100 {
+        background-color: #dbeafe !important;
+        color: #1e40af !important;
+    }
+    
+    .comprovante-atendimento .bg-orange-100 {
+        background-color: #fed7aa !important;
+        color: #9a3412 !important;
+    }
+    
+    .comprovante-atendimento .bg-purple-100 {
+        background-color: #f3e8ff !important;
+        color: #7c3aed !important;
+    }
+    
+    .comprovante-atendimento .bg-yellow-100 {
+        background-color: #fef3c7 !important;
+        color: #92400e !important;
+    }
+    
+    .comprovante-atendimento .bg-gray-100 {
+        background-color: #f3f4f6 !important;
+        color: #374151 !important;
+    }
+}
+

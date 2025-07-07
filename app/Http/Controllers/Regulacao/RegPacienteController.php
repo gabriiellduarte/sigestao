@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Regulacao;
 
 use App\Http\Controllers\Controller;
-use App\Models\Regulacao\RegPaciente;
-use App\Models\Regulacao\RegLocalidade;
+use App\Models\Localidade;
+use App\Models\Pessoa;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,8 +12,8 @@ class RegPacienteController extends Controller
 {
     public function index()
     {
-        $pacientes = RegPaciente::with('localidade')
-            ->orderBy('reg_paciente_nome')
+        $pacientes = Pessoa::with('localidade')
+            ->orderBy('ger_pessoas_nome')
             ->paginate(10);
 
         return Inertia::render('regulacao/Pacientes/Index', [
@@ -21,9 +21,13 @@ class RegPacienteController extends Controller
         ]);
     }
 
+    public function show(){
+        $pessoa = Pessoa::find(2);
+        return Inertia::render('regulacao/Pacientes/View',['paciente'=>$pessoa]);
+    }
     public function create()
     {
-        $localidades = RegLocalidade::orderBy('reg_loc_nome')->get();
+        $localidades = Localidade::orderBy('ger_localidades_nome')->get();
         
         return Inertia::render('regulacao/Pacientes/Create', [
             'localidades' => $localidades
@@ -46,15 +50,15 @@ class RegPacienteController extends Controller
             'reg_loc_id' => 'nullable|exists:reg_localidades,reg_loc_id'
         ]);
 
-        RegPaciente::create($validated);
+        Pessoa::create($validated);
 
         return redirect()->route('regulacao.pacientes.index')
             ->with('sucesso', 'Paciente cadastrado com sucesso!');
     }
 
-    public function edit(RegPaciente $paciente)
+    public function edit(Pessoa $paciente)
     {
-        $localidades = RegLocalidade::orderBy('reg_loc_nome')->get();
+        $localidades = Localidade::orderBy('ger_localidades_nome')->get();
         
         return Inertia::render('regulacao/Pacientes/Edit', [
             'paciente' => $paciente,
@@ -62,7 +66,7 @@ class RegPacienteController extends Controller
         ]);
     }
 
-    public function update(Request $request, RegPaciente $paciente)
+    public function update(Request $request, Pessoa $paciente)
     {
         $validated = $request->validate([
             'reg_paciente_nome' => 'required|string|max:100',
@@ -84,7 +88,7 @@ class RegPacienteController extends Controller
             ->with('sucesso', 'Paciente atualizado com sucesso!');
     }
 
-    public function destroy(RegPaciente $paciente)
+    public function destroy(Pessoa $paciente)
     {
         $paciente->delete();
 

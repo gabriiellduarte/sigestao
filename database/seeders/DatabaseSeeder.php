@@ -9,6 +9,7 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Hash;
 use Illuminate\Database\Seeder;
+use Database\Seeders\PermissionSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -111,5 +112,9 @@ class DatabaseSeeder extends Seeder
             'guard_name' => 'web',
         ]);
         $rolePortarias->syncPermissions(array_column($permissoesPortarias, 'name'));
+
+        $this->call([
+            PermissionSeeder::class,
+        ]);
     }
 }

@@ -68,32 +68,32 @@ const mainNavItems: NavItem[] = [
         title: 'Regulação',
         href: 'regulacao',
         icon: ClipboardListIcon,
-        permissions: 'regulacao.visualizar',
+        permissions: 'regulacao.dashboard.visualizar',
         children: [
             {
                 title: 'Dashboard',
                 href: '/regulacao/dashboard',
-                permissions: 'acessar sistema'
+                permissions: 'regulacao.dashboard.visualizar'
             },
             {
                 title: 'Lista de Atendimentos',
                 href: '/regulacao/atendimentos',
-                permissions: 'acessar sistema'
+                permissions: 'regulacao.atendimentos.visualizar'
             },
             {
                 title: 'Pacientes',
                 href: '/regulacao/pacientes',
-                permissions: 'acessar sistema'
+                permissions: 'regulacao.pacientes.visualizar'
             },
             {
                 title: 'Grupos de Procedimentos',
                 href: '/regulacao/grupoprocedimentos',
-                permissions: 'acessar sistema'
+                permissions: 'regulacao.gprocedimentos.visualizar'
             },
             {
                 title: 'Procedimentos',
                 href: '/regulacao/procedimentos',
-                permissions: 'acessar sistema'
+                permissions: 'regulacao.procedimentos.visualizar'
             },
             {
                 title: 'Médicos',

@@ -10,6 +10,9 @@ import { Calendar, User, Building, Stethoscope, AlertTriangle, Save, ArrowLeft, 
 import AppLayout from '@/layouts/app-layout';
 import { Link, useForm } from '@inertiajs/react';
 import { Pessoa } from '@/types/pessoa';
+import AtendimentoForm from './Form';
+import Modal from '@/components/Modal';
+import { toast } from 'sonner';
 
 interface AtendimentoFormData {
   ger_pessoas_id: number;
@@ -111,7 +114,85 @@ export default function Edit({
     reg_ate_retroativo: atendimento.reg_ate_retroativo,
   });
 
+  // Estados para busca dinâmica de pacientes
+  const [pacientesFiltrados, setPacientesFiltrados] = useState<Pessoa[]>([]);
+  const [buscaPaciente, setBuscaPaciente] = useState('');
+  const [loadingPacientes, setLoadingPacientes] = useState(false);
+  const [pacienteSelecionado, setPacienteSelecionado] = useState<Pessoa | null>(null);
+  const [primeiraCarga, setPrimeiraCarga] = useState(true);
+
+  // Estados para modal de cadastro rápido de paciente
+  const [showModalPaciente, setShowModalPaciente] = useState(false);
+  const [novoPacienteNome, setNovoPacienteNome] = useState('');
+  const [novoPacienteCpf, setNovoPacienteCpf] = useState('');
+  const [salvandoPaciente, setSalvandoPaciente] = useState(false);
+  const [erroPaciente, setErroPaciente] = useState('');
+
   const [procedimentosFiltrados, setProcedimentosFiltrados] = useState(procedimentos);
+
+  // Função para buscar pacientes
+  const buscarPacientes = async (termo: string) => {
+    setLoadingPacientes(true);
+    try {
+      const response = await fetch(`/administracao/pessoas-search?term=${encodeURIComponent(termo)}`);
+      const data = await response.json();
+      setLoadingPacientes(false);
+      return data;
+    } catch (e) {
+      setLoadingPacientes(false);
+      return [];
+    }
+  };
+
+  // Buscar pacientes ao digitar, garantindo que o selecionado sempre aparece
+  useEffect(() => {
+    if (buscaPaciente.length >= 3) {
+      setPrimeiraCarga(false); // Marca que não é mais a primeira carga
+      buscarPacientes(buscaPaciente).then((resultados) => {
+        setPacientesFiltrados(resultados);
+      });
+    } else if (buscaPaciente.length === 0 && !primeiraCarga) {
+      // Se limpou a busca e não é primeira carga, limpa os filtrados
+      setPacientesFiltrados([]);
+    }
+  }, [buscaPaciente, primeiraCarga]);
+
+  // Sempre que o ID do paciente mudar, buscar o paciente selecionado se necessário
+  useEffect(() => {
+    if (data.ger_pessoas_id) {
+      // Primeiro tenta encontrar nos pacientes filtrados
+      let paciente = pacientesFiltrados.find(p => p.ger_pessoas_id === data.ger_pessoas_id);
+      if (paciente) {
+        setPacienteSelecionado(paciente);
+      } else {
+        // Busca na API se não estiver nos filtrados
+        fetch(`/administracao/pessoas-search?id=${data.ger_pessoas_id}`)
+          .then(res => res.json())
+          .then(result => {
+            if (Array.isArray(result) && result.length > 0) {
+              setPacienteSelecionado(result[0]);
+            } else {
+              setPacienteSelecionado(null);
+            }
+          })
+          .catch(() => setPacienteSelecionado(null));
+      }
+    } else {
+      setPacienteSelecionado(null);
+    }
+  }, [data.ger_pessoas_id, pacientesFiltrados]);
+
+  // Na primeira carga, usar o paciente que vem do backend
+  useEffect(() => {
+    if (primeiraCarga && pessoas.length > 0) {
+      // Encontra o paciente atual nos dados do backend
+      const pacienteAtual = pessoas.find(p => p.ger_pessoas_id === data.ger_pessoas_id);
+      if (pacienteAtual) {
+        setPacienteSelecionado(pacienteAtual);
+        setPacientesFiltrados([pacienteAtual]); // Inclui o paciente atual na lista inicial
+      }
+    }
+  }, [primeiraCarga, pessoas, data.ger_pessoas_id]);
 
   // Filtrar procedimentos quando grupo é selecionado
   useEffect(() => {
@@ -126,6 +207,47 @@ export default function Edit({
       setProcedimentosFiltrados(procedimentos);
     }
   }, [data.reg_gpro_id, procedimentos]);
+
+  // Função para cadastrar paciente rápido
+  const cadastrarPacienteRapido = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSalvandoPaciente(true);
+    setErroPaciente('');
+    try {
+      const formData = new FormData();
+      formData.append('ger_pessoas_nome', novoPacienteNome);
+      formData.append('ger_pessoas_cpf', novoPacienteCpf);
+
+      const response = await fetch('/administracao/pessoas', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+        },
+        body: formData
+      });
+
+      const responseData = await response.json();
+      if (responseData && responseData.pessoa) {
+        // Adicionar nova pessoa à lista
+        pessoas.push(responseData.pessoa);
+        setPacientesFiltrados([responseData.pessoa]);
+        setData('ger_pessoas_id', responseData.pessoa.ger_pessoas_id);
+        setShowModalPaciente(false);
+        setNovoPacienteNome('');
+        setNovoPacienteCpf('');
+        setSalvandoPaciente(false);
+        setErroPaciente('');
+        toast.success('Paciente cadastrado com sucesso!');
+      } else {
+        setErroPaciente('Erro ao cadastrar paciente');
+        setSalvandoPaciente(false);
+      }
+    } catch (err) {
+      setErroPaciente('Erro ao cadastrar paciente');
+      setSalvandoPaciente(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,8 +270,16 @@ export default function Edit({
               <p className="text-gray-600">Protocolo: {atendimento.reg_ate_protocolo}</p>
             </div>
           </div>
+          <div className="flex items-center space-x-2">
+            
+            <a href={route('regulacao.atendimentos.comprovante', atendimento.reg_ate_id)} target='_blank'>
+              <Button variant="outline" size="sm">
+                <FileText className="h-4 w-4 mr-2" />
+                Ver Comprovante
+              </Button>
+            </a>
+          </div>
         </div>
-
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center text-blue-700">
@@ -157,326 +287,86 @@ export default function Edit({
               Dados do Atendimento
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Paciente */}
-                <div className="space-y-2 col-span-2">
-                  <Label htmlFor="paciente">Paciente *</Label>
-                  <Select 
-                    value={data.ger_pessoas_id.toString()} 
-                    onValueChange={(value) => setData('ger_pessoas_id', parseInt(value))}
-                  >
-                    <SelectTrigger className={errors.ger_pessoas_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione o paciente" />
-                    </SelectTrigger>
-                
-                    <SelectContent>
-                      {pessoas.map((pessoa) => (
-                        <SelectItem key={pessoa.ger_pessoas_id} value={pessoa.ger_pessoas_id.toString()}>
-                          {pessoa.ger_pessoas_nome} - {pessoa.ger_pessoas_cpf}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.ger_pessoas_id && (
-                    <p className="text-sm text-red-500">{errors.ger_pessoas_id}</p>
-                  )}
-                </div>
-
-                {/* Data do Atendimento */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_ate_datendimento">Data do Atendimento na regulação *</Label>
-                  <div className="relative">
-                    <Input
-                      id="reg_ate_datendimento"
-                      type="datetime-local"
-                      value={data.reg_ate_datendimento}
-                      onChange={(e) => setData('reg_ate_datendimento', e.target.value)}
-                      className={`pl-10 ${errors.reg_ate_datendimento ? 'border-red-500' : ''}`}
-                    />
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  </div>
-                  {errors.reg_ate_datendimento && (
-                    <p className="text-sm text-red-500">{errors.reg_ate_datendimento}</p>
-                  )}
-                </div>
-
-                {/* Unidade Solicitante */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_uni_id">Unidade Solicitante</Label>
-                  <Select 
-                    value={data.reg_uni_id?.toString() || ''} 
-                    onValueChange={(value) => setData('reg_uni_id', value ? parseInt(value) : null)}
-                  >
-                    <SelectTrigger className={errors.reg_uni_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione a unidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {unidadesSaude.map((unidade) => (
-                        <SelectItem key={unidade.reg_uni_id} value={unidade.reg_uni_id.toString()}>
-                          <div className="flex items-center">
-                            <Building className="h-4 w-4 mr-2" />
-                            {unidade.reg_uni_nome}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.reg_uni_id && (
-                    <p className="text-sm text-red-500">{errors.reg_uni_id}</p>
-                  )}
-                </div>
-
-                {/* Grupo de Procedimentos */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_gpro_id">Grupo de Procedimentos *</Label>
-                  <Select 
-                    value={data.reg_gpro_id.toString()} 
-                    onValueChange={(value) => setData('reg_gpro_id', parseInt(value))}
-                  >
-                    <SelectTrigger className={errors.reg_gpro_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione o grupo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {gruposProcedimentos.map((grupo) => (
-                        <SelectItem key={grupo.reg_gpro_id} value={grupo.reg_gpro_id.toString()}>
-                          {grupo.reg_gpro_nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.reg_gpro_id && (
-                    <p className="text-sm text-red-500">{errors.reg_gpro_id}</p>
-                  )}
-                </div>
-
-                {/* Procedimento */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_proc_id">Procedimento *</Label>
-                  <Select 
-                    value={data.reg_proc_id.toString()} 
-                    onValueChange={(value) => setData('reg_proc_id', parseInt(value))}
-                  >
-                    <SelectTrigger className={errors.reg_proc_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione o procedimento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {procedimentosFiltrados.map((proc) => (
-                        <SelectItem key={proc.reg_proc_id} value={proc.reg_proc_id.toString()}>
-                          <div className="flex items-center">
-                            <Stethoscope className="h-4 w-4 mr-2" />
-                            {proc.reg_proc_nome}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.reg_proc_id && (
-                    <p className="text-sm text-red-500">{errors.reg_proc_id}</p>
-                  )}
-                </div>
-
-                {/* Médico Solicitante */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_med_id">Médico Solicitante</Label>
-                  <Select 
-                    value={data.reg_med_id?.toString() || ''} 
-                    onValueChange={(value) => setData('reg_med_id', value ? parseInt(value) : null)}
-                  >
-                    <SelectTrigger className={errors.reg_med_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione o médico" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {medicos.map((medico) => (
-                        <SelectItem key={medico.reg_med_id} value={medico.reg_med_id.toString()}>
-                          <div className="flex items-center">
-                            <User className="h-4 w-4 mr-2" />
-                            {medico.reg_med_nome}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.reg_med_id && (
-                    <p className="text-sm text-red-500">{errors.reg_med_id}</p>
-                  )}
-                </div>
-
-                {/* Protocolo Solicitante */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_ate_protoc_solicitante">Protocolo Solicitante</Label>
-                  <Input
-                    id="reg_ate_protoc_solicitante"
-                    value={data.reg_ate_protoc_solicitante}
-                    onChange={(e) => setData('reg_ate_protoc_solicitante', e.target.value)}
-                    placeholder="Digite o protocolo"
-                    className={errors.reg_ate_protoc_solicitante ? 'border-red-500' : ''}
-                  />
-                  {errors.reg_ate_protoc_solicitante && (
-                    <p className="text-sm text-red-500">{errors.reg_ate_protoc_solicitante}</p>
-                  )}
-                </div>
-
-                {/* Data de Solicitação */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_ate_drequerente">Data de Solicitação do médico *</Label>
-                  <div className="relative">
-                    <Input
-                      id="reg_ate_drequerente"
-                      type="date"
-                      value={data.reg_ate_drequerente}
-                      onChange={(e) => setData('reg_ate_drequerente', e.target.value)}
-                      className={`pl-10 ${errors.reg_ate_drequerente ? 'border-red-500' : ''}`}
-                    />
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  </div>
-                  {errors.reg_ate_drequerente && (
-                    <p className="text-sm text-red-500">{errors.reg_ate_drequerente}</p>
-                  )}
-                </div>
-
-                {/* Tipo de Atendimento */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_tipo_id">Tipo de Atendimento *</Label>
-                  <Select 
-                    value={data.reg_tipo_id.toString()} 
-                    onValueChange={(value) => setData('reg_tipo_id', parseInt(value))}
-                  >
-                    <SelectTrigger className={errors.reg_tipo_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tiposAtendimento.map((tipo) => (
-                        <SelectItem key={tipo.reg_tipo_id} value={tipo.reg_tipo_id.toString()}>
-                          {tipo.reg_tipo_nome} (Peso: {tipo.reg_tipo_peso})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.reg_tipo_id && (
-                    <p className="text-sm text-red-500">{errors.reg_tipo_id}</p>
-                  )}
-                </div>
-
-                {/* ACS */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_acs_id">ACS</Label>
-                  <Select 
-                    value={data.reg_acs_id?.toString() || ''} 
-                    onValueChange={(value) => setData('reg_acs_id', value ? parseInt(value) : null)}
-                  >
-                    <SelectTrigger className={errors.reg_acs_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione o ACS" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {acs.map((acsItem) => (
-                        <SelectItem key={acsItem.reg_acs_id} value={acsItem.reg_acs_id.toString()}>
-                          {acsItem.reg_acs_nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.reg_acs_id && (
-                    <p className="text-sm text-red-500">{errors.reg_acs_id}</p>
-                  )}
-                </div>
-
-                {/* Posição Atual */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_ate_pos_atual">Posição Atual</Label>
-                  <Input
-                    id="reg_ate_pos_atual"
-                    type="number"
-                    value={data.reg_ate_pos_atual || ''}
-                    onChange={(e) => setData('reg_ate_pos_atual', e.target.value ? parseInt(e.target.value) : null)}
-                    placeholder="Posição atual na fila"
-                    className={errors.reg_ate_pos_atual ? 'border-red-500' : ''}
-                  />
-                  {errors.reg_ate_pos_atual && (
-                    <p className="text-sm text-red-500">{errors.reg_ate_pos_atual}</p>
-                  )}
-                </div>
-
-                {/* Posição Inicial */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_ate_pos_inicial">Posição Inicial</Label>
-                  <Input
-                    id="reg_ate_pos_inicial"
-                    type="number"
-                    value={data.reg_ate_pos_inicial || ''}
-                    onChange={(e) => setData('reg_ate_pos_inicial', e.target.value ? parseInt(e.target.value) : null)}
-                    placeholder="Posição inicial na fila"
-                    className={errors.reg_ate_pos_inicial ? 'border-red-500' : ''}
-                  />
-                  {errors.reg_ate_pos_inicial && (
-                    <p className="text-sm text-red-500">{errors.reg_ate_pos_inicial}</p>
-                  )}
-                </div>
-
-                {/* Prioridade */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_ate_prioridade">Prioridade</Label>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="reg_ate_prioridade"
-                      checked={data.reg_ate_prioridade}
-                      onCheckedChange={(checked) => setData('reg_ate_prioridade', checked)}
-                    />
-                    <Label htmlFor="reg_ate_prioridade">Marcar como prioritário</Label>
-                  </div>
-                  {errors.reg_ate_prioridade && (
-                    <p className="text-sm text-red-500">{errors.reg_ate_prioridade}</p>
-                  )}
-                </div>
-
-                {/* Retroativo */}
-                <div className="space-y-2">
-                  <Label htmlFor="reg_ate_retroativo">Retroativo</Label>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="reg_ate_retroativo"
-                      checked={data.reg_ate_retroativo}
-                      onCheckedChange={(checked) => setData('reg_ate_retroativo', checked)}
-                    />
-                    <Label htmlFor="reg_ate_retroativo">Marcar como retroativo</Label>
-                  </div>
-                  {errors.reg_ate_retroativo && (
-                    <p className="text-sm text-red-500">{errors.reg_ate_retroativo}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Observações */}
-              <div className="space-y-2">
-                <Label htmlFor="reg_ate_obs">Observações</Label>
-                <Textarea
-                  id="reg_ate_obs"
-                  value={data.reg_ate_obs}
-                  onChange={(e) => setData('reg_ate_obs', e.target.value)}
-                  placeholder="Digite observações sobre o atendimento..."
-                  rows={4}
-                  className={errors.reg_ate_obs ? 'border-red-500' : ''}
-                />
-                {errors.reg_ate_obs && (
-                  <p className="text-sm text-red-500">{errors.reg_ate_obs}</p>
-                )}
-              </div>
-
-              <div className="flex justify-end space-x-4 pt-6 border-t">
-                <Link href={route('regulacao.atendimentos.index')}>
-                  <Button type="button" variant="outline">
-                    Cancelar
-                  </Button>
-                </Link>
-                <Button type="submit" disabled={processing} className="bg-blue-600 hover:bg-blue-700">
-                  <Save className="h-4 w-4 mr-2" />
-                  {processing ? 'Salvando...' : 'Atualizar Atendimento'}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
+          <AtendimentoForm
+            data={data}
+            setData={setData}
+            onSubmit={handleSubmit}
+            errors={errors as Record<string, string>}
+            processing={processing}
+            pessoas={pessoas}
+            gruposProcedimentos={gruposProcedimentos}
+            procedimentos={procedimentos}
+            medicos={medicos}
+            unidadesSaude={unidadesSaude}
+            acs={acs}
+            tiposAtendimento={tiposAtendimento}
+            pacientesFiltrados={pacientesFiltrados}
+            buscaPaciente={buscaPaciente}
+            setBuscaPaciente={setBuscaPaciente}
+            loadingPacientes={loadingPacientes}
+            showModalPaciente={showModalPaciente}
+            setShowModalPaciente={setShowModalPaciente}
+            cadastrarPacienteRapido={cadastrarPacienteRapido}
+            novoPacienteNome={novoPacienteNome}
+            setNovoPacienteNome={setNovoPacienteNome}
+            novoPacienteCpf={novoPacienteCpf}
+            setNovoPacienteCpf={setNovoPacienteCpf}
+            salvandoPaciente={salvandoPaciente}
+            erroPaciente={erroPaciente}
+            modo="edit"
+            onCancel={() => window.history.back()}
+          />
         </Card>
+
+        {/* Modal de Cadastro Rápido de Paciente */}
+        <Modal
+          show={showModalPaciente}
+          onClose={() => setShowModalPaciente(false)}
+          title="Cadastrar Novo Paciente"
+        >
+          <form onSubmit={cadastrarPacienteRapido} className="space-y-4">
+            <div>
+              <Label htmlFor="novoPacienteNome">Nome Completo *</Label>
+              <Input
+                id="novoPacienteNome"
+                value={novoPacienteNome}
+                onChange={(e) => setNovoPacienteNome(e.target.value)}
+                placeholder="Digite o nome completo"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="novoPacienteCpf">CPF *</Label>
+              <Input
+                id="novoPacienteCpf"
+                value={novoPacienteCpf}
+                onChange={(e) => setNovoPacienteCpf(e.target.value)}
+                placeholder="Digite o CPF (apenas números)"
+                required
+              />
+            </div>
+            {erroPaciente && (
+              <p className="text-sm text-red-500">{erroPaciente}</p>
+            )}
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowModalPaciente(false)}
+                disabled={salvandoPaciente}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={salvandoPaciente}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {salvandoPaciente ? 'Salvando...' : 'Cadastrar Paciente'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
       </div>
     </AppLayout>
   );

@@ -38,9 +38,9 @@ class AtendimentosController extends Controller
 
     public function create()
     {
-        $pessoas = Pessoa::select('ger_pessoas_id', 'ger_pessoas_nome', 'ger_pessoas_cpf')
-            ->orderBy('ger_pessoas_nome')
-            ->get();
+        //$pessoas = Pessoa::select('ger_pessoas_id', 'ger_pessoas_nome', 'ger_pessoas_cpf')
+        //    ->orderBy('ger_pessoas_nome')->limit(10)
+        //    ->get();
 
         $gruposProcedimentos = RegGrupoProcedimento::orderBy('reg_gpro_nome')->get();
         $procedimentos = RegProcedimento::with('grupoProcedimento')->orderBy('reg_proc_nome')->get();
@@ -50,7 +50,7 @@ class AtendimentosController extends Controller
         $tiposAtendimento = RegTipoAtendimento::orderBy('reg_tipo_peso')->get();
 
         return Inertia::render('regulacao/Atendimentos/Create', [
-            'pessoas' => $pessoas,
+            //'pessoas' => $pessoas,
             'gruposProcedimentos' => $gruposProcedimentos,
             'procedimentos' => $procedimentos,
             'medicos' => $medicos,
@@ -131,7 +131,7 @@ class AtendimentosController extends Controller
     public function edit(RegAtendimento $atendimento)
     {
         $pessoas = Pessoa::select('ger_pessoas_id', 'ger_pessoas_nome', 'ger_pessoas_cpf')
-            ->orderBy('ger_pessoas_nome')
+            ->where('ger_pessoas_id', $atendimento->ger_pessoas_id)
             ->get();
 
         $gruposProcedimentos = RegGrupoProcedimento::orderBy('reg_gpro_nome')->get();
@@ -189,7 +189,7 @@ class AtendimentosController extends Controller
             'reg_ate_pos_inicial' => $request->reg_ate_pos_inicial,
         ]);
 
-        return redirect()->route('regulacao.atendimentos.index')
+        return redirect()->route('regulacao.atendimentos.edit',$atendimento->reg_ate_id)
             ->with('sucesso', 'Atendimento atualizado com sucesso!');
     }
 
@@ -252,5 +252,39 @@ class AtendimentosController extends Controller
 
         return redirect()->route('regulacao.atendimentos.index')
             ->with('sucesso', 'Agendamento cancelado com sucesso!');
+    }
+
+    public function comprovante($atendimento)
+    {
+
+        $atendimentoConsulta = RegAtendimento::where('reg_ate_id', $atendimento)->with([
+            'pessoa',
+            'procedimento',
+            'grupoProcedimento',
+            'tipoAtendimento',
+            'usuario'
+        ])->get();
+
+        $atendimento = $atendimentoConsulta->map(function($item){
+            return [
+                'pacienteNome'=>$item->pessoa->ger_pessoas_nome,
+                'procedimentoNome'=>$item->procedimento->reg_proc_nome,
+                'pacienteCNS'=>$item->pessoa->ger_pessoas_cns,
+                'pacienteTelefone1'=>$item->pessoa->ger_pessoas_telefone1,
+                'pacienteTelefone2'=>$item->pessoa->ger_pessoas_telefone2,
+                'pacienteNascimento'=>$item->pessoa->ger_pessoas_nascimento,
+                'pacienteEndereco'=>$item->pessoa->ger_pessoas_endereco,
+                'pacienteEnderecoN'=>$item->pessoa->ger_pessoas_endereco_n,
+                'pacienteCPF'=>$item->pessoa->ger_pessoas_cpf,
+                'usuarioNome'=>$item->usuario->name,
+                'dataSolicitacao'=>$item->reg_ate_datendimento,
+                'protocolo'=>$item->reg_ate_protocolo
+    
+            ];
+        });
+
+        return Inertia::render('regulacao/Atendimentos/DocumentoPrint', [
+            'atendimento' => $atendimento[0]
+        ]);
     }
 } 

@@ -12,10 +12,12 @@ import {
   AlertTriangle,
   Edit,
   Archive,
-  Trash2
+  Trash2,
+  Printer
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { Link, router } from '@inertiajs/react';
+import ComprovanteAtendimento from './Comprovante';
 
 interface Atendimento {
   reg_ate_id: number;
@@ -73,6 +75,8 @@ interface ShowProps {
 }
 
 export default function Show({ atendimento }: ShowProps) {
+  const [showComprovante, setShowComprovante] = React.useState(false);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
@@ -95,6 +99,14 @@ export default function Show({ atendimento }: ShowProps) {
     router.put(route('regulacao.atendimentos.desarquivar', atendimento.reg_ate_id));
   };
 
+  const handlePrintComprovante = () => {
+    setShowComprovante(true);
+    setTimeout(() => {
+      window.print();
+      setShowComprovante(false);
+    }, 100);
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6 p-4">
@@ -112,6 +124,16 @@ export default function Show({ atendimento }: ShowProps) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={handlePrintComprovante}>
+              <Printer className="h-4 w-4 mr-2" />
+              Imprimir Comprovante
+            </Button>
+            <Link href={route('regulacao.atendimentos.comprovante', atendimento.reg_ate_id)}>
+              <Button variant="outline" size="sm">
+                <FileText className="h-4 w-4 mr-2" />
+                Ver Comprovante
+              </Button>
+            </Link>
             <Link href={route('regulacao.atendimentos.edit', atendimento.reg_ate_id)}>
               <Button variant="outline" size="sm">
                 <Edit className="h-4 w-4 mr-2" />
@@ -340,6 +362,29 @@ export default function Show({ atendimento }: ShowProps) {
           )}
         </div>
       </div>
+
+      {/* Modal do Comprovante para Impressão */}
+      {showComprovante && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 print:hidden">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Comprovante de Atendimento</h3>
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm" onClick={() => window.print()}>
+                  <Printer className="h-4 w-4 mr-2" />
+                  Imprimir
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowComprovante(false)}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+            <div className="p-4">
+              <ComprovanteAtendimento atendimento={atendimento} />
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 } 

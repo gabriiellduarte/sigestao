@@ -18,12 +18,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import Modal from '@/components/Modal';
 
-interface Pessoa {
-  ger_pessoas_id: number;
-  ger_pessoas_nome: string;
-  ger_pessoas_cpf: string;
-}
-
 interface Servidor {
   adm_servidores_id: number;
   ger_pessoas_nome: string;

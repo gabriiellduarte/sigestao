@@ -64,10 +64,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return Inertia::render('regulacao/atendimentos_novo');
         })->name('atendimento.novo');
 
-        Route::get('pacientes', function(){
-            return Inertia::render('regulacao/pacientes',['nome'=>'testss']);
-        });
-
         Route::get('dashboard', function(){
             return Inertia::render('regulacao/dashboard');
         });
@@ -80,6 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('atendimentos/{atendimento}/desarquivar', [AtendimentosController::class, 'desarquivar'])->name('atendimentos.desarquivar');
         Route::put('atendimentos/{atendimento}/agendar', [AtendimentosController::class, 'agendar'])->name('atendimentos.agendar');
         Route::put('atendimentos/{atendimento}/desagendar', [AtendimentosController::class, 'desagendar'])->name('atendimentos.desagendar');
+        Route::get('atendimentos/{atendimento}/comprovante', [AtendimentosController::class, 'comprovante'])->name('atendimentos.comprovante');
         // Rotas de Pacientes
         Route::resource('pacientes', RegPacienteController::class);
 
@@ -90,12 +87,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('unidadessaude', RegUnidadeSaudeController::class)->parameters(['unidadessaude' => 'unidadessaude']);
         Route::resource('acs', RegAcsController::class)->parameters(['acs' => 'ac']);
         Route::resource('tiposatendimento', RegTipoAtendimentoController::class)->parameters(['tiposatendimento' => 'tiposatendimento']);
-    });
-    Route::get('home', function () {
-        return Inertia::render('home');
-    });
-    Route::get('tasks', function () {
-        return Inertia::render('tasks');
     });
 
     // Rotas de Permissões

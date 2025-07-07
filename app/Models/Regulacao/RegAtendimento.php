@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Pessoa;
 use App\Models\User;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class RegAtendimento extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'reg_atendimentos';
     protected $primaryKey = 'reg_ate_id';
@@ -45,6 +47,13 @@ class RegAtendimento extends Model
         'reg_ate_arquivado' => 'boolean',
         'reg_ate_agendado' => 'boolean',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+        ->logAll();
+        // Chain fluent methods for configuration options
+    }
 
     // Relacionamentos
     public function pessoa()

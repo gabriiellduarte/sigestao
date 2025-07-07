@@ -36,8 +36,8 @@ export default function Index({ auth, pacientes }: Props) {
 
     const filteredPacientes = pacientes.data.filter(paciente =>
         paciente.ger_pessoas_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        paciente.reg_paciente_cns.includes(searchTerm) ||
-        (paciente.reg_paciente_cpf && paciente.reg_paciente_cpf.includes(searchTerm))
+        paciente.ger_pessoas_cns.includes(searchTerm) ||
+        (paciente.ger_pessoas_cpf && paciente.ger_pessoas_cpf.includes(searchTerm))
     );
 
     return (
@@ -82,27 +82,27 @@ export default function Index({ auth, pacientes }: Props) {
                                 </TableHeader>
                                 <TableBody>
                                     {filteredPacientes.map((paciente) => (
-                                        <TableRow key={paciente.reg_paciente_id}>
+                                        <TableRow key={paciente.ger_pessoas_id}>
                                             <TableCell>{paciente.ger_pessoas_nome}</TableCell>
-                                            <TableCell>{paciente.reg_paciente_cns}</TableCell>
-                                            <TableCell>{paciente.reg_paciente_cpf}</TableCell>
+                                            <TableCell>{paciente.ger_pessoas_cns}</TableCell>
+                                            <TableCell>{paciente.ger_pessoas_cpf}</TableCell>
                                             <TableCell>
-                                                {new Date(paciente.reg_paciente_nascimento).toLocaleDateString()}
+                                                {new Date(paciente.ger_pessoas_nascimento).toLocaleDateString()}
                                             </TableCell>
-                                            <TableCell>{paciente.reg_paciente_telefone1}</TableCell>
+                                            <TableCell>{paciente.ger_pessoas_telefone1}</TableCell>
                                             <TableCell>
                                                 <div className="flex space-x-2">
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => router.visit(route('regulacao.pacientes.edit', paciente.reg_paciente_id))}
+                                                        onClick={() => router.visit(route('regulacao.pacientes.edit', paciente.ger_pessoas_id))}
                                                     >
                                                         <Pencil className="h-4 w-4" />
                                                     </Button>
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDelete(paciente.reg_paciente_id)}
+                                                        onClick={() => handleDelete(paciente.ger_pessoas_id)}
                                                     >
                                                         <Trash className="h-4 w-4" />
                                                     </Button>

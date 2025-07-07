@@ -39,7 +39,15 @@ class PessoaController extends Controller
             'ger_localidades_id' => 'nullable|integer|max:255'
         ]);
 
-        Pessoa::create($validated);
+        $pessoa = Pessoa::create($validated);
+
+        // Se for uma requisição AJAX, retorna JSON
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'pessoa' => $pessoa->only(['ger_pessoas_id', 'ger_pessoas_nome', 'ger_pessoas_cpf'])
+            ]);
+        }
 
         return redirect()->route('administracao.pessoas.index')
             ->with('sucesso', 'Pessoa cadastrada com sucesso!');
@@ -86,11 +94,24 @@ class PessoaController extends Controller
     public function search(Request $request)
     {
         $term = $request->get('term');
-        $pessoas = Pessoa::where('ger_pessoas_nome', 'like', "%{$term}%")
-            ->orWhere('ger_pessoas_cpf', 'like', "%{$term}%")
-            ->limit(10)
-            ->get(['ger_pessoas_id', 'ger_pessoas_nome', 'ger_pessoas_cpf']);
+        $id = $request->get('id');
         
-        return response()->json($pessoas);
+        if ($id) {
+            // Busca por ID específico
+            $pessoa = Pessoa::where('ger_pessoas_id', $id)
+                ->get(['ger_pessoas_id', 'ger_pessoas_nome', 'ger_pessoas_cpf']);
+            return response()->json($pessoa);
+        }
+        
+        if ($term) {
+            // Busca por termo (nome ou CPF)
+            $pessoas = Pessoa::where('ger_pessoas_nome', 'like', "%{$term}%")
+                ->orWhere('ger_pessoas_cpf', 'like', "%{$term}%")
+                ->limit(10)
+                ->get(['ger_pessoas_id', 'ger_pessoas_nome', 'ger_pessoas_cpf']);
+            return response()->json($pessoas);
+        }
+        
+        return response()->json([]);
     }
 } 
