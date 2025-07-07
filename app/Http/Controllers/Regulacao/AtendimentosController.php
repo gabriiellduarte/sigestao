@@ -14,6 +14,7 @@ use App\Models\Pessoa;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class AtendimentosController extends Controller
 {
@@ -50,7 +51,7 @@ class AtendimentosController extends Controller
         $tiposAtendimento = RegTipoAtendimento::orderBy('reg_tipo_peso')->get();
 
         return Inertia::render('regulacao/Atendimentos/Create', [
-            //'pessoas' => $pessoas,
+            'pessoas' => [],
             'gruposProcedimentos' => $gruposProcedimentos,
             'procedimentos' => $procedimentos,
             'medicos' => $medicos,
@@ -60,26 +61,58 @@ class AtendimentosController extends Controller
         ]);
     }
 
+    private function getValidationMessages()
+    {
+        return [
+            'ger_pessoas_id.required' => 'O campo paciente é obrigatório.',
+            'ger_pessoas_id.exists' => 'O paciente selecionado não existe.',
+            'reg_proc_id.required' => 'O campo procedimento é obrigatório.',
+            'reg_proc_id.exists' => 'O procedimento selecionado não existe.',
+            'reg_gpro_id.required' => 'O campo grupo de procedimento é obrigatório.',
+            'reg_gpro_id.exists' => 'O grupo de procedimento selecionado não existe.',
+            'reg_tipo_id.required' => 'O campo tipo de atendimento é obrigatório.',
+            'reg_tipo_id.exists' => 'O tipo de atendimento selecionado não existe.',
+            'reg_ate_datendimento.required' => 'A data do atendimento é obrigatória.',
+            'reg_ate_datendimento.date' => 'A data do atendimento deve ser uma data válida.',
+            'reg_ate_drequerente.required' => 'A data de solicitação é obrigatória.',
+            'reg_ate_drequerente.date' => 'A data de solicitação deve ser uma data válida.',
+            'reg_ate_obs.string' => 'O campo observações deve ser um texto.',
+            'reg_uni_id.exists' => 'A unidade de saúde selecionada não existe.',
+            'reg_med_id.exists' => 'O médico selecionado não existe.',
+            'reg_ate_protoc_solicitante.max' => 'O protocolo solicitante deve ter no máximo 50 caracteres.',
+            'reg_acs_id.exists' => 'O ACS selecionado não existe.',
+            'reg_ate_pos_atual.integer' => 'A posição atual deve ser um número inteiro.',
+            'reg_ate_pos_inicial.integer' => 'A posição inicial deve ser um número inteiro.',
+        ];
+    }
+
     public function store(Request $request)
     {
         $request->validate([
-            'ger_pessoas_id' => 'required|exists:ger_pessoas,ger_pessoas_id',
-            'reg_proc_id' => 'required|exists:reg_procedimentos,reg_proc_id',
-            'reg_gpro_id' => 'required|exists:reg_gprocedimentos,reg_gpro_id',
-            'reg_tipo_id' => 'required|exists:reg_tiposatendimento,reg_tipo_id',
+            'ger_pessoas_id' => 'required',
+            'reg_proc_id' => 'required',
+            'reg_gpro_id' => 'required',
+            'reg_tipo_id' => 'required',
             'reg_ate_datendimento' => 'required|date',
             'reg_ate_drequerente' => 'required|date',
             'reg_ate_obs' => 'nullable|string',
-            'reg_uni_id' => 'nullable|exists:reg_unidadessaude,reg_uni_id',
-            'reg_med_id' => 'nullable|exists:reg_medicos,reg_med_id',
+            'reg_uni_id' => 'nullable',
+            'reg_med_id' => 'nullable',
             'reg_ate_protoc_solicitante' => 'nullable|string|max:50',
-            'reg_acs_id' => 'nullable|exists:reg_acs,reg_acs_id',
+            'reg_acs_id' => 'nullable',
             'reg_ate_pos_atual' => 'nullable|integer',
             'reg_ate_pos_inicial' => 'nullable|integer',
-        ]);
+        ], $this->getValidationMessages());
 
-        // Gerar protocolo único
-        $protocolo = 'REG' . date('Ymd') . Str::random(6);
+        $existe = RegAtendimento::where('ger_pessoas_id', $request->ger_pessoas_id)
+            ->where('reg_proc_id', $request->reg_proc_id)
+            ->where('reg_gpro_id', $request->reg_gpro_id)
+            ->where('reg_ate_drequerente', $request->reg_ate_drequerente)
+            ->exists();
+
+        if ($existe) {
+            return back()->withErrors(['duplicado' => 'Cadastro Duplicado. Já existe um atendimento com esses dados.']);
+        }
 
         $atendimento = RegAtendimento::create([
             'ger_pessoas_id' => $request->ger_pessoas_id,
@@ -169,7 +202,7 @@ class AtendimentosController extends Controller
             'reg_acs_id' => 'nullable|exists:reg_acs,reg_acs_id',
             'reg_ate_pos_atual' => 'nullable|integer',
             'reg_ate_pos_inicial' => 'nullable|integer',
-        ]);
+        ], $this->getValidationMessages());
 
         $atendimento->update([
             'ger_pessoas_id' => $request->ger_pessoas_id,

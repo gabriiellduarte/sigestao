@@ -40,6 +40,12 @@ const mainNavItems: NavItem[] = [
                 permissions: 'acessar sistema'
             },
             {
+                title: 'Logs',
+                href: '/administracao/logs',
+                icon: UserCircle,
+                permissions: 'acessar sistema'
+            },
+            {
                 title: 'Pessoas',
                 href: '/administracao/pessoas',
                 icon: UserCircle,

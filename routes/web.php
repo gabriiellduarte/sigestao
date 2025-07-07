@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Administracao\LogsController;
 use App\Http\Controllers\Administracao\PortariasController;
 use App\Http\Controllers\Administracao\ServidoresController;
 use App\Http\Controllers\TipoPortariaController;
@@ -41,6 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('secretarias', SecretariaController::class);
         Route::resource('localidades', LocalidadeController::class);
         Route::resource('servidores', ServidoresController::class);
+        Route::resource('logs', LogsController::class);
         Route::get('servidores-search', [ServidoresController::class, 'search'])->name('servidores.search');
     });
     Route::prefix('documentos')->name('documentos.')->group(function () {

@@ -107,6 +107,11 @@ export default function AtendimentoForm({
 
   return (
     <CardContent>
+      {errors.duplicado && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center font-semibold">
+          {errors.duplicado}
+        </div>
+      )}
       <form onSubmit={onSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Paciente */}
