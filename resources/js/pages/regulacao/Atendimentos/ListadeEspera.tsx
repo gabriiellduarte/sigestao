@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Filter, Calendar, User, MapPin, Clock, Eye, Hash, ArrowLeft, Plus } from 'lucide-react';
+import { Search, Filter, Calendar, User, MapPin, Clock, Eye, Hash, ArrowLeft, Plus, Trash2, Edit, Archive, FileText } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { Link } from '@inertiajs/react';
 
@@ -318,13 +318,50 @@ export default function ListaEspera({ atendimentos }: ListaEsperaProps) {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Link href={route('regulacao.atendimentos.show', atendimento.reg_ate_id)}>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-1" />
-                            Ver Detalhes
-                          </Button>
-                        </Link>
+                        <div className="flex items-center space-x-2">
+                          
+                          <Link href={route('regulacao.atendimentos.edit', atendimento.reg_ate_id)}>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          
+                          {!atendimento.reg_ate_arquivado ? (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                            >
+                              <Archive className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          )}
+
+                          {!atendimento.reg_ate_agendado ? (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                            >
+                              <Calendar className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                            >
+                              <Calendar className="h-4 w-4" />
+                            </Button>
+                          )}
+                        
+                          
+                        </div>
                       </TableCell>
+  
                     </TableRow>
                   ))}
                 </TableBody>

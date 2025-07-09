@@ -22,6 +22,7 @@ interface Props {
 
 export default function Form({ pessoa, localidades, isEditing = false }: Props) {
     const { data, setData, post, put, processing, errors } = useForm<PessoaFormData>({
+        ger_pessoas_sexo: pessoa?.ger_pessoas_sexo || '',
         ger_pessoas_nome: pessoa?.ger_pessoas_nome || '',
         ger_pessoas_cns: pessoa?.ger_pessoas_cns || '',
         ger_pessoas_cpf: pessoa?.ger_pessoas_cpf || '',
@@ -48,7 +49,7 @@ export default function Form({ pessoa, localidades, isEditing = false }: Props) 
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label htmlFor="ger_pessoas_nome">Nome</Label>
+                            <Label htmlFor="ger_pessoas_nome">Nome *</Label>
                             <Input
                                 id="ger_pessoas_nome"
                                 value={data.ger_pessoas_nome}
@@ -61,12 +62,11 @@ export default function Form({ pessoa, localidades, isEditing = false }: Props) 
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="ger_pessoas_cns">CNS</Label>
+                            <Label htmlFor="ger_pessoas_cns">CNS (Cartão Nacional do SUS)</Label>
                             <Input
                                 id="ger_pessoas_cns"
                                 value={data.ger_pessoas_cns}
                                 onChange={e => setData('ger_pessoas_cns', e.target.value)}
-                                required
                             />
                             {errors.ger_pessoas_cns && (
                                 <p className="text-sm text-red-500">{errors.ger_pessoas_cns}</p>
@@ -74,11 +74,19 @@ export default function Form({ pessoa, localidades, isEditing = false }: Props) 
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="ger_pessoas_cpf">CPF</Label>
+                            <Label htmlFor="ger_pessoas_cpf">CPF *</Label>
                             <Input
                                 id="ger_pessoas_cpf"
                                 value={data.ger_pessoas_cpf || ''}
-                                onChange={e => setData('ger_pessoas_cpf', e.target.value)}
+                                maxLength={11}
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                onChange={e => {
+                                    // Remove tudo que não for número e limita a 11 caracteres
+                                    const onlyNums = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                    setData('ger_pessoas_cpf', onlyNums);
+                                }}
+                                required
                             />
                             {errors.ger_pessoas_cpf && (
                                 <p className="text-sm text-red-500">{errors.ger_pessoas_cpf}</p>
@@ -92,7 +100,6 @@ export default function Form({ pessoa, localidades, isEditing = false }: Props) 
                                 type="date"
                                 value={data.ger_pessoas_nascimento}
                                 onChange={e => setData('ger_pessoas_nascimento', e.target.value)}
-                                required
                             />
                             {errors.ger_pessoas_nascimento && (
                                 <p className="text-sm text-red-500">{errors.ger_pessoas_nascimento}</p>
@@ -100,12 +107,18 @@ export default function Form({ pessoa, localidades, isEditing = false }: Props) 
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="ger_pessoas_telefone1">Telefone Principal</Label>
+                            <Label htmlFor="ger_pessoas_telefone1">WhatsApp/Número Principal</Label>
                             <Input
                                 id="ger_pessoas_telefone1"
                                 value={data.ger_pessoas_telefone1}
-                                onChange={e => setData('ger_pessoas_telefone1', e.target.value)}
-                                required
+                                maxLength={11}
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                onChange={e => {
+                                    // Remove tudo que não for número e limita a 11 caracteres
+                                    const onlyNums = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                    setData('ger_pessoas_telefone1', onlyNums);
+                                }}
                             />
                             {errors.ger_pessoas_telefone1 && (
                                 <p className="text-sm text-red-500">{errors.ger_pessoas_telefone1}</p>
@@ -113,11 +126,18 @@ export default function Form({ pessoa, localidades, isEditing = false }: Props) 
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="ger_pessoas_telefone2">Telefone Secundário</Label>
+                            <Label htmlFor="ger_pessoas_telefone2">Número Principal</Label>
                             <Input
                                 id="ger_pessoas_telefone2"
                                 value={data.ger_pessoas_telefone2 || ''}
-                                onChange={e => setData('ger_pessoas_telefone2', e.target.value)}
+                                maxLength={11}
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                onChange={e => {
+                                    // Remove tudo que não for número e limita a 11 caracteres
+                                    const onlyNums = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                    setData('ger_pessoas_telefone2', onlyNums);
+                                }}
                             />
                             {errors.ger_pessoas_telefone2 && (
                                 <p className="text-sm text-red-500">{errors.ger_pessoas_telefone2}</p>
@@ -137,7 +157,7 @@ export default function Form({ pessoa, localidades, isEditing = false }: Props) 
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="ger_pessoas_endereco_n">Número</Label>
+                            <Label htmlFor="ger_pessoas_endereco_n">Número da casa</Label>
                             <Input
                                 id="ger_pessoas_endereco_n"
                                 value={data.ger_pessoas_endereco_n || ''}
@@ -170,6 +190,22 @@ export default function Form({ pessoa, localidades, isEditing = false }: Props) 
                             {errors.ger_pessoas_mae && (
                                 <p className="text-sm text-red-500">{errors.ger_pessoas_mae}</p>
                             )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="ger_pessoas_mae">Sexo</Label>
+                            <Select
+                                value={data?.ger_pessoas_sexo || 'masculino'}
+                                onValueChange={(value) => setData('ger_pessoas_sexo', value)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o sexo"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem key='masculino'
+                                    value='Masculino'>Masculino</SelectItem>
+                                    <SelectItem key='feminino'
+                                    value='Feminino'>Feminino</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="space-y-2">

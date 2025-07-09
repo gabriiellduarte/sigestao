@@ -12,13 +12,13 @@ import SettingsLayout from '@/layouts/settings/layout';
 interface Permission {
     id: number;
     name: string;
-    description: string;
+    descricao: string;
 }
 
 interface Role {
     id?: number;
     name: string;
-    description: string;
+    descricao: string;
     permissions: number[];
 }
 
@@ -30,8 +30,12 @@ interface Props {
 export default function Form({ role, permissions }: Props) {
     const { data, setData, post, put, processing, errors } = useForm({
         name: role?.name || '',
-        description: role?.description || '',
-        permissions: role?.permissions || [],
+        descricao: role?.descricao || '',
+        permissions: role?.permissions
+            ? Array.isArray(role.permissions) && typeof role.permissions[0] === 'object'
+                ? role.permissions.map((p: any) => p.id)
+                : role.permissions
+            : [],
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -99,18 +103,18 @@ export default function Form({ role, permissions }: Props) {
                                     <Label htmlFor="description">Descrição</Label>
                                     <Textarea
                                         id="description"
-                                        value={data.description}
-                                        onChange={e => setData('description', e.target.value)}
+                                        value={data.descricao}
+                                        onChange={e => setData('descricao', e.target.value)}
                                         placeholder="Digite a descrição da função"
                                     />
-                                    {errors.description && (
-                                        <p className="text-sm text-red-500">{errors.description}</p>
+                                    {errors.descricao && (
+                                        <p className="text-sm text-red-500">{errors.descricao}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label>Permissões</Label>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                                         {permissions.map((permission) => (
                                             <div key={permission.id} className="flex items-center space-x-2">
                                                 <Checkbox

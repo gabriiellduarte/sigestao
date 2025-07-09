@@ -8,7 +8,7 @@ import { type PropsWithChildren } from 'react';
 
 // Extende NavItem para aceitar permissions
 interface NavItem extends BaseNavItem {
-    permissions?: string[];
+    permissions?: string | string[];
 }
 
 const sidebarNavItems: NavItem[] = [
@@ -16,7 +16,6 @@ const sidebarNavItems: NavItem[] = [
         title: 'Meu Perfil',
         href: '/settings/profile',
         icon: null,
-        
     },
     {
         title: 'Senha',
@@ -27,30 +26,29 @@ const sidebarNavItems: NavItem[] = [
         title: 'Aparência',
         href: '/settings/appearance',
         icon: null,
-        permissions: ['profile.visualizar'],
+        permissions: ['Super Administrador'],
     },
     {
         title: 'Usuários',
         href: '/users',
         icon: null,
-        permissions: ['profile.visualizar'],
+        permissions: ['Super Administrador'],
     },
     {
         title: 'Permissões',
         href: '/permissions',
         icon: null,
-        permissions: ['profile.visualizar'],
+        permissions: ['Super Administrador'],
     },
     {
         title: 'Funções',
         href: '/roles',
         icon: null,
-        permissions: ['profile.visualizar'],
+        permissions: ['Super Administrador'],
     },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
-    // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;
     }
@@ -58,6 +56,15 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const currentPath = window.location.pathname;
     const { auth } = usePage().props as any;
     const userPermissions = auth?.user?.permissions || [];
+    const isSuperAdmin = userPermissions.includes('Super Administrador');
+
+    // Função de permissão igual ao nav-main
+    const hasPermission = (permissions: string | string[] | undefined) => {
+        if (!permissions) return true;
+        if (isSuperAdmin) return true;
+        const requiredPermissions = Array.isArray(permissions) ? permissions : [permissions];
+        return requiredPermissions.some(permission => auth.can[permission]);
+    };
 
     return (
         <div className="px-4 py-6">
@@ -67,7 +74,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                 <aside className="w-full max-w-xl lg:w-48">
                     <nav className="flex flex-col space-y-1 space-x-0">
                         {sidebarNavItems
-                            .filter(item => !item.permissions || item.permissions.every(p => userPermissions.includes(p)))
+                            .filter(item => hasPermission(item.permissions))
                             .map((item, index) => (
                                 <Button
                                     key={`${item.href}-${index}`}

@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('ger_pessoas', function (Blueprint $table) {
             $table->id('ger_pessoas_id');
             $table->string('ger_pessoas_nome', 150);
-            $table->string('ger_pessoas_sexo', 20);
-            $table->string('ger_pessoas_cns', 15)->nullable();
+            $table->string('ger_pessoas_sexo', 20)->nullable();
+            $table->string('ger_pessoas_cns', 20)->nullable();
             $table->string('ger_pessoas_cpf', 11)->unique();
             $table->date('ger_pessoas_nascimento')->nullable();
             $table->string('ger_pessoas_telefone1', 11)->default('8899999999');

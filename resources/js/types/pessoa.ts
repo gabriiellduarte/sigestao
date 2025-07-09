@@ -1,5 +1,6 @@
 export interface Pessoa {
     ger_pessoas_id: number;
+    ger_pessoas_sexo: string;
     ger_pessoas_nome: string;
     ger_pessoas_cns: string;
     ger_pessoas_cpf: string | null;
@@ -19,6 +20,7 @@ export interface Pessoa {
 
 export interface PessoaFormData {
     ger_pessoas_nome: string;
+    ger_pessoas_sexo: string;
     ger_pessoas_cns: string;
     ger_pessoas_cpf: string | null;
     ger_pessoas_nascimento: string;

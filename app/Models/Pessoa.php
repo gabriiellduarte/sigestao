@@ -36,4 +36,13 @@ class Pessoa extends Model
     {
         return $this->belongsTo(Localidade::class,'ger_localidades_id','ger_localidades_id');
     }
+
+    public static function getValidationMessages()
+    {
+        return [
+            'ger_pessoas_nome.required' => 'O nome da pessoa é obrigatório.',
+            'ger_pessoas_cpf.required' => 'O cpf da pessoa é obrigatório.',
+            'ger_pessoas_cpf.unique' => 'Já existe um CPF cadastrado com esse número.',
+        ];
+    }
 } 

@@ -6,7 +6,6 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, HomeIcon, UsersIcon, ClipboardListIcon, Building2, Briefcase, UserCircle, ScrollText } from 'lucide-react';
 import AppLogo from './app-logo';
-import { menuItems }  from '@/layouts/app/sidebar/itensmenu'
 
 const mainNavItems: NavItem[] = [
     {
@@ -123,19 +122,6 @@ const mainNavItems: NavItem[] = [
             }
         ]
     }
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
 ];
 
 export function AppSidebar() {

@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Filter, Calendar, User, MapPin, Clock, Eye, Hash, ArrowLeft, Plus } from 'lucide-react';
+import { Search, Filter, Calendar, User, MapPin, Clock, Eye, Hash, ArrowLeft, Plus, Edit, Archive, FileText } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
 interface Atendimento {
   reg_ate_id: number;
@@ -75,6 +75,16 @@ export default function ListaEspera({ atendimentos }: ListaEsperaProps) {
   const gruposProcedimento = [...new Set(atendimentos.data.map(a => a.grupo_procedimento.reg_gpro_nome))];
   const procedimentos = [...new Set(atendimentos.data.map(a => a.procedimento.reg_proc_nome))];
 
+  // Função para buscar do backend ao selecionar grupo
+  const handleGrupoChange = (grupo: string) => {
+    setSelectedGrupoProcedimento(grupo);
+    if (grupo !== 'todos') {
+      router.visit(route('regulacao.atendimentos.lista_espera', { grupo }));
+    } else {
+      router.visit(route('regulacao.atendimentos.lista_espera'));
+    }
+  };
+
   const filteredAtendimentos = atendimentos.data.filter(atendimento => {
     const matchesSearch = atendimento.pessoa.ger_pessoas_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          atendimento.pessoa.ger_pessoas_cpf.includes(searchTerm) ||
@@ -82,12 +92,11 @@ export default function ListaEspera({ atendimentos }: ListaEsperaProps) {
                          atendimento.reg_ate_protocolo.includes(searchTerm);
     
     const matchesProcedimento = selectedProcedimento === 'todos' || atendimento.procedimento.reg_proc_nome === selectedProcedimento;
-    const matchesGrupoProcedimento = selectedGrupoProcedimento === 'todos' || atendimento.grupo_procedimento.reg_gpro_nome === selectedGrupoProcedimento;
     const matchesPrioridade = selectedPrioridade === 'todos' || 
                              (selectedPrioridade === 'prioritario' && atendimento.reg_ate_prioridade) ||
                              (selectedPrioridade === 'normal' && !atendimento.reg_ate_prioridade);
 
-    return matchesSearch && matchesProcedimento && matchesGrupoProcedimento && matchesPrioridade;
+    return matchesSearch && matchesProcedimento && matchesPrioridade;
   });
 
   // Ordenar por prioridade, peso do tipo de atendimento e data de criação
@@ -182,7 +191,7 @@ export default function ListaEspera({ atendimentos }: ListaEsperaProps) {
               </div>
 
               {/* Grupo de Procedimento */}
-              <Select value={selectedGrupoProcedimento} onValueChange={setSelectedGrupoProcedimento}>
+              <Select value={selectedGrupoProcedimento} onValueChange={handleGrupoChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Grupo de Procedimento" />
                 </SelectTrigger>
@@ -243,6 +252,7 @@ export default function ListaEspera({ atendimentos }: ListaEsperaProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Ações</TableHead>
                     <TableHead>Posição</TableHead>
                     <TableHead>Protocolo</TableHead>
                     <TableHead>Paciente</TableHead>
@@ -253,12 +263,56 @@ export default function ListaEspera({ atendimentos }: ListaEsperaProps) {
                     <TableHead>Prioridade</TableHead>
                     <TableHead>Data Inclusão</TableHead>
                     <TableHead>Tempo Espera</TableHead>
-                    <TableHead>Ações</TableHead>
+                    
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedAtendimentos.map((atendimento, index) => (
                     <TableRow key={atendimento.reg_ate_id}>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          
+                          <Link href={route('regulacao.atendimentos.edit', atendimento.reg_ate_id)}>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          
+                          {!atendimento.reg_ate_arquivado ? (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                            >
+                              <Archive className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          )}
+
+                          {!atendimento.reg_ate_agendado ? (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                            >
+                              <Calendar className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                            >
+                              <Calendar className="h-4 w-4" />
+                            </Button>
+                          )}
+                        
+                          
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className={`flex items-center ${getPosicaoColor(index + 1)}`}>
                           <Hash className="h-4 w-4 mr-1" />
@@ -311,14 +365,7 @@ export default function ListaEspera({ atendimentos }: ListaEsperaProps) {
                           {getTempoEspera(atendimento.created_at)} dias
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Link href={route('regulacao.atendimentos.show', atendimento.reg_ate_id)}>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-1" />
-                            Ver Detalhes
-                          </Button>
-                        </Link>
-                      </TableCell>
+                      
                     </TableRow>
                   ))}
                 </TableBody>

@@ -8,7 +8,7 @@ class Role extends SpatieRole
 {
     protected $fillable = [
         'name',
-        'description',
+        'descricao',
         'guard_name'
     ];
 } 

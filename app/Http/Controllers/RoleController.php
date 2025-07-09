@@ -38,14 +38,14 @@ class RoleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:roles',
-            'description' => 'required|string|max:255',
+            'descricao' => 'required|string|max:255',
             'permissions' => 'required|array',
             'permissions.*' => 'exists:permissions,id'
         ]);
 
         $role = Role::create([
             'name' => $validated['name'],
-            'description' => $validated['description']
+            'descricao' => $validated['descricao']
         ]);
 
         $role->permissions()->sync($validated['permissions']);
@@ -81,14 +81,12 @@ class RoleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
-            'description' => 'required|string|max:255',
-            'permissions' => 'required|array',
-            'permissions.*' => 'exists:permissions,id'
+            'descricao' => 'required|string|max:255'
         ]);
 
         $role->update([
             'name' => $validated['name'],
-            'description' => $validated['description']
+            'descricao' => $validated['descricao']
         ]);
 
         $role->permissions()->sync($validated['permissions']);

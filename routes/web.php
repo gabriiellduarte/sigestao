@@ -71,7 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Rotas de Atendimentos
-        Route::get('atendimentos/espera', [AtendimentosController::class, 'espera'])->name('atendimentos.espera');
+        Route::get('atendimentos/espera/{grupo?}', [AtendimentosController::class, 'espera'])->name('atendimentos.espera');
 
         Route::resource('atendimentos', AtendimentosController::class);
         Route::put('atendimentos/{atendimento}/arquivar', [AtendimentosController::class, 'arquivar'])->name('atendimentos.arquivar');
