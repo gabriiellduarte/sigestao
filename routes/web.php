@@ -3,6 +3,10 @@
 use App\Http\Controllers\Administracao\LogsController;
 use App\Http\Controllers\Administracao\PortariasController;
 use App\Http\Controllers\Administracao\ServidoresController;
+use App\Http\Controllers\Buggys\BugueirosController;
+use App\Http\Controllers\Buggys\FilaBugueirosController;
+use App\Http\Controllers\Buggys\PasseiosController;
+use App\Http\Controllers\Regulacao\AgendamentosController;
 use App\Http\Controllers\TipoPortariaController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -79,6 +83,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('atendimentos/{atendimento}/agendar', [AtendimentosController::class, 'agendar'])->name('atendimentos.agendar');
         Route::put('atendimentos/{atendimento}/desagendar', [AtendimentosController::class, 'desagendar'])->name('atendimentos.desagendar');
         Route::get('atendimentos/{atendimento}/comprovante', [AtendimentosController::class, 'comprovante'])->name('atendimentos.comprovante');
+        //Rotas de Agendamentos
+        Route::resource('agendamentos', AgendamentosController::class);
+
         // Rotas de Pacientes
         Route::resource('pacientes', RegPacienteController::class);
 
@@ -89,6 +96,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('unidadessaude', RegUnidadeSaudeController::class)->parameters(['unidadessaude' => 'unidadessaude']);
         Route::resource('acs', RegAcsController::class)->parameters(['acs' => 'ac']);
         Route::resource('tiposatendimento', RegTipoAtendimentoController::class)->parameters(['tiposatendimento' => 'tiposatendimento']);
+    });
+
+    Route::prefix('bugueiros')->name('bugueiros.')->group(function () {
+       Route::resource('cadastro', BugueirosController::class);
+       Route::resource('passeios', PasseiosController::class);
+       Route::resource('filas', FilaBugueirosController::class);
+       
+       Route::get('filas/{fila_id}', [FilaBugueirosController::class, 'lista']);
+       Route::post('filas/{fila_id}/adicionar', [FilaBugueirosController::class, 'adicionarBugueiro']);
+       Route::post('filas/{fila_id}/adicionartodos', [FilaBugueirosController::class, 'adicionarTodosBugueiros']);
+       Route::put('filas/{fila_id}/atualizar/{id}', [FilaBugueirosController::class, 'atualizarBugueiro']);
+       Route::delete('filas/{fila_id}/remover/{id}', [FilaBugueirosController::class, 'removerBugueiro']);
+       Route::post('filas/{fila_id}/mover-cima/{id}', [FilaBugueirosController::class, 'moverCima']);
+       Route::post('filas/{fila_id}/mover-baixo/{id}', [FilaBugueirosController::class, 'moverBaixo']);
+
     });
 
     // Rotas de Permissões

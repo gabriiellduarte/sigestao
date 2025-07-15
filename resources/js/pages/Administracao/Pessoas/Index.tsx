@@ -10,9 +10,9 @@ import { DataTable } from "./TabelaStack/Tabela"
 import { ColumnDef } from "@tanstack/react-table";
 
 import { Input } from '@/components/ui/input';
-import { useForm } from '@inertiajs/react';
+import { useForm, router, usePage } from '@inertiajs/react';
 
-import { useRef, useCallback, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Props extends PageProps {
     pessoas: {
@@ -35,11 +35,21 @@ export default function Index({ auth, pessoas, filters }: Props) {
         search: filters.search || '',
     });
 
-    const gridRef = useRef<any>(null);
-
     // Estado para paginação e ordenação
     const [pageIndex, setPageIndex] = useState(pessoas.current_page - 1);
     const [sort, setSort] = useState<{ id: string; desc: boolean } | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const start = () => setIsLoading(true);
+        const end = () => setIsLoading(false);
+        window.addEventListener('inertia:start', start);
+        window.addEventListener('inertia:finish', end);
+        return () => {
+            window.removeEventListener('inertia:start', start);
+            window.removeEventListener('inertia:finish', end);
+        };
+    }, []);
 
     // Definição das colunas para pessoas
     const columns: ColumnDef<Pessoa>[] = [
@@ -82,33 +92,24 @@ export default function Index({ auth, pessoas, filters }: Props) {
     // Atualiza busca
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        // Sempre volta para a primeira página ao buscar
         setPageIndex(0);
-        window.location.href = route('administracao.pessoas.index') + '?search=' + encodeURIComponent(data.search);
+        router.get(route('administracao.pessoas.index'), { search: data.search, page: 1, sort: sort?.id, direction: sort?.desc ? 'desc' : 'asc' }, { preserveState: true, replace: true });
     };
 
     // Paginação
     const handlePageChange = (page: number) => {
         setPageIndex(page);
-        let url = route('administracao.pessoas.index') + `?page=${page + 1}`;
-        if (data.search) url += `&search=${encodeURIComponent(data.search)}`;
-        if (sort) url += `&sort=${sort.id}&direction=${sort.desc ? 'desc' : 'asc'}`;
-        window.location.href = url;
+        router.get(route('administracao.pessoas.index'), { search: data.search, page: page + 1, sort: sort?.id, direction: sort?.desc ? 'desc' : 'asc' }, { preserveState: true, replace: true });
     };
 
     // Ordenação
     const handleSortingChange = (sorting: any) => {
         if (sorting.length > 0) {
             setSort(sorting[0]);
-            let url = route('administracao.pessoas.index') + `?page=1`;
-            if (data.search) url += `&search=${encodeURIComponent(data.search)}`;
-            url += `&sort=${sorting[0].id}&direction=${sorting[0].desc ? 'desc' : 'asc'}`;
-            window.location.href = url;
+            router.get(route('administracao.pessoas.index'), { search: data.search, page: 1, sort: sorting[0].id, direction: sorting[0].desc ? 'desc' : 'asc' }, { preserveState: true, replace: true });
         } else {
             setSort(null);
-            let url = route('administracao.pessoas.index') + `?page=1`;
-            if (data.search) url += `&search=${encodeURIComponent(data.search)}`;
-            window.location.href = url;
+            router.get(route('administracao.pessoas.index'), { search: data.search, page: 1 }, { preserveState: true, replace: true });
         }
     };
 
@@ -141,7 +142,13 @@ export default function Index({ auth, pessoas, filters }: Props) {
                         />
                         <Button type="submit">Buscar</Button>
                     </form>
-                    <div className="mt-4">
+                    <div className="mt-4 min-h-[300px] relative">
+                        {isLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+                                <span>Carregando...</span>
+                            </div>
+                        )}
                         <DataTable
                             columns={columns}
                             data={pessoas.data}

@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, HomeIcon, UsersIcon, ClipboardListIcon, Building2, Briefcase, UserCircle, ScrollText } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, HomeIcon, UsersIcon, ClipboardListIcon, Building2, Briefcase, UserCircle, ScrollText, Car } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -70,6 +70,39 @@ const mainNavItems: NavItem[] = [
         ]
     },
     {
+        title:'Passeios de Buggy',
+        href:'#',
+        icon: Car,
+        permissions: 'buggy.visualizar',
+        children:[
+            {
+                title: 'DashBoard',
+                href:'/buggy/dashboard',
+                permissions:'buggy.dashboard'
+            },
+            {
+                title: 'Fila de Bugueiros',
+                href:'/bugueiros/filas',
+                permissions:'buggy.dashboard'
+            },
+            {
+                title: 'Bugueiros',
+                href:'/bugueiros/cadastro',
+                permissions:'buggy.dashboard'
+            },
+            {
+                title: 'Passeios',
+                href:'/bugueiros/passeios',
+                permissions:'buggy.dashboard'
+            },
+            {
+                title: 'Tipos de Passeios',
+                href:'buggy/dashboard',
+                permissions:'buggy.dashboard'
+            }
+        ]
+    },
+    {
         title: 'Regulação',
         href: 'regulacao',
         icon: ClipboardListIcon,
@@ -84,6 +117,11 @@ const mainNavItems: NavItem[] = [
                 title: 'Lista de Atendimentos',
                 href: '/regulacao/atendimentos',
                 permissions: 'regulacao.atendimentos.visualizar'
+            },
+            {
+                title: 'Agendamentos',
+                href: '/regulacao/agendamentos',
+                permissions: 'regulacao.agendamentos.visualizar'
             },
             {
                 title: 'Pacientes',

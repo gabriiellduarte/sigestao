@@ -15,7 +15,7 @@ class PessoaController extends Controller
         $search = $request->input('search');
         $sort = $request->input('sort', 'ger_pessoas_nome');
         $direction = $request->input('direction', 'asc');
-        $query = Pessoa::query()->limit(100);
+        $query = Pessoa::query();
 
         if ($search) {
             $query->where(function($q) use ($search) {

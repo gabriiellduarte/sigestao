@@ -15,6 +15,11 @@ export interface NavGroup {
     items: NavItem[];
 }
 
+interface GrupoProcedimento {
+    reg_gpro_id: number;
+    reg_gpro_nome: string;
+  }
+
 export interface NavItem {
     title: string;
     href: string;

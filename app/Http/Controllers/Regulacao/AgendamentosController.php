@@ -16,63 +16,12 @@ use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
-class AtendimentosController extends Controller
+class AgendamentosController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $search = $request->input('search');
-        $sort = $request->input('sort', 'reg_ate_id');
-        $direction = $request->input('direction', 'asc');
-        $grupo = $request->input('grupo');
 
-        // Sempre enviar os grupos para o filtro
-        $grupos = RegGrupoProcedimento::orderBy('reg_gpro_nome')->get();
-
-        // Só busca dados se o grupo estiver selecionado
-        if ($grupo && $grupo !== 'todos') {
-            $query = RegAtendimento::query();
-
-            // Filtro por grupo (ID)
-            $query->where('reg_gpro_id', $grupo);
-
-            if ($search) {
-                $query->whereHas('pessoa', function($q) use ($search) {
-                    $q->where('ger_pessoas_nome', 'like', "%{$search}%")
-                      ->orWhere('ger_pessoas_cpf', 'like', "%{$search}%")
-                      ->orWhere('ger_pessoas_cns', 'like', "%{$search}%");
-                });
-            }
-
-            // Permitir ordenação apenas por campos válidos
-            $allowedSorts = ['reg_ate_id', 'ger_pessoas_cns', 'ger_pessoas_cpf', 'ger_pessoas_telefone1'];
-            if (!in_array($sort, $allowedSorts)) {
-                $sort = 'reg_ate_id';
-            }
-            $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
-
-            $atendimentos = $query->with([
-                'pessoa',
-                'procedimento',
-                'grupoProcedimento',
-                'tipoAtendimento'
-            ])->orderBy($sort, $direction)->paginate(10)->withQueryString();
-        } else {
-            // Não retorna dados se não houver grupo selecionado
-            $atendimentos = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
-        }
-
-        // Se for requisição JSON (ag-grid), retorna apenas os dados e o total
-        if (request()->wantsJson()) {
-            return response()->json([
-                'data' => $atendimentos->items(),
-                'total' => $atendimentos->total(),
-            ]);
-        }
-
-        return Inertia::render('regulacao/Atendimentos/EsperaFinal', [
-            'atendimentos' => $atendimentos,
-            'grupos' => $grupos,
-            'filters' => $request->only('search', 'grupo'),
+        return Inertia::render('regulacao/Agendamentos/Lista', [
         ]);
     }
 

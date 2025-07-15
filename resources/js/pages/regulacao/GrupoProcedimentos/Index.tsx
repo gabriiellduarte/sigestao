@@ -5,11 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { Link, router } from '@inertiajs/react';
+import { GrupoProcedimento } from '@/types';
 
-interface GrupoProcedimento {
-  reg_gpro_id: number;
-  reg_gpro_nome: string;
-}
+
 
 interface IndexProps {
   grupos: {
