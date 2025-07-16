@@ -6,8 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Play, Plus, Users, UserCheck, Timer, ChevronUp, ChevronDown, FastForward, Rewind } from 'lucide-react';
+import { Clock, Play, Plus, Users, UserCheck, Timer, ChevronUp, ChevronDown, FastForward, Rewind, MoreVertical } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface BugueiroFila {
   id:number;
@@ -230,7 +231,7 @@ export const FilaBugueiros: React.FC = () => {
           </Card>
         </div>
         {/* Fila Atual */}
-        <Card>
+        <Card className='hidden md:block'>
           <CardHeader>
             <div className="flex items-center gap-2">
               <CardTitle>Fila Atual #{fila_id}</CardTitle>
@@ -382,7 +383,121 @@ export const FilaBugueiros: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        {/* Fila Atual */}
+        {/* Lista de Bugueiros - Mobile Card Layout */}
+        <div className="space-y-3 md:hidden">
+          {bugueirosFila.map((item) => (
+          <Card key={`${item.id}-${item.hora_entrada}`} className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="text-xs">
+                    #{item.posicao_fila}
+                  </Badge>
+                <Users className="h-4 w-4 text-gray-400" />
+                <span className="font-medium">{item.bugueiro?.bugueiro_nome}</span>
+              </div>
+              <Badge className={`${getStatusColor(item.status)} text-xs`}>
+                {getStatusText(item.status)}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-1 text-sm text-gray-600">
+                <Timer className="h-3 w-3" />
+                <span>{item.hora_entrada}</span>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1">
+                  <FastForward className="h-3 w-3 text-green-600" />
+                  <span className="text-sm font-medium text-green-600">{item.adiantamento}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Rewind className="h-3 w-3 text-red-600" />
+                  <span className="text-sm font-medium text-red-600">{item.atraso}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Ações Mobile */}
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => moverParaCima(item.id)}
+                      disabled={item.posicao_fila === 1}
+                      className="p-2 h-8 w-8"
+                    >
+                      <ChevronUp className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => moverParaBaixo(item.id)}
+                      disabled={item.posicao_fila === filaNaFila.length}
+                      className="p-2 h-8 w-8"
+                    >
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+              </div>
+                  
+              <div className="flex space-x-1">
+                    <Button
+                      size="sm"
+                      onClick={() => iniciarPasseio(item.id)}
+                      className="bg-blue-600 hover:bg-blue-700 text-xs px-3"
+                    >
+                      <Play className="h-3 w-3 mr-1" />
+                      Iniciar
+                    </Button>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline" className="p-2 h-8 w-8">
+                          <MoreVertical className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        {item.adiantamento > 0 && (
+                          <DropdownMenuItem onClick={() => iniciarPasseioAdiantado(item.id)}>
+                            <FastForward className="h-3 w-3 mr-2" />
+                            Usar Adiantamento ({item.adiantamento})
+                          </DropdownMenuItem>
+                        )}
+                        {item.atraso > 0 && (
+                          <DropdownMenuItem onClick={() => iniciarPasseioAtrasado(item.id)}>
+                            <Rewind className="h-3 w-3 mr-2" />
+                            Usar Atraso ({item.atraso})
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+              </div>
+              
+              {item.status === 'em_passeio' && (
+                <Button
+                  size="sm"
+                  onClick={() => finalizarPasseio(item.id)}
+                  className="bg-green-600 hover:bg-green-700 text-xs px-3 ml-auto"
+                >
+                  <UserCheck className="h-3 w-3 mr-1" />
+                  Finalizar
+                </Button>
+              )}
+            </div>
+          </Card>
+          ))}
+        
+        {bugueirosFila.length === 0 && (
+          <Card className="p-8">
+            <div className="text-center text-gray-500">
+              <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+              <p>Nenhum bugueiro na fila</p>
+            </div>
+          </Card>
+        )}
+        </div>
+        {/* Fila realizados */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -465,6 +580,7 @@ export const FilaBugueiros: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+        
         {/* Dialog para Adicionar à Fila */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
