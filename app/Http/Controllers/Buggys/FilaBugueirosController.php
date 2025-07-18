@@ -3,21 +3,30 @@ namespace App\Http\Controllers\Buggys;
 
 use App\Http\Controllers\Controller;
 
+use App\Models\Buggys\Passeio;
+use App\Models\Buggys\TipoPasseio;
+use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Buggys\Filas;
 use App\Models\Buggys\Bugueiros;
 use App\Models\Buggys\FilaBugueiro;
+use App\Models\Parceiro;
 
 class FilaBugueirosController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+    public function dashboard(){
+        return Inertia::render('Buggys/Dashboard');
+    }   
     public function index()
     {
         $props = [];
         // Busca fila aberta
+        $tipopasseio = TipoPasseio::all();
+        $parceiros = Parceiro::all();
         $fila = Filas::where('fila_status', 'aberta')->with('bugueirosFila')->first();
         $bugueiros = FilaBugueiro::where('fila_id', $fila->fila_id)->with('bugueiro')->orderBy('posicao_fila')->get();
         // Se não existir, cria uma nova
@@ -37,7 +46,9 @@ class FilaBugueirosController extends Controller
         return Inertia::render('Buggys/Fila/Lista', [
             'bugueiros_fila' => $bugueiros,
             'fila_id'=>$fila->fila_id,
-            'fila_status'=>$fila->fila_status
+            'fila_status'=>$fila->fila_status,
+            'passeios_tipo'=>$tipopasseio,
+            'parceiros'=>$parceiros,
         ]);
     }
 
@@ -89,16 +100,39 @@ class FilaBugueirosController extends Controller
     public function update(Request $request, $id)
     {
         $fila = Filas::findOrFail($id);
-        $validated = $request->validate([
-            'fila_data' => 'sometimes|date',
-            'fila_qntd_normal' => 'sometimes|integer',
-            'fila_qntd_adiantados' => 'sometimes|integer',
-            'fila_qntd_atrasados' => 'sometimes|integer',
-            'fila_obs' => 'nullable|string',
-            'fila_status' => 'sometimes|in:cancelada,finalizada,aberta',
-        ]);
-        $fila->update($validated);
-        return response()->json($fila);
+        try {
+            \DB::beginTransaction();
+            // Tenta criar o passeio antes de atualizar a fila
+            $passeio = new Passeio();
+            $passeio->bugueiro_id = $request->bugueiro_id;
+            $passeio->bugueiro_nome = $request->bugueiro_nome;
+            $passeio->tipoPasseio = $request->tipoPasseio ?? 'normal';
+            $passeio->nome_passeio = $request->nome_passeio ?? '';
+            $passeio->data_hora = $request->data_hora ?? now();
+            $passeio->duracao = $request->duracao ?? 1;
+            $passeio->valor = $request->valor ?? 0;
+            $passeio->parceiro = $request->parceiro ?? null;
+            $passeio->comissao_parceiro = $request->comissao_parceiro ?? null;
+            $passeio->observacoes = $request->observacoes ?? null;
+            $passeio->save();
+
+            // Se chegou aqui, passeio foi criado com sucesso, pode atualizar a fila
+            $validated = $request->validate([
+                'fila_data' => 'sometimes|date',
+                'fila_qntd_normal' => 'sometimes|integer',
+                'fila_qntd_adiantados' => 'sometimes|integer',
+                'fila_qntd_atrasados' => 'sometimes|integer',
+                'fila_obs' => 'nullable|string',
+                'fila_status' => 'sometimes|in:cancelada,finalizada,aberta',
+            ]);
+            $fila->update($validated);
+            \DB::commit();
+            return response()->json($fila);
+        } catch (Exception $e) {
+            \DB::rollBack();
+            // Se der erro ao criar o passeio, não atualiza nada
+            return response()->json(['error' => 'Erro ao criar passeio: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -134,11 +168,13 @@ class FilaBugueirosController extends Controller
             ]);
         $filaModel = Filas::find($fila_id);
         $statusFila = $filaModel ? $filaModel->fila_status : null;
+        $parceiros = Parceiro::all();
         return Inertia::render('Buggys/Fila/Lista', [
             'fila' => $fila,
             'bugueirosDisponiveis' => $bugueirosDisponiveis,
             'fila_id' => (int)$fila_id,
             'statusFila' => $statusFila,
+            'parceiros' => $parceiros,
         ]);
     }
 
@@ -200,9 +236,57 @@ class FilaBugueirosController extends Controller
     // Atualizar dados do bugueiro na fila
     public function atualizarBugueiro(Request $request, $fila_id, $id)
     {
-        $bugueiroFila = FilaBugueiro::where('fila_id', $fila_id)->findOrFail($id);
-        $bugueiroFila->update($request->only(['posicao_fila', 'atraso', 'adiantamento', 'fez_passeio', 'status']));
-        return redirect()->back();
+        $fila = FilaBugueiro::where([['fila_id', $fila_id],['id',$id]])->with('bugueiro')->first();
+        $tipopasseio = TipoPasseio::find($request->tipo_passeio_id);
+        try {
+            \DB::beginTransaction();
+
+            // Verifica se o bugueiro não é o primeiro da fila (menor posicao_fila entre os que não fizeram passeio)
+            if ($fila->posicao_fila > 1) {
+                // Incrementa o campo bugueiro_fila_adiantamentos no cadastro do bugueiro
+                $bugueiro = $fila->bugueiro;
+                if ($bugueiro) {
+                    $bugueiro->bugueiro_fila_adiantamentos = $bugueiro->bugueiro_fila_adiantamentos + 1;
+                    $bugueiro->save();
+                }
+            }
+            // Tenta criar o passeio antes de atualizar a fila
+            $passeio = new Passeio();
+            $passeio->bugueiro_id = $fila->bugueiro_id;
+            $passeio->fila_id = $fila_id;
+            $passeio->bugueiro_nome = $fila->bugueiro->bugueiro_nome;
+            $passeio->tipoPasseio = $request->tipoPasseio;
+            $passeio->nome_passeio = $tipopasseio->nome;
+            $passeio->data_hora = $request->data_hora ?? now();
+            $passeio->duracao = $tipopasseio->duracao;
+            $passeio->valor = $tipopasseio->preco ?? 0;
+            $passeio->parceiro = $request->parceiro ?? null;
+            $passeio->comissao_parceiro = $request->comissao_parceiro ?? null;
+            $passeio->observacoes = $request->observacoes ?? null;
+            $passeio->save();
+
+            $bugueiroFila = FilaBugueiro::where('fila_id', $fila_id)->findOrFail($id);
+            $bugueiroFila->update($request->only(['posicao_fila', 'atraso', 'adiantamento', 'fez_passeio', 'status']));
+
+            // Se chegou aqui, passeio foi criado com sucesso, pode atualizar a fila
+            $validated = $request->validate([
+                'fila_data' => 'sometimes|date',
+                'fila_qntd_normal' => 'sometimes|integer',
+                'fila_qntd_adiantados' => 'sometimes|integer',
+                'fila_qntd_atrasados' => 'sometimes|integer',
+                'fila_obs' => 'nullable|string',
+                'fila_status' => 'sometimes|in:cancelada,finalizada,aberta',
+            ]);
+            $fila->update($validated);
+            \DB::commit();
+
+            $this->reordenarFila($fila_id, true);
+            //return redirect()->back()->with('sucesso', 'Sucesso ao criar passeio ');
+        } catch (Exception $e) {
+            \DB::rollBack();
+            // Se der erro ao criar o passeio, não atualiza nada
+            return redirect()->back()->with('erro', 'Erro ao criar passeio ');
+        }
     }
 
     // Remover bugueiro da fila
@@ -249,5 +333,60 @@ class FilaBugueirosController extends Controller
             return redirect()->route('bugueiros.filas.index')->with('erro', value: 'Erro ao atualizar bugueiro.');
 
         }
+    }
+
+    // Criar nova fila e adicionar todos os bugueiros cadastrados
+    public function novaFilaComTodos()
+    {
+        // Fecha a fila aberta, se houver
+        $filaAberta = Filas::where('fila_status', 'aberta')->first();
+        if ($filaAberta) {
+            $filaAberta->update(['fila_status' => 'finalizada']);
+        }
+        // Cria nova fila
+        $fila = Filas::create([
+            'fila_data' => now(),
+            'fila_qntd_normal' => 0,
+            'fila_qntd_adiantados' => 0,
+            'fila_qntd_atrasados' => 0,
+            'fila_obs' => null,
+            'fila_status' => 'aberta',
+        ]);
+        // Adiciona todos os bugueiros cadastrados
+        $bugueiros = Bugueiros::all();
+        foreach ($bugueiros as $bugueiro) {
+            FilaBugueiro::create([
+                'fila_id' => $fila->fila_id,
+                'bugueiro_id' => $bugueiro->bugueiro_id,
+                'posicao_fila' => $bugueiro->bugueiro_posicao_oficial,
+                'atraso' => 0,
+                'adiantamento' => 0,
+                'fez_passeio' => false,
+                'hora_entrada' => now(),
+                'status' => 'na-fila',
+            ]);
+        }
+        return redirect()->route('bugueiros.filas.index');
+    }
+
+    // Reordenar fila conforme bugueiro_posicao_oficial
+    public function reordenarFila($fila_id, $apenasFezPasseio = false)
+    {
+        $fila = Filas::find($fila_id);
+        if (!$fila) {
+            return redirect()->back()->with('erro', 'Fila não encontrada.');
+        }
+        $query = FilaBugueiro::where('fila_id', $fila->fila_id);
+        if ($apenasFezPasseio) {
+            $query->where('fez_passeio', true);
+        }
+        $bugueirosFila = $query->with('bugueiro')->get();
+        foreach ($bugueirosFila as $item) {
+            if ($item->bugueiro && isset($item->bugueiro->bugueiro_posicao_oficial)) {
+                $item->posicao_fila = $item->bugueiro->bugueiro_posicao_oficial;
+                $item->save();
+            }
+        }
+        return redirect()->back()->with('sucesso', 'Fila reordenada com sucesso!');
     }
 }

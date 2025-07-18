@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Calendar, Users, Truck, TrendingUp, DollarSign } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
 
 const passeioPorMes = [
   { mes: 'Jan', passeios: 45, receita: 4500 },
@@ -41,7 +42,8 @@ const chartConfig = {
 
 export const DashboardBuggy: React.FC = () => {
   return (
-    <div className="space-y-6">
+    <AppLayout>
+    <div className="space-y-6 p-4">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard - Passeios de Buggy</h1>
       </div>
@@ -196,6 +198,8 @@ export const DashboardBuggy: React.FC = () => {
         </Card>
       </div>
     </div>
+    </AppLayout>
+    
   );
 };
 

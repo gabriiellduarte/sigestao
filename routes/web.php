@@ -6,6 +6,7 @@ use App\Http\Controllers\Administracao\ServidoresController;
 use App\Http\Controllers\Buggys\BugueirosController;
 use App\Http\Controllers\Buggys\FilaBugueirosController;
 use App\Http\Controllers\Buggys\PasseiosController;
+use App\Http\Controllers\Buggys\TipoDePasseioController;
 use App\Http\Controllers\Regulacao\AgendamentosController;
 use App\Http\Controllers\TipoPortariaController;
 use App\Models\User;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Regulacao\RegMedicoController;
 use App\Http\Controllers\Regulacao\RegUnidadeSaudeController;
 use App\Http\Controllers\Regulacao\RegAcsController;
 use App\Http\Controllers\Regulacao\RegTipoAtendimentoController;
+use App\Http\Controllers\ParceirosController;
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -101,8 +103,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('bugueiros')->name('bugueiros.')->group(function () {
        Route::resource('cadastro', BugueirosController::class);
        Route::resource('passeios', PasseiosController::class);
+       // Rotas de Parceiros
+       Route::resource('parceiros', ParceirosController::class);
        Route::resource('filas', FilaBugueirosController::class);
-       
+       Route::get('dashboard', [FilaBugueirosController::class, 'dashboard']);
+       Route::post('filas/nova-com-todos', [FilaBugueirosController::class, 'novaFilaComTodos'])->name('filas.novaComTodos');
+       Route::post('filas/{fila}/reordenar', [FilaBugueirosController::class, 'reordenarFila'])->name('filas.reordenar');
+
+       Route::resource('tipodepasseio', TipoDePasseioController::class);
+
        Route::get('filas/{fila_id}', [FilaBugueirosController::class, 'lista']);
        Route::post('filas/{fila_id}/adicionar', [FilaBugueirosController::class, 'adicionarBugueiro']);
        Route::post('filas/{fila_id}/adicionartodos', [FilaBugueirosController::class, 'adicionarTodosBugueiros']);
@@ -112,6 +121,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
        Route::post('filas/{fila_id}/mover-baixo/{id}', [FilaBugueirosController::class, 'moverBaixo']);
 
     });
+
+    
 
     // Rotas de Permissões
     Route::resource('permissions', PermissionController::class);

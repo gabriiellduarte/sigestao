@@ -10,53 +10,54 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Search, Plus, Edit, Trash2, Calendar, User, MapPin, Clock, DollarSign, Eye } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
+import { usePage, router } from '@inertiajs/react';
 
 interface Passeio {
   id: string;
-  clienteNome: string;
-  clienteTelefone: string;
-  bugueiro: string;
-  tipoPasseio: string;
-  data: string;
-  horario: string;
+  bugueiro_id: number;
+  bugueiro_nome: string;
+  tipoPasseio: 'normal'|'cortesia'|'parceria';
+  data_hora: string;
   duracao: number;
   valor: number;
-  status: 'agendado' | 'em_andamento' | 'concluido' | 'cancelado';
+  parceiro: string;
+  comissao: number;
   observacoes?: string;
-  avaliacao?: number;
+  nome_passeio?: string; // Added nome_passeio to the interface
 }
 
 const mockPasseios: Passeio[] = [
   {
     id: '1',
-    clienteNome: 'Carlos Mendes',
-    clienteTelefone: '(84) 99999-0001',
-    bugueiro: 'João Silva',
-    tipoPasseio: 'Dunas',
-    data: '2024-07-15',
-    horario: '14:00',
+    bugueiro_id: 1,
+    bugueiro_nome: 'João Silva',
+    tipoPasseio: 'normal',
+    data_hora: '2024-07-15',
     duracao: 3,
     valor: 150,
-    status: 'concluido',
-    avaliacao: 5,
-    observacoes: 'Cliente ficou muito satisfeito'
+    observacoes: 'Cliente ficou muito satisfeito',
+    comissao:50,
+    parceiro: 'James',
+    nome_passeio: 'Passeio de Dunas'
   },
   {
     id: '2',
-    clienteNome: 'Ana Costa',
-    clienteTelefone: '(84) 98888-0002',
-    bugueiro: 'Maria Santos',
-    tipoPasseio: 'Praia',
-    data: '2024-07-16',
-    horario: '09:00',
+    bugueiro_id: 2,
+    bugueiro_nome: 'João Silva',
+    tipoPasseio: 'normal',
+    data_hora: '2024-07-16',
     duracao: 4,
     valor: 200,
-    status: 'agendado'
+    comissao:25,
+    parceiro:'Tranquilandia',
+    nome_passeio: 'Passeio de Praia'
   }
 ];
 
 export const PasseiosCrud: React.FC = () => {
-  const [passeios, setPasseios] = useState<Passeio[]>(mockPasseios);
+  const { props } = usePage();
+  const passeiosBackend = props.passeios as Passeio[] || [];
+  const [passeios, setPasseios] = useState<Passeio[]>(passeiosBackend);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -64,11 +65,10 @@ export const PasseiosCrud: React.FC = () => {
   const [formData, setFormData] = useState<Partial<Passeio>>({});
 
   const filteredPasseios = passeios.filter(passeio => {
-    const matchesSearch = passeio.clienteNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         passeio.bugueiro.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = passeio.bugueiro_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          passeio.tipoPasseio.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'todos' || passeio.status === statusFilter;
+    const matchesStatus = statusFilter === 'todos';
     
     return matchesSearch && matchesStatus;
   });
@@ -76,15 +76,11 @@ export const PasseiosCrud: React.FC = () => {
   const handleAddPasseio = () => {
     setEditingPasseio(null);
     setFormData({
-      clienteNome: '',
-      clienteTelefone: '',
-      bugueiro: '',
-      tipoPasseio: '',
-      data: '',
-      horario: '',
+      bugueiro_id: 0,
+      bugueiro_nome: '',
+      data_hora: '',
       duracao: 3,
       valor: 0,
-      status: 'agendado',
       observacoes: ''
     });
     setIsDialogOpen(true);
@@ -98,22 +94,46 @@ export const PasseiosCrud: React.FC = () => {
 
   const handleSavePasseio = () => {
     if (editingPasseio) {
-      setPasseios(prev => prev.map(p => 
-        p.id === editingPasseio.id ? { ...p, ...formData } as Passeio : p
-      ));
+      router.put(`/bugueiros/passeios/${editingPasseio.id}`, formData, {
+        onSuccess: (page) => {
+          if (page && page.props && page.props.passeios) {
+            setPasseios(page.props.passeios as Passeio[]);
+          }
+          setIsDialogOpen(false);
+        },
+        onError: (errors) => {
+          // Trate erros de validação se necessário
+          console.log(errors);
+        }
+      });
     } else {
-      const newPasseio: Passeio = {
-        id: Date.now().toString(),
-        ...formData
-      } as Passeio;
-      setPasseios(prev => [...prev, newPasseio]);
+      router.post('/bugueiros/passeios', formData, {
+        onSuccess: (page) => {
+          if (page && page.props && page.props.passeios) {
+            setPasseios(page.props.passeios as Passeio[]);
+          }
+          setIsDialogOpen(false);
+        },
+        onError: (errors) => {
+          // Trate erros de validação se necessário
+          console.log(errors);
+        }
+      });
     }
-    setIsDialogOpen(false);
   };
 
   const handleDeletePasseio = (id: string) => {
     if (confirm('Tem certeza que deseja excluir este passeio?')) {
-      setPasseios(prev => prev.filter(p => p.id !== id));
+      router.delete(`/bugueiros/passeios/${id}`, {
+        onSuccess: (page) => {
+          if (page && page.props && page.props.passeios) {
+            setPasseios(page.props.passeios as Passeio[]);
+          }
+        },
+        onError: (errors) => {
+          console.log(errors);
+        }
+      });
     }
   };
 
@@ -182,43 +202,38 @@ export const PasseiosCrud: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Cliente</TableHead>
                   <TableHead>Bugueiro</TableHead>
                   <TableHead>Tipo</TableHead>
+                  <TableHead>Nome do Passeio</TableHead>
                   <TableHead>Data/Hora</TableHead>
                   <TableHead>Duração</TableHead>
                   <TableHead>Valor</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredPasseios.map((passeio) => (
                   <TableRow key={passeio.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{passeio.clienteNome}</div>
-                        <div className="text-sm text-gray-500">{passeio.clienteTelefone}</div>
-                      </div>
-                    </TableCell>
+                    
                     <TableCell>
                       <div className="flex items-center">
                         <User className="h-4 w-4 mr-2 text-gray-400" />
-                        {passeio.bugueiro}
+                        {passeio.bugueiro_nome}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                        {passeio.tipoPasseio}
+                        <Badge>{passeio.tipoPasseio}</Badge>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {passeio.nome_passeio || '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2 text-gray-400" />
                         <div>
-                          <div>{new Date(passeio.data).toLocaleDateString('pt-BR')}</div>
-                          <div className="text-sm text-gray-500">{passeio.horario}</div>
+                          <div>{new Date(passeio.data_hora).toLocaleDateString('pt-BR')} {new Date(passeio.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
                       </div>
                     </TableCell>
@@ -230,15 +245,10 @@ export const PasseiosCrud: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        <DollarSign className="h-4 w-4 mr-2 text-gray-400" />
-                        R$ {passeio.valor.toFixed(2)}
+                        R$ {typeof passeio.valor === 'number' ? passeio.valor.toFixed(2) : Number(passeio.valor || 0).toFixed(2)}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(passeio.status)}>
-                        {getStatusLabel(passeio.status)}
-                      </Badge>
-                    </TableCell>
+                    
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <Button
@@ -278,29 +288,12 @@ export const PasseiosCrud: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="clienteNome">Nome do Cliente</Label>
-                <Input
-                  id="clienteNome"
-                  value={formData.clienteNome || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, clienteNome: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="clienteTelefone">Telefone</Label>
-                <Input
-                  id="clienteTelefone"
-                  value={formData.clienteTelefone || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, clienteTelefone: e.target.value }))}
-                />
-              </div>
-            </div>
+            
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="bugueiro">Bugueiro</Label>
                 <Select 
-                  value={formData.bugueiro || ''} 
+                  value={formData.bugueiro_nome || ''} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, bugueiro: value }))}
                 >
                   <SelectTrigger>
@@ -317,16 +310,15 @@ export const PasseiosCrud: React.FC = () => {
                 <Label htmlFor="tipoPasseio">Tipo de Passeio</Label>
                 <Select 
                   value={formData.tipoPasseio || ''} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, tipoPasseio: value }))}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, tipoPasseio: value as Passeio['tipoPasseio'] }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Dunas">Dunas</SelectItem>
-                    <SelectItem value="Praia">Praia</SelectItem>
-                    <SelectItem value="Trilha">Trilha</SelectItem>
-                    <SelectItem value="Sunset">Sunset</SelectItem>
+                    <SelectItem value="normal">Dunas</SelectItem>
+                    <SelectItem value="cortesia">Praia</SelectItem>
+                    <SelectItem value="parceria">Trilha</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -337,19 +329,11 @@ export const PasseiosCrud: React.FC = () => {
                 <Input
                   id="data"
                   type="date"
-                  value={formData.data || ''}
+                  value={formData.data_hora || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, data: e.target.value }))}
                 />
               </div>
-              <div>
-                <Label htmlFor="horario">Horário</Label>
-                <Input
-                  id="horario"
-                  type="time"
-                  value={formData.horario || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, horario: e.target.value }))}
-                />
-              </div>
+              
               <div>
                 <Label htmlFor="duracao">Duração (h)</Label>
                 <Input
@@ -373,23 +357,7 @@ export const PasseiosCrud: React.FC = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, valor: parseFloat(e.target.value) }))}
                 />
               </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={formData.status || 'agendado'} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as any }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="agendado">Agendado</SelectItem>
-                    <SelectItem value="em_andamento">Em Andamento</SelectItem>
-                    <SelectItem value="concluido">Concluído</SelectItem>
-                    <SelectItem value="cancelado">Cancelado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              
             </div>
             <div>
               <Label htmlFor="observacoes">Observações</Label>

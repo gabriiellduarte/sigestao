@@ -6,9 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Play, Plus, Users, UserCheck, Timer, ChevronUp, ChevronDown, FastForward, Rewind, MoreVertical } from 'lucide-react';
+import { Clock, Play, Plus, Users, UserCheck, Timer, ChevronUp, ChevronDown, FastForward, Rewind, MoreVertical, ArrowDownAZ } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { TipoPasseio, Parceiro } from '@/types';
 
 interface BugueiroFila {
   id:number;
@@ -20,10 +21,13 @@ interface BugueiroFila {
   fez_passeio: boolean;
   hora_passeio: string;
   hora_entrada: string;
-  status: 'adiantado' | 'disponivel' | 'em_passeio' | 'atrasado';
-  bugueiro?: {
+  tipo_passeio_id?: string;
+  bugueiro: {
     bugueiro_id: number;
     bugueiro_nome: string;
+    bugueiro_posicao_oficial: number;
+    bugueiro_fila_atrasos: number;
+    bugueiro_fila_adiantamentos: number;
     telefone: string;
     status: string;
   };
@@ -31,8 +35,10 @@ interface BugueiroFila {
 
 interface PageProps {
   bugueiros_fila: BugueiroFila[];
+  passeios_tipo: TipoPasseio[];
   fila_id: number;
   fila_status?: string;
+  parceiros: Parceiro[];
   [key: string]: any; // Corrige o erro de tipagem do Inertia
 }
 
@@ -40,12 +46,25 @@ export const FilaBugueiros: React.FC = () => {
   const { props } = usePage<PageProps>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [bugueiroSelecionado, setBugueiroSelecionado] = useState<string>('');
+  const [isPasseioDialogOpen, setIsPasseioDialogOpen] = useState(false);
+  const [bugueiroParaPasseio, setBugueiroParaPasseio] = useState<number>(0);
+  const [idPasseio, setIdPasseio] = useState<string>('0');
+  const [tipoPasseio, setTipoPasseio] = useState<string>('');
   const [modalAdiantadoOpen, setModalAdiantadoOpen] = useState(false);
   const [bugueiroAdiantado, setBugueiroAdiantado] = useState<BugueiroFila | null>(null);
   const fila_id = props.fila_id;
   const bugueirosFila: BugueiroFila[] = props.bugueiros_fila ?? [];
+  const tiposPasseio: TipoPasseio[] = props.passeios_tipo ?? [];
   const statusFila = props.fila_status ?? 'aberta';
+  const parceiros: Parceiro[] = props.parceiros ?? [];
+  const [parceiroSelecionado, setParceiroSelecionado] = useState<string>('');
+  const [modalReordenar, setModalReordenar] = useState(false);
 
+  const abrirDialogPasseio = (id: number) => {
+    setBugueiroParaPasseio(id);
+    setTipoPasseio('normal');
+    setIsPasseioDialogOpen(true);
+  };
   // Adicionar bugueiro à fila
   const adicionarBugueiroFila = () => {
     if (!bugueiroSelecionado) return;
@@ -70,8 +89,8 @@ export const FilaBugueiros: React.FC = () => {
   };
 
   // Atualizar status do bugueiro na fila (ex: iniciar passeio)
-  const atualizarBugueiroFila = (bugueiroFilaId: number, data: Partial<BugueiroFila>) => {
-    router.put(`/bugueiros/filas/${fila_id}/atualizar/${bugueiroFilaId}`, data, {
+  const atualizarBugueiroFila = (bugueiroParaPasseio: number, data: any) => {
+    router.put(`/bugueiros/filas/${fila_id}/atualizar/${bugueiroParaPasseio}`, data, {
       preserveScroll: true,
     });
   };
@@ -90,35 +109,49 @@ export const FilaBugueiros: React.FC = () => {
   const moverParaBaixo = (id: number) => {
     router.post(`/bugueiros/filas/${fila_id}/mover-baixo/${id}`, {}, { preserveScroll: true });
   };
-  const iniciarPasseio = (bugueiro_id: number) => {
-    const bugueiro = bugueirosFila.find(f => f.bugueiro_id === bugueiro_id);
+  const iniciarPasseio = () => {
+    const bugueiro = bugueirosFila.find(f => f.id === bugueiroParaPasseio);
+    console.log('bugueiro',bugueiro);
     if (!bugueiro) return;
     const primeiro = bugueirosFila.filter(f => f.fez_passeio === false).sort((a, b) => a.posicao_fila - b.posicao_fila)[0];
-    if (primeiro && bugueiro.bugueiro_id !== primeiro.bugueiro_id) {
-      setBugueiroAdiantado(bugueiro);
+    console.log('primeiro',primeiro);
+    if (primeiro && bugueiro.id !== primeiro.id) {
+      //setBugueiroAdiantado(bugueiro);
       setModalAdiantadoOpen(true);
       return;
     }
-    atualizarBugueiroFila(bugueiro_id, { status: 'em_passeio' });
+    enviaAtualizacaodeFila();
   };
   const finalizarPasseio = (id: number) => {
     //atualizarBugueiroFila(id, { status: 'finalizado' });
   };
-  const iniciarPasseioAdiantado = (id: number) => {
-    atualizarBugueiroFila(id, { status: 'em_passeio', adiantamento: (bugueirosFila.find(f => f.bugueiro_id === id)?.adiantamento || 1) - 1 });
+  const enviaAtualizacaodeFila = () => {
+    atualizarBugueiroFila(bugueiroParaPasseio, { fez_passeio: true, tipo_passeio_id: idPasseio, tipoPasseio: tipoPasseio, parceiro: parceiroSelecionado });
+    setIsPasseioDialogOpen(false);
+    setBugueiroParaPasseio(0);
+    setTipoPasseio('');
+    setParceiroSelecionado('');
+  }
+  const iniciarPasseioAdiantado = () => {
+    enviaAtualizacaodeFila();
+    setModalAdiantadoOpen(false);
   };
   const iniciarPasseioAtrasado = (id: number) => {
-    atualizarBugueiroFila(id, { status: 'em_passeio', atraso: (bugueirosFila.find(f => f.bugueiro_id === id)?.atraso || 1) - 1 });
+    atualizarBugueiroFila(id, { fez_passeio: true, atraso: (bugueirosFila.find(f => f.bugueiro_id === id)?.atraso || 1) - 1 });
   };
 
   const confirmarAdiantamento = () => {
     if (bugueiroAdiantado) {
       atualizarBugueiroFila(bugueiroAdiantado.bugueiro_id, {
         fez_passeio: true,
-        adiantamento: bugueiroAdiantado.adiantamento + 1
+        adiantamento: bugueiroAdiantado.adiantamento + 1,
+        tipo_passeio_id: tipoPasseio
       });
       setModalAdiantadoOpen(false);
       setBugueiroAdiantado(null);
+      setIsPasseioDialogOpen(false);
+      setBugueiroParaPasseio(0);
+      setTipoPasseio('');
     }
   };
 
@@ -127,18 +160,17 @@ export const FilaBugueiros: React.FC = () => {
     setBugueiroAdiantado(null);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'na-fila':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'em-passeio':
-        return 'bg-blue-100 text-blue-800';
-      case 'finalizado':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const iniciarNovaFila = () => {
+    router.post(route('bugueiros.filas.novaComTodos'));
   };
+
+  const reordenarFila = () => {
+    router.post(route('bugueiros.filas.reordenar', { fila: fila_id }), {}, {
+      onSuccess: () => setModalReordenar(false)
+    });
+  };
+
+ 
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -176,16 +208,7 @@ export const FilaBugueiros: React.FC = () => {
       <div className="space-y-6 p-4">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Fila - Bugueiros</h1>
-          <div className="flex gap-2">
-            <Button onClick={adicionarTodos} className="flex items-center space-x-2" variant="secondary">
-              <Plus className="h-4 w-4" />
-              <span>Adicionar Todos</span>
-            </Button>
-            <Button onClick={() => setIsDialogOpen(true)} className="flex items-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>Adicionar à Fila</span>
-            </Button>
-          </div>
+          
         </div>
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:grid-cols-2">
@@ -233,28 +256,49 @@ export const FilaBugueiros: React.FC = () => {
         {/* Fila Atual */}
         <Card className='hidden md:block'>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle>Fila Atual #{fila_id}</CardTitle>
-              <Badge className={getStatusFilaColor(statusFila)}>{statusFila.charAt(0).toUpperCase() + statusFila.slice(1)}</Badge>
+            <div className="flex justify-between items-center gap-2">
+              <div className='flex gap-2'>
+                <CardTitle>Fila Atual #{fila_id}</CardTitle>
+                <Badge className={getStatusFilaColor(statusFila)}>{statusFila.charAt(0).toUpperCase() + statusFila.slice(1)}</Badge>
+              </div>
+              
+              <div className="flex gap-2">
+                {bugueirosFila.filter(f => f.fez_passeio === false).length === 0 && (
+                  <Button onClick={iniciarNovaFila} className="flex items-center space-x-2" variant="secondary">
+                    <Plus className="h-4 w-4" />
+                    <span>Iniciar nova fila</span>
+                  </Button>
+                )}
+                <Button onClick={adicionarTodos} className="flex items-center space-x-2" variant="secondary">
+                  <Plus className="h-4 w-4" />
+                  <span>Adicionar todos na fila</span>
+                </Button>
+                <Button onClick={() => setIsDialogOpen(true)} className="flex items-center space-x-2">
+                  <Plus className="h-4 w-4" />
+                  <span>Adicionar à Fila</span>
+                </Button>
+                <Button onClick={() => setModalReordenar(true)} size="icon" variant="outline" title="Reordenar fila">
+                  <ArrowDownAZ className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <CardDescription>Controle da fila de bugueiros para passeios</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
               <Table>
-                <TableHeader>
+                <TableHeader className="h-8">
                   <TableRow>
                     <TableHead>Posição</TableHead>
                     <TableHead>Bugueiro</TableHead>
                     <TableHead>Hora Entrada</TableHead>
-                    <TableHead>Créditos/Débitos</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Adiantamentos/Atrasos</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {bugueirosFila.filter(item => item.fez_passeio === false).map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className="h-4">
                       <TableCell>
                         <div className="flex items-center">
                           
@@ -266,8 +310,7 @@ export const FilaBugueiros: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
-                          <Users className="h-4 w-4 mr-2 text-gray-400" />
-                          {item.bugueiro?.bugueiro_nome ?? 'Sem nome'}
+                          {item.bugueiro?.bugueiro_posicao_oficial + ' - ' +item.bugueiro.bugueiro_nome}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -280,20 +323,16 @@ export const FilaBugueiros: React.FC = () => {
                         <div className="flex items-center space-x-2">
                           <div className="flex items-center space-x-1">
                             <FastForward className="h-3 w-3 text-green-600" />
-                            <span className="text-sm font-medium text-green-600">{item.adiantamento}</span>
+                            <span className="text-sm font-medium text-green-600">{item.bugueiro.bugueiro_fila_adiantamentos}</span>
                           </div>
                           <span className="text-gray-400">|</span>
                           <div className="flex items-center space-x-1">
                             <Rewind className="h-3 w-3 text-red-600" />
-                            <span className="text-sm font-medium text-red-600">{item.atraso}</span>
+                            <span className="text-sm font-medium text-red-600">{item.bugueiro.bugueiro_fila_atrasos}</span>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(item.status)}>
-                          {getStatusText(item.status)}
-                        </Badge>
-                      </TableCell>
+                      
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           {item.fez_passeio === false && (
@@ -321,18 +360,17 @@ export const FilaBugueiros: React.FC = () => {
                               <div className="flex space-x-1">
                                 <Button
                                   size="sm"
-                                  onClick={() => iniciarPasseio(item.bugueiro_id)}
-                                  className="bg-blue-600 hover:bg-blue-700"
+                                  onClick={() => abrirDialogPasseio(item.id)}
+                                  className="bg-green-600 hover:bg-green-700"
                                 >
                                   <Play className="h-4 w-4 mr-1" />
-                                  Iniciar
                                 </Button>
-                                {item.adiantamento > 0 && (
+                                {item.bugueiro.bugueiro_fila_adiantamentos > 0 && (
                                   <Button
                                     size="sm"
-                                    onClick={() => iniciarPasseioAdiantado(item.bugueiro_id)}
+                                    onClick={() => iniciarPasseioAdiantado()}
                                     className="bg-green-600 hover:bg-green-700"
-                                    title={`Usar adiantamento (${item.adiantamento} disponível)`}
+                                    title={`Usar adiantamento (${item.bugueiro.bugueiro_fila_adiantamentos} disponível)`}
                                   >
                                     <FastForward className="h-4 w-4" />
                                   </Button>
@@ -350,16 +388,7 @@ export const FilaBugueiros: React.FC = () => {
                               </div>
                             </>
                           )}
-                          {item.status === 'em_passeio' && (
-                            <Button
-                              size="sm"
-                              onClick={() => finalizarPasseio(item.bugueiro_id)}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              <UserCheck className="h-4 w-4 mr-1" />
-                              Finalizar
-                            </Button>
-                          )}
+                          
                           <Button
                             size="sm"
                             variant="destructive"
@@ -395,9 +424,7 @@ export const FilaBugueiros: React.FC = () => {
                 <Users className="h-4 w-4 text-gray-400" />
                 <span className="font-medium">{item.bugueiro?.bugueiro_nome}</span>
               </div>
-              <Badge className={`${getStatusColor(item.status)} text-xs`}>
-                {getStatusText(item.status)}
-              </Badge>
+              
             </div>
             
             <div className="flex items-center justify-between mb-3">
@@ -409,11 +436,11 @@ export const FilaBugueiros: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-1">
                   <FastForward className="h-3 w-3 text-green-600" />
-                  <span className="text-sm font-medium text-green-600">{item.adiantamento}</span>
+                  <span className="text-sm font-medium text-green-600">{item.bugueiro.bugueiro_fila_adiantamentos}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Rewind className="h-3 w-3 text-red-600" />
-                  <span className="text-sm font-medium text-red-600">{item.atraso}</span>
+                  <span className="text-sm font-medium text-red-600">{item.bugueiro.bugueiro_fila_atrasos}</span>
                 </div>
               </div>
             </div>
@@ -444,7 +471,7 @@ export const FilaBugueiros: React.FC = () => {
               <div className="flex space-x-1">
                     <Button
                       size="sm"
-                      onClick={() => iniciarPasseio(item.id)}
+                      onClick={iniciarPasseio}
                       className="bg-blue-600 hover:bg-blue-700 text-xs px-3"
                     >
                       <Play className="h-3 w-3 mr-1" />
@@ -458,32 +485,22 @@ export const FilaBugueiros: React.FC = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        {item.adiantamento > 0 && (
-                          <DropdownMenuItem onClick={() => iniciarPasseioAdiantado(item.id)}>
+                        {item.bugueiro.bugueiro_fila_adiantamentos > 0 && (
+                          <DropdownMenuItem onClick={() => iniciarPasseioAdiantado()}>
                             <FastForward className="h-3 w-3 mr-2" />
-                            Usar Adiantamento ({item.adiantamento})
+                            Usar Adiantamento ({item.bugueiro.bugueiro_fila_adiantamentos})
                           </DropdownMenuItem>
                         )}
                         {item.atraso > 0 && (
                           <DropdownMenuItem onClick={() => iniciarPasseioAtrasado(item.id)}>
                             <Rewind className="h-3 w-3 mr-2" />
-                            Usar Atraso ({item.atraso})
+                            Usar Atraso ({item.bugueiro.bugueiro_fila_atrasos})
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
               </div>
               
-              {item.status === 'em_passeio' && (
-                <Button
-                  size="sm"
-                  onClick={() => finalizarPasseio(item.id)}
-                  className="bg-green-600 hover:bg-green-700 text-xs px-3 ml-auto"
-                >
-                  <UserCheck className="h-3 w-3 mr-1" />
-                  Finalizar
-                </Button>
-              )}
             </div>
           </Card>
           ))}
@@ -512,7 +529,7 @@ export const FilaBugueiros: React.FC = () => {
                     <TableHead>Era da posição</TableHead>
                     <TableHead>Bugueiro</TableHead>
                     <TableHead>Hora do passeio</TableHead>
-                    <TableHead>Créditos/Débitos</TableHead>
+                    <TableHead>Adiantamentos/Atrasos</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -544,12 +561,12 @@ export const FilaBugueiros: React.FC = () => {
                         <div className="flex items-center space-x-2">
                           <div className="flex items-center space-x-1">
                             <FastForward className="h-3 w-3 text-green-600" />
-                            <span className="text-sm font-medium text-green-600">{item.adiantamento}</span>
+                            <span className="text-sm font-medium text-green-600">{item.bugueiro.bugueiro_fila_adiantamentos}</span>
                           </div>
                           <span className="text-gray-400">|</span>
                           <div className="flex items-center space-x-1">
                             <Rewind className="h-3 w-3 text-red-600" />
-                            <span className="text-sm font-medium text-red-600">{item.atraso}</span>
+                            <span className="text-sm font-medium text-red-600">{item.bugueiro.bugueiro_fila_atrasos}</span>
                           </div>
                         </div>
                       </TableCell>
@@ -630,7 +647,108 @@ export const FilaBugueiros: React.FC = () => {
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={cancelarAdiantamento}>Cancelar</Button>
-              <Button onClick={confirmarAdiantamento}>Confirmar</Button>
+              <Button onClick={iniciarPasseioAdiantado}>Confirmar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* Dialog para Selecionar Tipo de Passeio */}
+        <Dialog open={isPasseioDialogOpen} onOpenChange={setIsPasseioDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Iniciar Passeio</DialogTitle>
+            <DialogDescription>
+              Selecione o tipo de passeio que será realizado
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="id-passeio" className="text-sm font-medium">
+                Passeio
+              </label>
+              <Select 
+                value={idPasseio} 
+                onValueChange={setIdPasseio}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o passeio" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tiposPasseio.map((tipo)=>(
+                    <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="tipo-passeio" className="text-sm font-medium">
+                Tipo de passeio
+              </label>
+              <Select 
+                value={tipoPasseio} 
+                onValueChange={setTipoPasseio}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo de passeio" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='normal'>Normal</SelectItem>
+                  <SelectItem value='cortesia'>Cortesia</SelectItem>
+                  <SelectItem value='parceria'>Parceria</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="parceiro" className="text-sm font-medium">
+                Parceiro
+              </label>
+              <Select
+                value={parceiroSelecionado}
+                onValueChange={setParceiroSelecionado}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o parceiro (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nenhum">Nenhum parceiro</SelectItem>
+                  {parceiros.map((parceiro) => (
+                    <SelectItem key={parceiro.id} value={parceiro.nome}>{parceiro.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsPasseioDialogOpen(false);
+                setBugueiroParaPasseio(0);
+                setTipoPasseio('');
+                setParceiroSelecionado('');
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={iniciarPasseio}
+              disabled={!tipoPasseio}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Iniciar Passeio
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+        </Dialog>
+        {/* Modal de confirmação de reordenar fila */}
+        <Dialog open={modalReordenar} onOpenChange={setModalReordenar}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reordenar Fila</DialogTitle>
+            </DialogHeader>
+            <p>Tem certeza que deseja reordenar a fila? Esta ação irá atualizar a posição de todos os bugueiros conforme a posição oficial.</p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setModalReordenar(false)}>Cancelar</Button>
+              <Button onClick={reordenarFila} className="bg-blue-600 hover:bg-blue-700">Confirmar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

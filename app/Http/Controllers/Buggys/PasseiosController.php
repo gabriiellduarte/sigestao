@@ -3,65 +3,65 @@
 namespace App\Http\Controllers\Buggys;
 
 use App\Http\Controllers\Controller;
-
 use Illuminate\Http\Request;
+use App\Models\Buggys\Passeio;
 use Inertia\Inertia;
 
 class PasseiosController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return Inertia::render('Buggys/Passeios/Cadastro');
+        $passeios = Passeio::all();
+        return Inertia::render('Buggys/Passeios/Cadastro', [
+            'passeios' => $passeios
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+    
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'bugueiro_id' => 'required|integer',
+            'bugueiro_nome' => 'required|string',
+            'tipoPasseio' => 'required|in:normal,cortesia,parceria',
+            'data_hora' => 'required|date',
+            'duracao' => 'required|numeric',
+            'valor' => 'required|numeric',
+            'parceiro' => 'nullable|string',
+            'bug_passeios' => 'nullable|numeric',
+            'observacoes' => 'nullable|string',
+        ]);
+        $passeio = Passeio::create($validated);
+        return redirect()->route('bugueiros.passeios.index')->with('sucesso','Passeio cadastrado com sucesso!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $passeio = Passeio::findOrFail($id);
+        $validated = $request->validate([
+            'bugueiro_id' => 'required|integer',
+            'bugueiro_nome' => 'required|string',
+            'nome_passeio'=>'required|string',
+            'tipoPasseio' => 'required|in:normal,cortesia,parceria',
+            'data_hora' => 'required|date',
+            'duracao' => 'required|numeric',
+            'valor' => 'required|numeric',
+            'parceiro' => 'nullable|string',
+            'bug_passeios' => 'nullable|numeric',
+            'observacoes' => 'nullable|string',
+        ]);
+        $passeio->update($validated);
+        return redirect()->route('bugueiros.passeios.index')->with('sucesso','Passeio atualizado com sucesso!');
+    }
+    public function show(){
+
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function destroy($id)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $passeio = Passeio::findOrFail($id);
+        $passeio->delete();
+        return redirect()->route('bugueiros.passeios.index')->with('sucesso','Passeio apagado com sucesso!');
     }
 }

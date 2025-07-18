@@ -15,6 +15,15 @@ export interface NavGroup {
     items: NavItem[];
 }
 
+interface TipoPasseio {
+    id: string;
+    nome: string;
+    descricao: string;
+    duracao: number;
+    preco: number;
+    ativo: boolean;
+  }
+
 interface GrupoProcedimento {
     reg_gpro_id: number;
     reg_gpro_nome: string;
@@ -88,4 +97,12 @@ export interface User {
     updated_at: string;
     permissions?: string[];
     roles?: string[];
+} 
+
+export interface Parceiro {
+  id: number;
+  nome: string;
+  contato: string;
+  created_at?: string;
+  updated_at?: string;
 } 

@@ -77,7 +77,7 @@ const mainNavItems: NavItem[] = [
         children:[
             {
                 title: 'DashBoard',
-                href:'/buggy/dashboard',
+                href:'/bugueiros/dashboard',
                 permissions:'buggy.dashboard'
             },
             {
@@ -97,8 +97,14 @@ const mainNavItems: NavItem[] = [
             },
             {
                 title: 'Tipos de Passeios',
-                href:'buggy/dashboard',
+                href:'/bugueiros/tipodepasseio',
                 permissions:'buggy.dashboard'
+            },
+            {
+                title: 'Parceiros',
+                href: '/bugueiros/parceiros',
+                icon: UserCircle,
+                permissions: 'acessar sistema'
             }
         ]
     },
