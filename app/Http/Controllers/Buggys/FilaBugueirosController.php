@@ -342,7 +342,8 @@ class FilaBugueirosController extends Controller
             $bugueiroFila->obs = $request->input('obs');
         }
         $bugueiroFila->save();
-        return redirect()->route('bugueiros.filas.index')->with('sucesso', 'Bugueiro removido da fila.');
+        $this->reordenarFila($fila_id,true);
+        //return redirect()->route('bugueiros.filas.index')->with('sucesso', 'Bugueiro removido da fila.');
     }
 
     // Remover bugueiro da fila com atraso e observação
@@ -361,7 +362,8 @@ class FilaBugueirosController extends Controller
             $bugueiro->bugueiro_fila_atrasos = $bugueiro->bugueiro_fila_atrasos + 1;
             $bugueiro->save();
         }
-        return redirect()->route('bugueiros.filas.index')->with('sucesso', 'Bugueiro removido da fila com atraso registrado.');
+        $this->reordenarFila($fila_id,true);
+        //return redirect()->route('bugueiros.filas.index')->with('sucesso', 'Bugueiro removido da fila com atraso registrado.');
     }
 
     // Mover bugueiro para cima na fila
