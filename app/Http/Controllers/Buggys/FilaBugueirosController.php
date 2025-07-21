@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 
 use App\Models\Buggys\Passeio;
 use App\Models\Buggys\TipoPasseio;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,7 +20,39 @@ class FilaBugueirosController extends Controller
      * Display a listing of the resource.
      */
     public function dashboard(){
-        return Inertia::render('Buggys/Dashboard');
+        // Dados reais para o dashboard
+        $totalPasseios = Passeio::count();
+        $bugueirosAtivos = Passeio::distinct('bugueiro_id')->count('bugueiro_id');
+        $receitaTotal = Passeio::sum('valor');
+        $avaliacaoMedia = 4.7;
+        $passeiosPorMes = Passeio::selectRaw('YEAR(data_hora) as ano, MONTH(data_hora) as mes_num, COUNT(*) as passeios, SUM(valor) as receita')
+            ->whereNotNull('data_hora')
+            ->groupByRaw('YEAR(data_hora), MONTH(data_hora)')
+            ->orderByRaw('YEAR(data_hora) DESC, MONTH(data_hora) DESC')
+            ->limit(6)
+            ->get()
+            ->map(function($item) {
+                $meses = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                $item->mes = $meses[intval($item->mes_num)];
+                return $item;
+        });
+        $rankingBugueiros = Passeio::selectRaw('bugueiro_nome, bugueiro_id, COUNT(*) as passeios')
+            ->groupBy('bugueiro_id', 'bugueiro_nome')
+            ->orderByDesc('passeios')
+            ->limit(5)
+            ->get();
+        $tiposPasseios = Passeio::selectRaw('tipoPasseio as tipo, COUNT(*) as quantidade')
+            ->groupBy('tipoPasseio')
+            ->get();
+        return Inertia::render('Buggys/Dashboard', [
+            'totalPasseios' => $totalPasseios,
+            'bugueirosAtivos' => $bugueirosAtivos,
+            'receitaTotal' => $receitaTotal,
+            'avaliacaoMedia' => $avaliacaoMedia,
+            'passeiosPorMes' => $passeiosPorMes,
+            'rankingBugueiros' => $rankingBugueiros,
+            'tiposPasseios' => $tiposPasseios,
+        ]);
     }   
     public function index()
     {
@@ -249,38 +282,41 @@ class FilaBugueirosController extends Controller
                     $bugueiro->bugueiro_fila_adiantamentos = $bugueiro->bugueiro_fila_adiantamentos + 1;
                     $bugueiro->save();
                 }
+                // Adiciona o campo adiantamento ao request para poder ele adicionar no update da fila logo abaixo
+                $request->merge(['adiantamento' => 1]);
             }
-            // Tenta criar o passeio antes de atualizar a fila
-            $passeio = new Passeio();
-            $passeio->bugueiro_id = $fila->bugueiro_id;
-            $passeio->fila_id = $fila_id;
-            $passeio->bugueiro_nome = $fila->bugueiro->bugueiro_nome;
-            $passeio->tipoPasseio = $request->tipoPasseio;
-            $passeio->nome_passeio = $tipopasseio->nome;
-            $passeio->data_hora = $request->data_hora ?? now();
-            $passeio->duracao = $tipopasseio->duracao;
-            $passeio->valor = $tipopasseio->preco ?? 0;
-            $passeio->parceiro = $request->parceiro ?? null;
-            $passeio->comissao_parceiro = $request->comissao_parceiro ?? null;
-            $passeio->observacoes = $request->observacoes ?? null;
-            $passeio->save();
+            if($request->usa_adiantamento){
+                $fila->update(['removido'=>true, 'obs'=>'1 ADIANTAMENTO UTILIZADO']);
+                // Se usou adiantamento, desconta 1 do bugueiro
+                $bugueiro = $fila->bugueiro;
+                if($bugueiro->bugueiro_fila_adiantamentos > 0) {
+                    $bugueiro->bugueiro_fila_adiantamentos -= 1;
+                    $bugueiro->save();
+                }
+                //$this->reordenarFila($fila_id,true);
+            }else{
+                // Tenta criar o passeio antes de atualizar a fila
+                $passeio = new Passeio();
+                $passeio->bugueiro_id = $fila->bugueiro_id;
+                $passeio->fila_id = $fila_id;
+                $passeio->bugueiro_nome = $fila->bugueiro->bugueiro_nome;
+                $passeio->tipoPasseio = $request->tipoPasseio;
+                $passeio->nome_passeio = $tipopasseio->nome;
+                $passeio->data_hora = $request->data_hora ?? now();
+                $passeio->duracao = $tipopasseio->duracao;
+                $passeio->valor = $tipopasseio->preco ?? 0;
+                $passeio->parceiro = $request->parceiro ?? null;
+                $passeio->comissao_parceiro = $request->comissao_parceiro ?? null;
+                $passeio->observacoes = $request->observacoes ?? null;
+                $passeio->save();
 
-            $bugueiroFila = FilaBugueiro::where('fila_id', $fila_id)->findOrFail($id);
-            $bugueiroFila->update($request->only(['posicao_fila', 'atraso', 'adiantamento', 'fez_passeio', 'status']));
+                $request->merge(['hora_passeio' => Carbon::now()]);
 
-            // Se chegou aqui, passeio foi criado com sucesso, pode atualizar a fila
-            $validated = $request->validate([
-                'fila_data' => 'sometimes|date',
-                'fila_qntd_normal' => 'sometimes|integer',
-                'fila_qntd_adiantados' => 'sometimes|integer',
-                'fila_qntd_atrasados' => 'sometimes|integer',
-                'fila_obs' => 'nullable|string',
-                'fila_status' => 'sometimes|in:cancelada,finalizada,aberta',
-            ]);
-            $fila->update($validated);
+                $fila->update($request->only(['posicao_fila', 'atraso', 'adiantamento', 'fez_passeio', 'obs','removido','hora_passeio']));
+            }
             \DB::commit();
 
-            $this->reordenarFila($fila_id, true);
+            $this->reordenarFila($fila_id,true);
             //return redirect()->back()->with('sucesso', 'Sucesso ao criar passeio ');
         } catch (Exception $e) {
             \DB::rollBack();
@@ -295,6 +331,37 @@ class FilaBugueirosController extends Controller
         $bugueiroFila = FilaBugueiro::where('fila_id', $fila_id)->findOrFail($id);
         $bugueiroFila->delete();
         return redirect()->back();
+    }
+
+    // Remover bugueiro da fila (simples)
+    public function removerSimples(Request $request, $fila_id, $id)
+    {
+        $bugueiroFila = FilaBugueiro::where('fila_id', $fila_id)->findOrFail($id);
+        $bugueiroFila->removido = true;
+        if ($request->has('obs')) {
+            $bugueiroFila->obs = $request->input('obs');
+        }
+        $bugueiroFila->save();
+        return redirect()->route('bugueiros.filas.index')->with('sucesso', 'Bugueiro removido da fila.');
+    }
+
+    // Remover bugueiro da fila com atraso e observação
+    public function removerComAtraso(Request $request, $fila_id, $id)
+    {
+        $request->validate([
+            'observacao' => 'required|string',
+        ]);
+        $bugueiroFila = FilaBugueiro::where('fila_id', $fila_id)->findOrFail($id);
+        $bugueiroFila->removido = true;
+        $bugueiroFila->obs = $request->input('observacao');
+        $bugueiroFila->save();
+        // Atualiza atraso no cadastro do bugueiro
+        $bugueiro = $bugueiroFila->bugueiro;
+        if ($bugueiro) {
+            $bugueiro->bugueiro_fila_atrasos = $bugueiro->bugueiro_fila_atrasos + 1;
+            $bugueiro->save();
+        }
+        return redirect()->route('bugueiros.filas.index')->with('sucesso', 'Bugueiro removido da fila com atraso registrado.');
     }
 
     // Mover bugueiro para cima na fila
@@ -370,23 +437,89 @@ class FilaBugueirosController extends Controller
     }
 
     // Reordenar fila conforme bugueiro_posicao_oficial
-    public function reordenarFila($fila_id, $apenasFezPasseio = false)
+    public function reordenarFila($fila_id, $apenasFilaAtual = false)
     {
-        $fila = Filas::find($fila_id);
-        if (!$fila) {
-            return redirect()->back()->with('erro', 'Fila não encontrada.');
-        }
-        $query = FilaBugueiro::where('fila_id', $fila->fila_id);
-        if ($apenasFezPasseio) {
-            $query->where('fez_passeio', true);
-        }
-        $bugueirosFila = $query->with('bugueiro')->get();
-        foreach ($bugueirosFila as $item) {
-            if ($item->bugueiro && isset($item->bugueiro->bugueiro_posicao_oficial)) {
+        $query = FilaBugueiro::where('fila_id', $fila_id);
+        //Só ordena os que ainda não fizeram passeio
+        $query->where('fez_passeio', false);
+        $bugueirosFila = $query->with('bugueiro')->orderBy('posicao_fila')->get();
+
+        if($apenasFilaAtual){
+            foreach ($bugueirosFila as $key => $item) {
+                $item->posicao_fila = $key + 1;
+                $item->save();
+            }
+        }else{
+            foreach ($bugueirosFila as $key => $item) {
                 $item->posicao_fila = $item->bugueiro->bugueiro_posicao_oficial;
                 $item->save();
             }
         }
+        
         return redirect()->back()->with('sucesso', 'Fila reordenada com sucesso!');
+    }
+
+    /**
+     * Retorna dados reais para o dashboard dos buggys
+     */
+    public function dashboardDadosReais()
+    {
+        // Total de passeios
+        $totalPasseios = \App\Models\Buggys\Passeio::count();
+        // Bugueiros ativos (com pelo menos 1 passeio)
+        $bugueirosAtivos = \App\Models\Buggys\Passeio::distinct('bugueiro_id')->count('bugueiro_id');
+        // Receita total
+        $receitaTotal = \App\Models\Buggys\Passeio::sum('valor');
+        // Avaliação média (mock, pois não há campo de avaliação)
+        $avaliacaoMedia = 4.7;
+        // Passeios por mês (últimos 6 meses)
+        $passeiosPorMes = \App\Models\Buggys\Passeio::selectRaw('DATE_FORMAT(data_hora, "%b") as mes, COUNT(*) as passeios, SUM(valor) as receita')
+            ->whereNotNull('data_hora')
+            ->groupByRaw('YEAR(data_hora), MONTH(data_hora)')
+            ->orderByRaw('YEAR(data_hora) DESC, MONTH(data_hora) DESC')
+            ->limit(6)
+            ->get();
+        // Ranking de bugueiros (top 5)
+        $rankingBugueiros = \App\Models\Buggys\Passeio::selectRaw('bugueiro_nome, bugueiro_id, COUNT(*) as passeios')
+            ->groupBy('bugueiro_id', 'bugueiro_nome')
+            ->orderByDesc('passeios')
+            ->limit(5)
+            ->get();
+        // Tipos de passeios
+        $tiposPasseios = \App\Models\Buggys\Passeio::selectRaw('tipoPasseio as tipo, COUNT(*) as quantidade')
+            ->groupBy('tipoPasseio')
+            ->get();
+        return response()->json([
+            'totalPasseios' => $totalPasseios,
+            'bugueirosAtivos' => $bugueirosAtivos,
+            'receitaTotal' => $receitaTotal,
+            'avaliacaoMedia' => $avaliacaoMedia,
+            'passeiosPorMes' => $passeiosPorMes,
+            'rankingBugueiros' => $rankingBugueiros,
+            'tiposPasseios' => $tiposPasseios,
+        ]);
+    }
+
+    /**
+     * Lista todas as filas com dados básicos
+     */
+    public function listarFilas()
+    {
+        $filas = \App\Models\Buggys\Filas::orderBy('fila_data', 'desc')->get();
+        return Inertia::render('Buggys/Filas/ListaTodas', [
+            'filas' => $filas
+        ]);
+    }
+
+    /**
+     * Mostra todos os bugueiros de uma fila específica (incluindo removidos e quem já fez passeio)
+     */
+    public function verFilaCompleta($fila_id)
+    {
+        $fila = \App\Models\Buggys\Filas::with(['bugueirosFila.bugueiro'])->findOrFail($fila_id);
+        return Inertia::render('Buggys/Filas/VerFila', [
+            'fila' => $fila,
+            'bugueiros_fila' => $fila->bugueirosFila
+        ]);
     }
 }

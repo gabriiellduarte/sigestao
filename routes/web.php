@@ -107,8 +107,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
        Route::resource('parceiros', ParceirosController::class);
        Route::resource('filas', FilaBugueirosController::class);
        Route::get('dashboard', [FilaBugueirosController::class, 'dashboard']);
+       Route::get('dashboard-dados-reais', [FilaBugueirosController::class, 'dashboardDadosReais']);
+       Route::get('todas-filas', [FilaBugueirosController::class, 'listarFilas'])->name('filas.todas');
+       Route::get('filas/{fila}/ver-completa', [FilaBugueirosController::class, 'verFilaCompleta'])->name('filas.verCompleta');
        Route::post('filas/nova-com-todos', [FilaBugueirosController::class, 'novaFilaComTodos'])->name('filas.novaComTodos');
        Route::post('filas/{fila}/reordenar', [FilaBugueirosController::class, 'reordenarFila'])->name('filas.reordenar');
+       Route::post('filas/{fila}/remover-simples/{id}', [FilaBugueirosController::class, 'removerSimples'])->name('filas.removerSimples');
+       Route::post('filas/{fila}/remover-com-atraso/{id}', [FilaBugueirosController::class, 'removerComAtraso'])->name('filas.removerComAtraso');
 
        Route::resource('tipodepasseio', TipoDePasseioController::class);
 

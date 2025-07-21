@@ -17,6 +17,8 @@ class FilaBugueiro extends Model
         'hora_entrada',
         'hora_passeio',
         'fez_passeio',
+        'obs',
+        'removido',
     ];
 
     protected $casts = [

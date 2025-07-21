@@ -1,33 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Calendar, Users, Truck, TrendingUp, DollarSign } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
-
-const passeioPorMes = [
-  { mes: 'Jan', passeios: 45, receita: 4500 },
-  { mes: 'Fev', passeios: 52, receita: 5200 },
-  { mes: 'Mar', passeios: 38, receita: 3800 },
-  { mes: 'Abr', passeios: 61, receita: 6100 },
-  { mes: 'Mai', passeios: 73, receita: 7300 },
-  { mes: 'Jun', passeios: 68, receita: 6800 }
-];
-
-const bugueiroPorPasseios = [
-  { nome: 'João Silva', passeios: 28, avaliacao: 4.8 },
-  { nome: 'Maria Santos', passeios: 31, avaliacao: 4.9 },
-  { nome: 'Pedro Costa', passeios: 24, avaliacao: 4.7 },
-  { nome: 'Ana Lima', passeios: 35, avaliacao: 4.6 },
-  { nome: 'Carlos Souza', passeios: 22, avaliacao: 4.5 }
-];
-
-const tiposPasseios = [
-  { tipo: 'Dunas', quantidade: 89, cor: '#8884d8' },
-  { tipo: 'Praia', quantidade: 67, cor: '#82ca9d' },
-  { tipo: 'Trilha', quantidade: 43, cor: '#ffc658' },
-  { tipo: 'Sunset', quantidade: 34, cor: '#ff7c7c' }
-];
+import axios from 'axios';
+import { usePage } from '@inertiajs/react';
 
 const chartConfig = {
   passeios: {
@@ -41,6 +19,35 @@ const chartConfig = {
 };
 
 export const DashboardBuggy: React.FC = () => {
+  const { props } = usePage<any>();
+  const dados = props;
+  const loading = !dados || typeof dados.totalPasseios === 'undefined';
+
+  // Conversão para os gráficos
+  const passeioPorMes = (dados.passeiosPorMes || []).map((item: any) => ({
+    mes: item.mes,
+    passeios: Number(item.passeios),
+    receita: Number(item.receita)
+  })).reverse();
+  const bugueiroPorPasseios = (dados.rankingBugueiros || []).map((item: any) => ({
+    nome: item.bugueiro_nome,
+    passeios: Number(item.passeios),
+    avaliacao: 4.7 // mock, pois não há campo
+  }));
+  const tiposPasseios = (dados.tiposPasseios || []).map((item: any, idx: number) => ({
+    tipo: item.tipo,
+    quantidade: Number(item.quantidade),
+    cor: ['#8884d8','#82ca9d','#ffc658','#ff7c7c','#ffb347','#bada55'][idx % 6]
+  }));
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="p-8 text-center text-gray-500">Carregando dados do dashboard...</div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
     <div className="space-y-6 p-4">
@@ -56,8 +63,8 @@ export const DashboardBuggy: React.FC = () => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">337</div>
-            <p className="text-xs text-muted-foreground">+12% em relação ao mês anterior</p>
+            <div className="text-2xl font-bold">{dados.totalPasseios}</div>
+            <p className="text-xs text-muted-foreground">&nbsp;</p>
           </CardContent>
         </Card>
 
@@ -67,8 +74,8 @@ export const DashboardBuggy: React.FC = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">+2 novos este mês</p>
+            <div className="text-2xl font-bold">{dados.bugueirosAtivos}</div>
+            <p className="text-xs text-muted-foreground">&nbsp;</p>
           </CardContent>
         </Card>
 
@@ -78,8 +85,8 @@ export const DashboardBuggy: React.FC = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 33.700</div>
-            <p className="text-xs text-muted-foreground">+8% em relação ao mês anterior</p>
+            <div className="text-2xl font-bold">R$ {Number(dados.receitaTotal).toLocaleString('pt-BR', {minimumFractionDigits:2})}</div>
+            <p className="text-xs text-muted-foreground">&nbsp;</p>
           </CardContent>
         </Card>
 
@@ -89,7 +96,7 @@ export const DashboardBuggy: React.FC = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4.7</div>
+            <div className="text-2xl font-bold">{dados.avaliacaoMedia}</div>
             <p className="text-xs text-muted-foreground">⭐ Excelente avaliação</p>
           </CardContent>
         </Card>
@@ -145,7 +152,7 @@ export const DashboardBuggy: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {bugueiroPorPasseios.map((bugueiro, index) => (
+              {bugueiroPorPasseios.map((bugueiro: any, index: number) => (
                 <div key={bugueiro.nome} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
@@ -182,12 +189,12 @@ export const DashboardBuggy: React.FC = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ tipo, percent }) => `${tipo} ${(percent * 100).toFixed(0)}%`}
+                  label={({ tipo, percent }) => `${tipo} ${percent ? (percent * 100).toFixed(0) : 0}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="quantidade"
                 >
-                  {tiposPasseios.map((entry, index) => (
+                  {tiposPasseios.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={entry.cor} />
                   ))}
                 </Pie>
