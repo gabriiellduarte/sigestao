@@ -453,10 +453,20 @@ export const FilaBugueiros: React.FC = () => {
                 <Users className="h-4 w-4 text-gray-400" />
                 <span className="font-medium">{item.bugueiro?.bugueiro_nome}</span>
               </div>
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1">
+                  <FastForward className="h-3 w-3 text-green-600" />
+                  <span className="text-sm font-medium text-green-600">{item.bugueiro.bugueiro_fila_adiantamentos}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Rewind className="h-3 w-3 text-red-600" />
+                  <span className="text-sm font-medium text-red-600">{item.bugueiro.bugueiro_fila_atrasos}</span>
+                </div>
+              </div>
               
             </div>
             
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3 hidden">
               <div className="flex items-center space-x-1 text-sm text-gray-600">
                 <Timer className="h-3 w-3" />
                 <span>{item.hora_entrada}</span>
