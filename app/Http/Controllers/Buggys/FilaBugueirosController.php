@@ -443,7 +443,7 @@ class FilaBugueirosController extends Controller
     {
         $query = FilaBugueiro::where('fila_id', $fila_id);
         //Só ordena os que ainda não fizeram passeio
-        $query->where('fez_passeio', false);
+        $query->where('fez_passeio', false)->where('removido',false);
         $bugueirosFila = $query->with('bugueiro')->orderBy('posicao_fila')->get();
 
         if($apenasFilaAtual){

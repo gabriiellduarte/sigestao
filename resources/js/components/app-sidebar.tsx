@@ -105,6 +105,12 @@ const mainNavItems: NavItem[] = [
                 href: '/bugueiros/parceiros',
                 icon: UserCircle,
                 permissions: 'acessar sistema'
+            },
+            {
+                title: 'Crachá',
+                href: '/cracha',
+                icon: UserCircle,
+                permissions: 'acessar sistema'
             }
         ]
     },

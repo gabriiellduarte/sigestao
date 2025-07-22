@@ -31,6 +31,11 @@ use App\Http\Controllers\Regulacao\RegTipoAtendimentoController;
 use App\Http\Controllers\ParceirosController;
 
 
+Route::get('cracha', function(){
+    return Inertia::render('Buggys/CrachaVirtual');
+   });
+
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::redirect('/', destination: 'dashboard');
     Route::get('/dashboard', function () {
@@ -124,6 +129,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
        Route::delete('filas/{fila_id}/remover/{id}', [FilaBugueirosController::class, 'removerBugueiro']);
        Route::post('filas/{fila_id}/mover-cima/{id}', [FilaBugueirosController::class, 'moverCima']);
        Route::post('filas/{fila_id}/mover-baixo/{id}', [FilaBugueirosController::class, 'moverBaixo']);
+
+       
 
     });
 

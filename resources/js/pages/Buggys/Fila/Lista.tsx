@@ -307,40 +307,39 @@ export const FilaBugueiros: React.FC = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Na Fila</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <div className="text-2xl font-bold">{filaNaFila.length}</div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{filaNaFila.length}</div>
               <p className="text-xs text-muted-foreground">Aguardando passeio</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Realizados</CardTitle>
-              <Play className="h-4 w-4 text-muted-foreground" />
+              <div className="text-2xl font-bold">{emPasseio.length}</div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{emPasseio.length}</div>
+              
               <p className="text-xs text-muted-foreground">Fizeram passeio</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Adiantados</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
+              <div className="text-2xl font-bold">{adiantados.length}</div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{adiantados.length}</div>
+              
               <p className="text-xs text-muted-foreground">Bugueiros com passeio adiantado nessa fila</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Atrasados</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
+              <div className="text-2xl font-bold">{atraso.length}</div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{atraso.length}</div>
+              
               <p className="text-xs text-muted-foreground">Bugueiros com passeio atrasado nessa fila</p>
             </CardContent>
           </Card>
@@ -443,8 +442,8 @@ export const FilaBugueiros: React.FC = () => {
           </div>
         )}
         {/* Lista de Bugueiros - Mobile Card Layout */}
-        <div className="space-y-3 md:hidden">
-          {bugueirosFila.map((item) => (
+        <div className="space-y-3 md:hiddenn">
+          {bugueirosFila.filter(item => item.fez_passeio === false && !item.removido).map((item) => (
           <Card key={`${item.id}-${item.hora_entrada}`} className="p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
@@ -501,7 +500,7 @@ export const FilaBugueiros: React.FC = () => {
               <div className="flex space-x-1">
                     <Button
                       size="sm"
-                      onClick={iniciarPasseio}
+                      onClick={()=>abrirDialogPasseio(item.id)}
                       className="bg-blue-600 hover:bg-blue-700 text-xs px-3"
                     >
                       <Play className="h-3 w-3 mr-1" />
