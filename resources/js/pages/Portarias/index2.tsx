@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, Eye, ChevronDown, FileText, Building, ExternalLink, PersonStanding, Users, Gauge, Pencil } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, ChevronDown, FileText, Building, ExternalLink, PersonStanding, Users, Gauge, Pencil, BookUser } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -252,32 +252,38 @@ export default function ListaPortarias({pessoas, filters}: Props) {
                 </Button>
                 </Link>
                 <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full md:w-auto">
-                    <ChevronDown className="h-4 w-4 mr-2" />
-                    Outros
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem asChild>
-                    <Link href={route('documentos.tiposdeportaria.index')} className="flex items-center">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Tipos de Portaria
-                    </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                    <Link href={route('administracao.secretarias.index')} className="flex items-center">
-                        <Building className="h-4 w-4 mr-2" />
-                        Secretarias
-                    </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                    <Link href={route('administracao.servidores.index')} className="flex items-center">
-                        <Users className="h-4 w-4 mr-2" />
-                        Servidores
-                    </Link>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
+                  <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full md:w-auto">
+                        <ChevronDown className="h-4 w-4 mr-2" />
+                        Outros
+                      </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem asChild>
+                        <Link href={route('documentos.tiposdeportaria.index')} className="flex items-center">
+                            <FileText className="h-4 w-4 mr-2" />
+                            Tipos de Portaria
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={route('administracao.secretarias.index')} className="flex items-center">
+                            <Building className="h-4 w-4 mr-2" />
+                            Secretarias
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={route('administracao.servidores.index')} className="flex items-center">
+                            <Users className="h-4 w-4 mr-2" />
+                            Servidores
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={route('administracao.pessoas.index')} className="flex items-center">
+                            <BookUser className="h-4 w-4 mr-2" />
+                            Servidores
+                        </Link>
+                      </DropdownMenuItem>
+                  </DropdownMenuContent>
                 </DropdownMenu>
                 <Link href={route('documentos.portarias.create')}>
                 <Button className="w-full md:w-auto">

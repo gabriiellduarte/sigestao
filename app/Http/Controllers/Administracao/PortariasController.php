@@ -139,7 +139,7 @@ class PortariasController extends Controller
         // Permitir ordenação apenas por campos válidos
         $allowedSorts = ['doc_portarias_servidor_nome', 'doc_portarias_numero', 'adm_cargos_id', 'adm_secretarias_id'];
         if (!in_array($sort, $allowedSorts)) {
-            $sort = 'doc_portarias_servidor_nome';
+            $sort = 'doc_portarias_data';
         }
         $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
 
