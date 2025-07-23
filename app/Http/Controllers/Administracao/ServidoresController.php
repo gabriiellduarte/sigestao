@@ -10,10 +10,47 @@ use Inertia\Inertia;
 
 class ServidoresController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+
+        $search = $request->input('buscar');
+        $sort = $request->input('sort', 'adm_servidores_id');
+        
+        $direction = $request->input('direction', 'asc');
+        $query = Servidores::query();
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('pessoa.ger_pessoas_nome', 'like', "%{$search}%")
+                  ->orWhere('pessoa.ger_pessoas_cpf', 'like', "%{$search}%");
+            });
+        }
+
+        // Permitir ordenação apenas por campos válidos
+        $allowedSorts = ['pessoa.ger_pessoas_nome', 'pessoa.ger_pessoas_cpf'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'adm_servidores_id';
+        }
+        $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
+
+        $pessoas = $query->with(    'pessoa')->orderBy($sort, $direction)->paginate(10)->withQueryString();
+
+        // Se for requisição JSON (ag-grid), retorna apenas os dados e o total
+        if (request()->wantsJson()) {
+            return response()->json([
+                'data' => $pessoas->items(),
+                'total' => $pessoas->total(),
+            ]);
+        }
+
+        return Inertia::render('Administracao/Servidores/index', [
+            'servidores' => $pessoas,
+            'filters' => $request->only('buscar'),
+        ]);
+
+
         // Buscar todos os servidores com dados da pessoa relacionada
-        $servidores = Servidores::with('pessoa')->get();
+        $servidores = Servidores::with('pessoa')->limit(10)->get();
 
         return Inertia::render('Administracao/Servidores/index', [
             'servidores' => $servidores

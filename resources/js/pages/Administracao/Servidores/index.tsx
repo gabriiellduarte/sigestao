@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Plus, Edit, Trash2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Search, Plus, Edit, Trash2, ExternalLink, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,8 +12,10 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import { DataTable } from '../Pessoas/TabelaStack/Tabela';
+import { ColumnDef } from '@tanstack/react-table';
 
 interface Pessoa {
   ger_pessoas_id: number;
@@ -31,25 +33,74 @@ interface Servidor {
 }
 
 interface ServidoresPageProps extends PageProps {
-  servidores: Servidor[];
-  [key: string]: any;
+  servidores: {
+    data: Servidor[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    next_page_url: string | null;
+    prev_page_url: string | null;
+    links: Array<any>;
+  };
+  filters: {
+    search?: string;
+  };
 }
+const columns: ColumnDef<Servidor>[] = [
+    
+  {
+      accessorKey: 'adm_servidores_id',
+      header: 'Número',
+  },
+  {
+      accessorKey: 'pessoa.ger_pessoas_nome',
+      header: 'Servidor',
+      enableSorting: true,
+  },
+  {
+    accessorKey: 'pessoa.ger_pessoas_cpf',
+    header: 'CPF'
+  },
+  {
+      id: 'acoes',
+      header: 'Ações',
+      cell: ({ row }) => (
+          <div className="flex justify-end space-x-2">
+              <Link href={route('administracao.servidores.edit', row.original.adm_servidores_id)}>
+                  <Button variant="ghost" size="sm">
+                      <Pencil className="h-4 w-4" />
+                  </Button>
+              </Link>
+          </div>
+      ),
+  },
+  ];
 
-const ListaServidores: React.FC = () => {
-  const { servidores } = usePage<ServidoresPageProps>().props;
+export default function ListaServidores({servidores, filters}: ServidoresPageProps){
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filtro local em todos os dados
-  const filteredServidores = servidores.filter((servidor) => {
-    const pessoa = servidor.pessoa;
-    return (
-      pessoa.ger_pessoas_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (pessoa.ger_pessoas_cpf && pessoa.ger_pessoas_cpf.includes(searchTerm)) ||
-      (pessoa.ger_pessoas_email && pessoa.ger_pessoas_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (pessoa.ger_pessoas_telefone1 && pessoa.ger_pessoas_telefone1.includes(searchTerm))
-    );
-  });
+  const [pageIndex, setPageIndex] = useState(servidores.current_page - 1);
+  const [sort, setSort] = useState<{ id: string; desc: boolean } | null>(null);
 
+  const { data, setData } = useForm({
+    search: filters.search || '',
+  });
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      router.get(route('administracao.servidores.index', { buscar: searchTerm }), undefined, { preserveState: true, replace: true });
+    }, 400);
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
+  const handleSortingChange = (sorting: any) => {
+    if (sorting.length > 0) {
+        setSort(sorting[0]);
+        router.get(route('administracao.servidores.index'), { buscar: data.search, page: 1, sort: sorting[0].id, direction: sorting[0].desc ? 'desc' : 'asc' }, { preserveState: true, replace: true });
+    } else {
+        setSort(null);
+        router.get(route('administracao.servidores.index'), { buscar: data.search, page: 1 }, { preserveState: true, replace: true });
+    }
+};
   const getStatusColor = (status: string | undefined) => {
     switch (status) {
       case 'ativo': return 'bg-green-100 text-green-800';
@@ -68,6 +119,10 @@ const ListaServidores: React.FC = () => {
     router.get(route('administracao.servidores.edit', id));
   };
 
+  const handlePageChange = (page: number) => {
+    setPageIndex(page);
+    router.get(route('administracao.servidores.index'), { buscar: data.search, page: page + 1, sort: sort?.id, direction: sort?.desc ? 'desc' : 'asc' }, { preserveState: true, replace: true });
+  };
   return (
     <AppLayout>
       <div className="space-y-4 md:space-y-6 p-4">
@@ -96,62 +151,18 @@ const ListaServidores: React.FC = () => {
         </div>
         <div className="bg-white rounded-lg border overflow-hidden">
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[200px]">Nome</TableHead>
-                  <TableHead className="min-w-[120px]">CPF</TableHead>
-                  <TableHead className="min-w-[200px]">Email</TableHead>
-                  <TableHead className="min-w-[120px]">Telefone</TableHead>
-                  <TableHead className="min-w-[100px]">Status</TableHead>
-                  <TableHead className="w-[120px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredServidores.map((servidor) => (
-                  <TableRow key={servidor.adm_servidores_id}>
-                    <TableCell className="font-medium">{servidor.pessoa.ger_pessoas_nome}</TableCell>
-                    <TableCell>{servidor.pessoa.ger_pessoas_cpf}</TableCell>
-                    <TableCell>{servidor.pessoa.ger_pessoas_email || '-'}</TableCell>
-                    <TableCell>{servidor.pessoa.ger_pessoas_telefone1 || '-'}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(servidor.pessoa.status)}>
-                        {servidor.pessoa.status ? servidor.pessoa.status.charAt(0).toUpperCase() + servidor.pessoa.status.slice(1) : 'Não informado'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(servidor.adm_servidores_id)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(servidor.adm_servidores_id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns} data={servidores.data}
+              pageCount={servidores.last_page}
+              pageIndex={pageIndex}
+              onPageChange={handlePageChange}
+              onSortingChange={handleSortingChange}
+            />
+            
           </div>
         </div>
-        {filteredServidores.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Nenhum servidor encontrado.</p>
-          </div>
-        )}
+        
       </div>
     </AppLayout>
   );
 };
-
-export default ListaServidores;
