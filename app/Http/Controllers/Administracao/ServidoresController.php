@@ -59,7 +59,7 @@ class ServidoresController extends Controller
 
     public function create()
     {
-        $pessoas = Pessoa::all();
+        $pessoas = Pessoa::limit(20)->get();
         return Inertia::render('Administracao/Servidores/criar', [
             'pessoas' => $pessoas
         ]);

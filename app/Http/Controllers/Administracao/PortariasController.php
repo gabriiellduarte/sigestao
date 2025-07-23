@@ -91,6 +91,21 @@ class PortariasController extends Controller
         ]);
     }
 
+    public function proximoNumero(Request $request){
+        $data = $request->input('data');
+        try {
+            $dataCarbon = \Carbon\Carbon::parse($data);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Data inválida'], 400);
+        }
+        $numeroFormatado = $this->formataProximoNumero($dataCarbon);
+        // Redireciona para a rota de criação passando os parâmetros
+        return redirect()->route('documentos.portarias.create', [
+            'next_numero_portaria' => $numeroFormatado,
+            'data' => $dataCarbon->toDateString()
+        ]);
+    }
+
     private function getCorForTipo($tipo)
     {
         $cores = [
@@ -106,10 +121,11 @@ class PortariasController extends Controller
 
     public function index(Request $request)
     {
+
         $search = $request->input('buscar');
-        $sort = $request->input('sort', 'doc_portarias_numero');
+        $sort = $request->input('sort', 'doc_portarias_data');
         
-        $direction = $request->input('direction', 'asc');
+        $direction = $request->input('direction', 'desc');
         $query = Portaria::query();
 
         if ($search) {
@@ -171,6 +187,22 @@ class PortariasController extends Controller
 
     }
 
+    public function formataProximoNumero($data)
+    {
+        // Garantir que $data é um objeto Carbon
+        if (!$data instanceof \Carbon\Carbon) {
+            try {
+                $data = \Carbon\Carbon::parse($data);
+            } catch (\Exception $e) {
+                return '';
+            }
+        }
+        $qtdPortariasHoje = Portaria::whereDate('doc_portarias_data', $data)->where('doc_portarias_status', '!=', 'cancelado')->count();
+        $proximoNumero = str_pad($qtdPortariasHoje + 1, 3, '0', STR_PAD_LEFT);
+        $numeroFormatado = $proximoNumero . '.' . $data->format('d') . '.' . $data->format('m') . '/' . $data->format('Y');
+        return $numeroFormatado;
+    }
+
     public function create(Request $request)
     {
         //$servidores = Servidores::with('pessoa')->get();
@@ -179,13 +211,12 @@ class PortariasController extends Controller
         $cargos = Cargo::all();
         $secretarias = Secretaria::all();
         $tipos = TipoPortaria::where('doc_tiposportaria_status', true)->get();
-        // Buscar a quantidade de portarias do dia
-        $hoje = now();
-        $qtdPortariasHojes = Portaria::whereDate('doc_portarias_data', $hoje->toDateString())->count();
-        $qtdPortariasHojes;
-        $qtdPortariasHoje = Portaria::whereDate('doc_portarias_data', $hoje->toDateString())->where('doc_portarias_status', '!=', 'cancelado')->count();
-        $proximoNumero = str_pad($qtdPortariasHoje + 1, 3, '0', STR_PAD_LEFT);
-        $numeroFormatado = $proximoNumero . '.' . $hoje->format('d') . '.' . $hoje->format('m') . '/' . $hoje->format('Y');
+        
+        if (!$request->has('data')) {
+            $numeroFormatado = $this->formataProximoNumero($request->input('data', now()));
+        }else{
+            $numeroFormatado = $request->input('next_numero_portaria');
+        }
         
         return Inertia::render('Portarias/criar', [
             //'servidores' => $servidores,
@@ -243,7 +274,7 @@ class PortariasController extends Controller
                 $portaria->update(['doc_portarias_link_documento' => $link]);
             } catch (\Exception $e) {
                 DB::rollBack();
-                \Log::error('Usuario:'.$user->id.' Erro ao gerar documento Google Docs: ' . $e->getMessage());
+                Log::error('Usuario:'.$user->id.' Erro ao gerar documento Google Docs: ' . $e->getMessage());
                 return redirect()->back()->with('erro', 'Erro ao gerar o documento da portaria. Nenhuma portaria foi salva. Detalhe: ' . $e->getMessage());
             }
             DB::commit();
@@ -301,7 +332,7 @@ class PortariasController extends Controller
                         $googleDocs->excluirDocumento($docId);
                     }
                 } catch (\Exception $e) {
-                    \Log::error('Erro ao excluir Google Docs antigo (update): ' . $e->getMessage());
+                    Log::error('Erro ao excluir Google Docs antigo (update): ' . $e->getMessage());
                 }
             }
             $user = Auth::user();
@@ -330,7 +361,7 @@ class PortariasController extends Controller
                 $portaria->update(['doc_portarias_link_documento' => $link]);
             } catch (\Exception $e) {
                 DB::rollBack();
-                \Log::error('Usuario:'.$user->id.' Erro ao gerar documento Google Docs (update): ' . $e->getMessage());
+                Log::error('Usuario:'.$user->id.' Erro ao gerar documento Google Docs (update): ' . $e->getMessage());
                 return redirect()->back()->with('erro', 'Erro ao gerar o documento da portaria. Nenhuma alteração foi salva. Detalhe: ' . $e->getMessage());
             }
             DB::commit();
@@ -360,7 +391,7 @@ class PortariasController extends Controller
             } catch (\Exception $e) {
                 $erroGoogle = true;
                 $mensagemErroGoogle = $e->getMessage();
-                \Log::error('Erro ao excluir Google Docs: ' . $e->getMessage());
+                Log::error('Erro ao excluir Google Docs: ' . $e->getMessage());
             }
         }
         $portaria->delete();

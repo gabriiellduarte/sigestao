@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('portarias/porservidor', [PortariasController::class,'listaporservidor'])->name('portarias.porservidor');
         
         Route::resource('tiposdeportaria', TipoPortariaController::class);
+        Route::get('/portarias/proximonumero', [PortariasController::class, 'proximoNumero'])->name('portarias.proximonumero');
 
         Route::resource('portarias', PortariasController::class);
         Route::post('portarias/import', [PortariasController::class, 'import'])->name('portarias.import');

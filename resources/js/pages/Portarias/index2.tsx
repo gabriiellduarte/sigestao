@@ -89,7 +89,8 @@ type Payment = {
         accessorKey: 'doc_portarias_status',
         header: 'Status',
         cell: ({row})=>{
-            const portaria:string  = row.getValue("doc_portarias_servidor_nome");
+            const portaria:string  = row.getValue("doc_portarias_status");
+            console.log(portaria);
             return <Badge className={getStatusColor(portaria)}>
                 {getStatusLabel(portaria)}
             </Badge>
@@ -172,7 +173,7 @@ export default function ListaPortarias({pessoas, filters}: Props) {
 
   const handlePageChange = (page: number) => {
     setPageIndex(page);
-    //router.get(route('documentos.portarias.index'), { buscar: data.search, page: page + 1, sort: sort?.id, direction: sort?.desc ? 'desc' : 'asc' }, { preserveState: true, replace: true });
+    router.get(route('documentos.portarias.index'), { buscar: data.search, page: page + 1, sort: sort?.id, direction: sort?.desc ? 'desc' : 'asc' }, { preserveState: true, replace: true });
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -318,23 +319,8 @@ export default function ListaPortarias({pessoas, filters}: Props) {
                         />
             </div>
             </div>
-            {/* Paginação */}
-            <div className="flex justify-center mt-4">
-            <nav className="inline-flex -space-x-px">
-                {portarias.prev_page_url && (
-                <Button variant="outline" size="sm" onClick={() => handlePageChange(portarias.prev_page_url!)}>
-                    Anterior
-                </Button>
-                )}
-                <span className="px-3 py-2 text-gray-700">Página {portarias.current_page} de {portarias.last_page}</span>
-                {portarias.next_page_url && (
-                <Button variant="outline" size="sm" onClick={() => handlePageChange(portarias.next_page_url!)}>
-                    Próxima
-                </Button>
-                )}
-            </nav>
-            </div>
-        {portarias.data.length === 0 && (
+            
+        {pessoas.data.length === 0 && (
           <div className="text-center py-8">
             <p className="text-gray-500">Nenhuma portaria encontrada.</p>
           </div>

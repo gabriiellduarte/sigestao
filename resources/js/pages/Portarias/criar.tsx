@@ -127,6 +127,14 @@ const CadastroPortarias: React.FC = () => {
     }
   };
 
+  useEffect(()=>{
+    console.info('Procurando próximo número de portaria...');
+    router.get(route('documentos.portarias.proximonumero'), 
+      {data: data.doc_portarias_data}, 
+      {preserveState: true, replace: true }
+    );
+  },[data.doc_portarias_data]);
+
   // Buscar servidores ao digitar, garantindo que o selecionado sempre aparece
   useEffect(() => {
     if (buscaServidor.length >= 6) {
