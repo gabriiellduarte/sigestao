@@ -280,7 +280,7 @@ export default function ListaPortarias({pessoas, filters}: Props) {
                       <DropdownMenuItem asChild>
                         <Link href={route('administracao.pessoas.index')} className="flex items-center">
                             <BookUser className="h-4 w-4 mr-2" />
-                            Servidores
+                            Pessoas
                         </Link>
                       </DropdownMenuItem>
                   </DropdownMenuContent>

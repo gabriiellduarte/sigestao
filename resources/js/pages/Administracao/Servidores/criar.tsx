@@ -75,7 +75,7 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
   const buscarServidores = async (termo: string) => {
     setLoadingServidores(true);
     try {
-      const response = await fetch(`/administracao/servidores-search?term=${encodeURIComponent(termo)}`);
+      const response = await fetch(`/administracao/pessoas-search?term=${encodeURIComponent(termo)}`);
       const data = await response.json();
       setLoadingServidores(false);
       return data;
@@ -244,7 +244,7 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
                     type="email"
                     value={data.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="email@prefeitura.gov.br"
+                    placeholder="email@aracati.ce.gov.br"
                     className={formErrors.email || errors.email ? 'border-red-500' : ''}
                   />
                   {(formErrors.email || errors.email) && (
