@@ -71,7 +71,7 @@ class GoogleDocsService
 
         // --- NOVO BLOCO: Aplicar negrito na descrição ---
         $descricao = $dados['descricao'] ?? null;
-        /*
+        
         if ($descricao) {
             $document = $this->docsService->documents->get($documentId);
             $content = $document->getBody()->getContent();
@@ -109,7 +109,7 @@ class GoogleDocsService
                     'requests' => [$boldRequest],
                 ]));
             }
-        }*/
+        }
         // --- FIM DO BLOCO ---
 
         // 4. Retornar o link do documento

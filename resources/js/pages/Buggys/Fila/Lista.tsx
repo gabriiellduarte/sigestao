@@ -13,9 +13,11 @@ import { TipoPasseio, Parceiro } from '@/types';
 import { Input } from '@/components/ui/input';
 import ItemTabelaFila from './ItemTabelaFilaRealizados';
 import ItemTabelaFilaAtual from './ItemTabelaFilaAtual';
+import { ColumnDef } from '@tanstack/react-table';
+import { DataTable } from '@/pages/Administracao/Pessoas/TabelaStack/Tabela';
 
 interface BugueiroFila {
-  id:number;
+  id: number;
   fila_id: number;
   bugueiro_id: number;
   posicao_fila: number;
@@ -63,13 +65,13 @@ export const FilaBugueiros: React.FC = () => {
   const parceiros: Parceiro[] = props.parceiros ?? [];
   const [parceiroSelecionado, setParceiroSelecionado] = useState<string>('');
   const [modalReordenar, setModalReordenar] = useState(false);
-  const [modalRemoverAtraso, setModalRemoverAtraso] = useState<{open: boolean, id: number|null, tipo: 'simples'|'atraso'}>({open: false, id: null, tipo: 'simples'});
+  const [modalRemoverAtraso, setModalRemoverAtraso] = useState<{ open: boolean, id: number | null, tipo: 'simples' | 'atraso' }>({ open: false, id: null, tipo: 'simples' });
   const [obsRemocao, setObsRemocao] = useState('');
   const [reordenando, setReordenando] = useState(false);
   const [usaAdiantamento, setUsaAdiantamento] = useState(false);
   const [mensagemWhatsapp, setMensagemWhatsapp] = useState('');
   const [enviando, setEnviando] = useState(false);
-  const [respostaApi, setRespostaApi] = useState<string|null>(null);
+  const [respostaApi, setRespostaApi] = useState<string | null>(null);
 
   const abrirDialogPasseio = (id: number) => {
     setBugueiroParaPasseio(id);
@@ -122,10 +124,10 @@ export const FilaBugueiros: React.FC = () => {
   };
   const iniciarPasseio = () => {
     const bugueiro = bugueirosFila.find(f => f.id === bugueiroParaPasseio);
-    console.log('bugueiro',bugueiro);
+    console.log('bugueiro', bugueiro);
     if (!bugueiro) return;
     const primeiro = bugueirosFila.filter(f => f.fez_passeio === false && !f.removido).sort((a, b) => a.posicao_fila - b.posicao_fila)[0];
-    console.log('primeiro',primeiro);
+    console.log('primeiro', primeiro);
     if (primeiro && bugueiro.id !== primeiro.id) {
       //setBugueiroAdiantado(bugueiro);
       setModalAdiantadoOpen(true);
@@ -138,11 +140,11 @@ export const FilaBugueiros: React.FC = () => {
   };
   const enviaAtualizacaodeFila = (id?: number, usa_adiantado?: boolean) => {
     const filaPivoID = id ?? bugueiroParaPasseio;
-   
-    atualizarBugueiroFila(filaPivoID, { 
-      fez_passeio: true, 
-      tipo_passeio_id: idPasseio, 
-      tipoPasseio: tipoPasseio, 
+
+    atualizarBugueiroFila(filaPivoID, {
+      fez_passeio: true,
+      tipo_passeio_id: idPasseio,
+      tipoPasseio: tipoPasseio,
       parceiro: parceiroSelecionado,
       usa_adiantamento: usa_adiantado
     });
@@ -171,7 +173,7 @@ export const FilaBugueiros: React.FC = () => {
 
   const reordenarFila = () => {
     setReordenando(true);
-    router.post(route('bugueiros.filas.reordenar', { fila: fila_id}), {}, {
+    router.post(route('bugueiros.filas.reordenar', { fila: fila_id }), {}, {
       onSuccess: () => {
         setModalReordenar(false);
         setReordenando(false);
@@ -188,7 +190,7 @@ export const FilaBugueiros: React.FC = () => {
     if (modalRemoverAtraso.tipo === 'simples') {
       router.post(route('bugueiros.filas.removerSimples', { fila: fila_id, id: modalRemoverAtraso.id }), { obs: obsRemocao }, {
         onSuccess: () => {
-          setModalRemoverAtraso({open: false, id: null, tipo: 'simples'});
+          setModalRemoverAtraso({ open: false, id: null, tipo: 'simples' });
           setObsRemocao('');
         },
         preserveScroll: true
@@ -196,7 +198,7 @@ export const FilaBugueiros: React.FC = () => {
     } else {
       router.post(route('bugueiros.filas.removerComAtraso', { fila: fila_id, id: modalRemoverAtraso.id }), { observacao: obsRemocao }, {
         onSuccess: () => {
-          setModalRemoverAtraso({open: false, id: null, tipo: 'simples'});
+          setModalRemoverAtraso({ open: false, id: null, tipo: 'simples' });
           setObsRemocao('');
         },
         preserveScroll: true
@@ -204,7 +206,7 @@ export const FilaBugueiros: React.FC = () => {
     }
   };
 
- 
+
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -221,8 +223,8 @@ export const FilaBugueiros: React.FC = () => {
 
   const filaNaFila = bugueirosFila.filter(f => f.fez_passeio === false);
   const emPasseio = bugueirosFila.filter(f => f.fez_passeio === true);
-  const adiantados = bugueirosFila.filter(f => f.adiantamento === 1); 
-  const atraso = bugueirosFila.filter(f => f.atraso === 1); 
+  const adiantados = bugueirosFila.filter(f => f.adiantamento === 1);
+  const atraso = bugueirosFila.filter(f => f.atraso === 1);
 
   const getStatusFilaColor = (status: string) => {
     switch (status) {
@@ -295,12 +297,132 @@ export const FilaBugueiros: React.FC = () => {
     setEnviando(false);
   };
 
+  const colunas: ColumnDef<BugueiroFila>[] = [
+    {
+      accessorKey: 'bugueiro.bugueiro_posicao_oficial',
+      header: 'Posição',
+      cell: info => {
+        const posicao = info.getValue();
+        return <Badge variant="outline" className="mr-2">
+                  #{String(posicao)}
+                </Badge>;
+      }
+    },
+    {
+      accessorKey: 'bugueiro.bugueiro_nome',
+      header: 'Nome',
+      cell: info => {
+        const nome = info.getValue();
+        const posicao = info.row.original.bugueiro.bugueiro_posicao_oficial;
+        return <span className="text-sm font-medium text-gray-900">{String(posicao)} - {String(nome)}</span>;
+      }
+    },
+    {
+      accessorKey: 'bugueiro.bugueiro_fila_adiantamentos',
+      header: 'Adiantamentos/Atrasos',
+      cell: info => {
+        const adiantamentos = info.getValue();
+        const atrasos = info.row.original.bugueiro.bugueiro_fila_atrasos;
+        
+        return <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
+                  <FastForward className="h-3 w-3 text-green-600" />
+                  <span className="text-sm font-medium text-green-600">{String(adiantamentos)}</span>
+                </div>
+                <span className="text-gray-400">|</span>
+                <div className="flex items-center space-x-1">
+                  <Rewind className="h-3 w-3 text-red-600" />
+                  <span className="text-sm font-medium text-red-600">{String(atrasos)}</span>
+                </div>
+              </div>;
+      }
+    },
+    {
+      header: 'Atrasos',
+      cell: info => {
+        const atraso = info.row.original.atraso;
+        const item = info.row.original;
+        const fila = filaNaFila.length;
+        return <div className="flex items-center space-x-2">
+                {item.fez_passeio === false && (
+                  <>
+                    <div className="flex flex-col space-y-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => moverParaCima(item.id)}
+                        disabled={item.posicao_fila === 1}
+                        className="p-1 h-6 w-6"
+                      >
+                        <ChevronUp className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => moverParaBaixo(item.id)}
+                        disabled={item.posicao_fila === fila}
+                        className="p-1 h-6 w-6"
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="flex space-x-1">
+                      <Button
+                        size="sm"
+                        onClick={() => abrirDialogPasseio(item.id)}
+                        title="Iniciar passeio"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                      </Button>
+                      {item.bugueiro.bugueiro_fila_adiantamentos > 0 && item.posicao_fila === 1 && (
+                        <Button
+                          size="sm"
+                          onClick={() => iniciarPasseioAdiantado(item.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                          title={`Usar adiantamento (${item.bugueiro.bugueiro_fila_adiantamentos} disponível)`}
+                        >
+                          <FastForward className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {item.atraso > 0 && (
+                        <Button
+                          size="sm"
+                          onClick={() => iniciarPasseioAtrasado(item.bugueiro_id)}
+                          className="bg-orange-600 hover:bg-orange-700"
+                          title={`Usar atraso (${item.atraso} disponível)`}
+                        >
+                          <Rewind className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </>
+                )}
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="destructive">Remover</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => setModalRemoverAtraso({open: true, id: item.id, tipo: 'simples'})}>
+                      Remover simples
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setModalRemoverAtraso({open: true, id: item.id, tipo: 'atraso'})}>
+                      Remover com atraso
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>;
+      }
+    },
+  ];
+
   return (
     <AppLayout>
       <div className="space-y-6 p-4">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Fila - Bugueiros</h1>
-          
+
         </div>
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:grid-cols-2">
@@ -319,7 +441,7 @@ export const FilaBugueiros: React.FC = () => {
               <div className="text-2xl font-bold">{emPasseio.length}</div>
             </CardHeader>
             <CardContent>
-              
+
               <p className="text-xs text-muted-foreground">Fizeram passeio</p>
             </CardContent>
           </Card>
@@ -329,7 +451,7 @@ export const FilaBugueiros: React.FC = () => {
               <div className="text-2xl font-bold">{adiantados.length}</div>
             </CardHeader>
             <CardContent>
-              
+
               <p className="text-xs text-muted-foreground">Bugueiros com passeio adiantado nessa fila</p>
             </CardContent>
           </Card>
@@ -339,7 +461,7 @@ export const FilaBugueiros: React.FC = () => {
               <div className="text-2xl font-bold">{atraso.length}</div>
             </CardHeader>
             <CardContent>
-              
+
               <p className="text-xs text-muted-foreground">Bugueiros com passeio atrasado nessa fila</p>
             </CardContent>
           </Card>
@@ -352,7 +474,7 @@ export const FilaBugueiros: React.FC = () => {
                 <CardTitle>Fila Atual #{fila_id}</CardTitle>
                 <Badge className={getStatusFilaColor(statusFila)}>{statusFila.charAt(0).toUpperCase() + statusFila.slice(1)}</Badge>
               </div>
-              
+
               <div className="flex gap-2">
                 {bugueirosFila.filter(f => f.fez_passeio === false && !f.removido).length === 0 && (
                   <Button onClick={iniciarNovaFila} className="flex items-center space-x-2" variant="secondary">
@@ -392,40 +514,11 @@ export const FilaBugueiros: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
-              <Table>
-                <TableHeader className="h-8">
-                  <TableRow>
-                    <TableHead>Posição</TableHead>
-                    <TableHead>Bugueiro</TableHead>
-                    <TableHead>Hora Entrada</TableHead>
-                    <TableHead>Adiantamentos/Atrasos</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bugueirosFila.filter(item => item.fez_passeio === false && !item.removido).map((item) => (
-                    <ItemTabelaFilaAtual 
-                    key={item.id} 
-                    item={item} 
-                    onRemover={removerBugueiro} 
-                    moverParaBaixo={moverParaBaixo}
-                    moverParaCima={moverParaCima}
-                    abrirDialogPasseio={abrirDialogPasseio}
-                    iniciarPasseioAdiantado={iniciarPasseioAdiantado}
-                    iniciarPasseioAtrasado={iniciarPasseioAtrasado}
-                    fila={filaNaFila}
-                    setModalRemoverAtraso={setModalRemoverAtraso}
-                    />
-                  ))}
-                  {bugueirosFila.filter(item => item.fez_passeio === false).length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                        Nenhum bugueiro na fila
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <DataTable
+                data={bugueirosFila.filter(item => item.fez_passeio === false && !item.removido)}
+                columns={colunas}
+              />
+              
             </div>
           </CardContent>
         </Card>
@@ -444,114 +537,114 @@ export const FilaBugueiros: React.FC = () => {
         {/* Lista de Bugueiros - Mobile Card Layout */}
         <div className="space-y-3 md:hiddenn">
           {bugueirosFila.filter(item => item.fez_passeio === false && !item.removido).map((item) => (
-          <Card key={`${item.id}-${item.hora_entrada}`} className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
+            <Card key={`${item.id}-${item.hora_entrada}`} className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
                   <Badge variant="outline" className="text-xs">
                     #{item.posicao_fila}
                   </Badge>
-                <Users className="h-4 w-4 text-gray-400" />
-                <span className="font-medium">{item.bugueiro?.bugueiro_nome}</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-1">
-                  <FastForward className="h-3 w-3 text-green-600" />
-                  <span className="text-sm font-medium text-green-600">{item.bugueiro.bugueiro_fila_adiantamentos}</span>
+                  <Users className="h-4 w-4 text-gray-400" />
+                  <span className="font-medium">{item.bugueiro?.bugueiro_nome}</span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Rewind className="h-3 w-3 text-red-600" />
-                  <span className="text-sm font-medium text-red-600">{item.bugueiro.bugueiro_fila_atrasos}</span>
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-1">
+                    <FastForward className="h-3 w-3 text-green-600" />
+                    <span className="text-sm font-medium text-green-600">{item.bugueiro.bugueiro_fila_adiantamentos}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Rewind className="h-3 w-3 text-red-600" />
+                    <span className="text-sm font-medium text-red-600">{item.bugueiro.bugueiro_fila_atrasos}</span>
+                  </div>
                 </div>
-              </div>
-              
-            </div>
-            
-            <div className="flex items-center justify-between mb-3 hidden">
-              <div className="flex items-center space-x-1 text-sm text-gray-600">
-                <Timer className="h-3 w-3" />
-                <span>{item.hora_entrada}</span>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-1">
-                  <FastForward className="h-3 w-3 text-green-600" />
-                  <span className="text-sm font-medium text-green-600">{item.bugueiro.bugueiro_fila_adiantamentos}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Rewind className="h-3 w-3 text-red-600" />
-                  <span className="text-sm font-medium text-red-600">{item.bugueiro.bugueiro_fila_atrasos}</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Ações Mobile */}
-            <div className="flex items-center justify-between">
-              <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => moverParaCima(item.id)}
-                      disabled={item.posicao_fila === 1}
-                      className="p-2 h-8 w-8"
-                    >
-                      <ChevronUp className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => moverParaBaixo(item.id)}
-                      disabled={item.posicao_fila === filaNaFila.length}
-                      className="p-2 h-8 w-8"
-                    >
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
               </div>
-                  
-              <div className="flex space-x-1">
-                    <Button
-                      size="sm"
-                      onClick={()=>abrirDialogPasseio(item.id)}
-                      className="bg-blue-600 hover:bg-blue-700 text-xs px-3"
-                    >
-                      <Play className="h-3 w-3 mr-1" />
-                      Iniciar
-                    </Button>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="sm" variant="outline" className="p-2 h-8 w-8">
-                          <MoreVertical className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        {item.bugueiro.bugueiro_fila_adiantamentos > 0 && (
-                          <DropdownMenuItem onClick={() => iniciarPasseioAdiantado(item.id)}>
-                            <FastForward className="h-3 w-3 mr-2" />
-                            Usar Adiantamento ({item.bugueiro.bugueiro_fila_adiantamentos})
-                          </DropdownMenuItem>
-                        )}
-                        {item.atraso > 0 && (
-                          <DropdownMenuItem onClick={() => iniciarPasseioAtrasado(item.id)}>
-                            <Rewind className="h-3 w-3 mr-2" />
-                            Usar Atraso ({item.bugueiro.bugueiro_fila_atrasos})
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+
+              <div className="flex items-center justify-between mb-3 hidden">
+                <div className="flex items-center space-x-1 text-sm text-gray-600">
+                  <Timer className="h-3 w-3" />
+                  <span>{item.hora_entrada}</span>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-1">
+                    <FastForward className="h-3 w-3 text-green-600" />
+                    <span className="text-sm font-medium text-green-600">{item.bugueiro.bugueiro_fila_adiantamentos}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Rewind className="h-3 w-3 text-red-600" />
+                    <span className="text-sm font-medium text-red-600">{item.bugueiro.bugueiro_fila_atrasos}</span>
+                  </div>
+                </div>
               </div>
-              
-            </div>
-          </Card>
+
+              {/* Ações Mobile */}
+              <div className="flex items-center justify-between">
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => moverParaCima(item.id)}
+                    disabled={item.posicao_fila === 1}
+                    className="p-2 h-8 w-8"
+                  >
+                    <ChevronUp className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => moverParaBaixo(item.id)}
+                    disabled={item.posicao_fila === filaNaFila.length}
+                    className="p-2 h-8 w-8"
+                  >
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </div>
+
+                <div className="flex space-x-1">
+                  <Button
+                    size="sm"
+                    onClick={() => abrirDialogPasseio(item.id)}
+                    className="bg-blue-600 hover:bg-blue-700 text-xs px-3"
+                  >
+                    <Play className="h-3 w-3 mr-1" />
+                    Iniciar
+                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="outline" className="p-2 h-8 w-8">
+                        <MoreVertical className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {item.bugueiro.bugueiro_fila_adiantamentos > 0 && (
+                        <DropdownMenuItem onClick={() => iniciarPasseioAdiantado(item.id)}>
+                          <FastForward className="h-3 w-3 mr-2" />
+                          Usar Adiantamento ({item.bugueiro.bugueiro_fila_adiantamentos})
+                        </DropdownMenuItem>
+                      )}
+                      {item.atraso > 0 && (
+                        <DropdownMenuItem onClick={() => iniciarPasseioAtrasado(item.id)}>
+                          <Rewind className="h-3 w-3 mr-2" />
+                          Usar Atraso ({item.bugueiro.bugueiro_fila_atrasos})
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+              </div>
+            </Card>
           ))}
-        
-        {bugueirosFila.length === 0 && (
-          <Card className="p-8">
-            <div className="text-center text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-              <p>Nenhum bugueiro na fila</p>
-            </div>
-          </Card>
-        )}
+
+          {bugueirosFila.length === 0 && (
+            <Card className="p-8">
+              <div className="text-center text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <p>Nenhum bugueiro na fila</p>
+              </div>
+            </Card>
+          )}
         </div>
         {/* Fila realizados */}
         <Card>
@@ -591,7 +684,7 @@ export const FilaBugueiros: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* Dialog para Adicionar à Fila */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
@@ -606,8 +699,8 @@ export const FilaBugueiros: React.FC = () => {
                 <label htmlFor="bugueiro" className="text-sm font-medium">
                   Bugueiro
                 </label>
-                <Select 
-                  value={bugueiroSelecionado} 
+                <Select
+                  value={bugueiroSelecionado}
                   onValueChange={setBugueiroSelecionado}
                 >
                   <SelectTrigger>
@@ -620,8 +713,8 @@ export const FilaBugueiros: React.FC = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 onClick={adicionarBugueiroFila}
                 disabled={!bugueiroSelecionado}
               >
@@ -647,91 +740,91 @@ export const FilaBugueiros: React.FC = () => {
         </Dialog>
         {/* Dialog para Selecionar Tipo de Passeio */}
         <Dialog open={isPasseioDialogOpen} onOpenChange={setIsPasseioDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Iniciar Passeio</DialogTitle>
-            <DialogDescription>
-              Selecione o tipo de passeio que será realizado
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="id-passeio" className="text-sm font-medium">
-                Passeio
-              </label>
-              <Select 
-                value={idPasseio} 
-                onValueChange={setIdPasseio}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o passeio" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tiposPasseio.map((tipo)=>(
-                    <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Iniciar Passeio</DialogTitle>
+              <DialogDescription>
+                Selecione o tipo de passeio que será realizado
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <label htmlFor="id-passeio" className="text-sm font-medium">
+                  Passeio
+                </label>
+                <Select
+                  value={idPasseio}
+                  onValueChange={setIdPasseio}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o passeio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tiposPasseio.map((tipo) => (
+                      <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="tipo-passeio" className="text-sm font-medium">
+                  Tipo de passeio
+                </label>
+                <Select
+                  value={tipoPasseio}
+                  onValueChange={setTipoPasseio}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo de passeio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='normal'>Normal</SelectItem>
+                    <SelectItem value='cortesia'>Cortesia</SelectItem>
+                    <SelectItem value='parceria'>Parceria</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="parceiro" className="text-sm font-medium">
+                  Parceiro
+                </label>
+                <Select
+                  value={parceiroSelecionado}
+                  onValueChange={setParceiroSelecionado}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o parceiro (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nenhum">Nenhum parceiro</SelectItem>
+                    {parceiros.map((parceiro) => (
+                      <SelectItem key={parceiro.id} value={parceiro.nome}>{parceiro.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <label htmlFor="tipo-passeio" className="text-sm font-medium">
-                Tipo de passeio
-              </label>
-              <Select 
-                value={tipoPasseio} 
-                onValueChange={setTipoPasseio}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsPasseioDialogOpen(false);
+                  setBugueiroParaPasseio(0);
+                  setTipoPasseio('');
+                  setParceiroSelecionado('');
+                }}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo de passeio" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='normal'>Normal</SelectItem>
-                  <SelectItem value='cortesia'>Cortesia</SelectItem>
-                  <SelectItem value='parceria'>Parceria</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="parceiro" className="text-sm font-medium">
-                Parceiro
-              </label>
-              <Select
-                value={parceiroSelecionado}
-                onValueChange={setParceiroSelecionado}
+                Cancelar
+              </Button>
+              <Button
+                onClick={iniciarPasseio}
+                disabled={!tipoPasseio}
+                className="bg-blue-600 hover:bg-blue-700"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o parceiro (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nenhum">Nenhum parceiro</SelectItem>
-                  {parceiros.map((parceiro) => (
-                    <SelectItem key={parceiro.id} value={parceiro.nome}>{parceiro.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setIsPasseioDialogOpen(false);
-                setBugueiroParaPasseio(0);
-                setTipoPasseio('');
-                setParceiroSelecionado('');
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              onClick={iniciarPasseio}
-              disabled={!tipoPasseio}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Iniciar Passeio
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+                Iniciar Passeio
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
         {/* Modal de confirmação de reordenar fila */}
         <Dialog open={modalReordenar} onOpenChange={setModalReordenar}>
@@ -749,7 +842,7 @@ export const FilaBugueiros: React.FC = () => {
           </DialogContent>
         </Dialog>
         {/* Modal de remoção com observação */}
-        <Dialog open={modalRemoverAtraso.open} onOpenChange={open => setModalRemoverAtraso({open, id: open ? modalRemoverAtraso.id : null, tipo: modalRemoverAtraso.tipo})}>
+        <Dialog open={modalRemoverAtraso.open} onOpenChange={open => setModalRemoverAtraso({ open, id: open ? modalRemoverAtraso.id : null, tipo: modalRemoverAtraso.tipo })}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Remover bugueiro {modalRemoverAtraso.tipo === 'atraso' ? 'com atraso' : 'da fila'}</DialogTitle>
@@ -757,7 +850,7 @@ export const FilaBugueiros: React.FC = () => {
             <div className="mb-2">Informe o motivo da remoção:</div>
             <Input value={obsRemocao} onChange={e => setObsRemocao(e.target.value)} placeholder="Motivo da remoção" />
             <DialogFooter>
-              <Button variant="outline" onClick={() => setModalRemoverAtraso({open: false, id: null, tipo: 'simples'})}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setModalRemoverAtraso({ open: false, id: null, tipo: 'simples' })}>Cancelar</Button>
               <Button onClick={removerComObs} disabled={!obsRemocao.trim()} className={modalRemoverAtraso.tipo === 'atraso' ? "bg-orange-600 hover:bg-orange-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}>
                 Confirmar remoção
               </Button>
