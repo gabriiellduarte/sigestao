@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Http\Controllers\Administracao\LogsController;
@@ -108,6 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('bugueiros')->name('bugueiros.')->group(function () {
        Route::resource('cadastro', BugueirosController::class);
+       Route::post('passeios/adicionarpasseioemgrupo', [FilaBugueirosController::class, 'adicionarPasseioEmGrupo']);
        Route::resource('passeios', PasseiosController::class);
        // Rotas de Parceiros
        Route::resource('parceiros', ParceirosController::class);
@@ -120,7 +122,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
        Route::post('filas/{fila}/reordenar', [FilaBugueirosController::class, 'reordenarFila'])->name('filas.reordenar');
        Route::post('filas/{fila}/remover-simples/{id}', [FilaBugueirosController::class, 'removerSimples'])->name('filas.removerSimples');
        Route::post('filas/{fila}/remover-com-atraso/{id}', [FilaBugueirosController::class, 'removerComAtraso'])->name('filas.removerComAtraso');
-
+       
+        
        Route::resource('tipodepasseio', TipoDePasseioController::class);
 
        Route::get('filas/{fila_id}', [FilaBugueirosController::class, 'lista']);

@@ -13,6 +13,7 @@ use App\Models\Buggys\Filas;
 use App\Models\Buggys\Bugueiros;
 use App\Models\Buggys\FilaBugueiro;
 use App\Models\Parceiro;
+use Illuminate\Support\Facades\DB;
 
 class FilaBugueirosController extends Controller
 {
@@ -56,12 +57,11 @@ class FilaBugueirosController extends Controller
     }   
     public function index()
     {
-        $props = [];
         // Busca fila aberta
         $tipopasseio = TipoPasseio::all();
         $parceiros = Parceiro::all();
         $fila = Filas::where('fila_status', 'aberta')->with('bugueirosFila')->first();
-        $bugueiros = FilaBugueiro::where('fila_id', $fila->fila_id)->with('bugueiro')->orderBy('posicao_fila')->get();
+        
         // Se não existir, cria uma nova
         if (!$fila) {
             $fila = Filas::create([
@@ -74,7 +74,7 @@ class FilaBugueirosController extends Controller
             ]);
             $bugueiros = [];
         }else{
-
+            $bugueiros = FilaBugueiro::where('fila_id', $fila->fila_id)->with('bugueiro')->orderBy('posicao_fila')->get();
         }
         return Inertia::render('Buggys/Fila/Lista', [
             'bugueiros_fila' => $bugueiros,
@@ -134,7 +134,7 @@ class FilaBugueirosController extends Controller
     {
         $fila = Filas::findOrFail($id);
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
             // Tenta criar o passeio antes de atualizar a fila
             $passeio = new Passeio();
             $passeio->bugueiro_id = $request->bugueiro_id;
@@ -159,10 +159,10 @@ class FilaBugueirosController extends Controller
                 'fila_status' => 'sometimes|in:cancelada,finalizada,aberta',
             ]);
             $fila->update($validated);
-            \DB::commit();
+            DB::commit();
             return response()->json($fila);
         } catch (Exception $e) {
-            \DB::rollBack();
+            DB::rollBack();
             // Se der erro ao criar o passeio, não atualiza nada
             return response()->json(['error' => 'Erro ao criar passeio: ' . $e->getMessage()], 500);
         }
@@ -272,7 +272,7 @@ class FilaBugueirosController extends Controller
         $fila = FilaBugueiro::where([['fila_id', $fila_id],['id',$id]])->with('bugueiro')->first();
         $tipopasseio = TipoPasseio::find($request->tipo_passeio_id);
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
 
             // Verifica se o bugueiro não é o primeiro da fila (menor posicao_fila entre os que não fizeram passeio)
             if ($fila->posicao_fila > 1) {
@@ -314,12 +314,51 @@ class FilaBugueirosController extends Controller
 
                 $fila->update($request->only(['posicao_fila', 'atraso', 'adiantamento', 'fez_passeio', 'obs','removido','hora_passeio']));
             }
-            \DB::commit();
+            DB::commit();
 
             $this->reordenarFila($fila_id,true);
             //return redirect()->back()->with('sucesso', 'Sucesso ao criar passeio ');
         } catch (Exception $e) {
-            \DB::rollBack();
+            DB::rollBack();
+            // Se der erro ao criar o passeio, não atualiza nada
+            return redirect()->back()->with('erro', 'Erro ao criar passeio ');
+        }
+    }
+
+    // Atualizar dados do bugueiro na fila
+    public function salvaPasseioGrupo(Request $request, $id)
+    {
+        $fila = FilaBugueiro::where('id',$id)->with('bugueiro')->first();
+        $tipopasseio = TipoPasseio::find($request->tipo_passeio_id);
+        try {
+            DB::beginTransaction();
+            
+            // Tenta criar o passeio antes de atualizar a fila
+            $passeio = new Passeio();
+            $passeio->bugueiro_id = $fila->bugueiro_id;
+            $passeio->fila_id = $fila->fila_id;
+            $passeio->bugueiro_nome = $fila->bugueiro->bugueiro_nome;
+            $passeio->tipoPasseio = $request->tipoPasseio;
+            $passeio->nome_passeio = $tipopasseio->nome;
+            $passeio->data_hora = $request->data_hora ?? now();
+            $passeio->duracao = $tipopasseio->duracao;
+            $passeio->valor = $tipopasseio->preco ?? 0;
+            $passeio->parceiro = $request->parceiro ?? null;
+            $passeio->comissao_parceiro = $request->comissao_parceiro ?? null;
+            $passeio->observacoes = $request->observacoes ?? null;
+            $passeio->save();
+
+            $request->merge(['hora_passeio' => Carbon::now()]);
+            $request->merge(['fez_passeio' => true]);
+            $request->merge(['obs' => 'PASSEIO EM GRUPO']);
+
+            $fila->update($request->only(['posicao_fila', 'atraso', 'adiantamento', 'fez_passeio', 'obs','removido','hora_passeio']));
+            
+            DB::commit();
+            
+            //return redirect()->back()->with('sucesso', 'Sucesso ao criar passeio ');
+        } catch (Exception $e) {
+            DB::rollBack();
             // Se der erro ao criar o passeio, não atualiza nada
             return redirect()->back()->with('erro', 'Erro ao criar passeio ');
         }
@@ -523,5 +562,29 @@ class FilaBugueirosController extends Controller
             'fila' => $fila,
             'bugueiros_fila' => $fila->bugueirosFila
         ]);
+    }
+
+    public function adicionarPasseioEmGrupo(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+            'descricao' => 'required|string',
+        ]);
+
+        // Aqui você pode salvar o passeio em grupo conforme sua lógica de negócio
+        // Exemplo: criar um registro de passeio para cada id
+        
+        foreach ($data['ids'] as $idfila) {
+            $this->salvaPasseioGrupo($request, $idfila);
+            //Passeio::create([
+            //    'pessoa_id' => $id,
+            //    'descricao' => $data['descricao'],
+                // Adicione outros campos necessários
+            //]);
+        }
+        $this->reordenarFila($request->filaId,true);
+
+        return to_route('bugueiros.filas.index')->with('sucesso', 'Passeio em grupo adicionado com sucesso!');
     }
 }

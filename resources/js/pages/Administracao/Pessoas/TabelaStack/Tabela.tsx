@@ -9,6 +9,8 @@ import {
   SortingState,
 } from "@tanstack/react-table"
 
+import React, { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -18,15 +20,21 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-import React, { useState } from "react";
+// ...existing code...
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { router } from "@inertiajs/react";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  pageCount?: number
-  pageIndex?: number
-  onPageChange?: (page: number) => void
-  onSortingChange?: (sorting: any) => void
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  pageCount?: number;
+  pageIndex?: number;
+  onPageChange?: (page: number) => void;
+  onSortingChange?: (sorting: any) => void;
+  onGroupActionClick?: (selectedIds: number[]) => void;
+  selectedRowIds?: number[];
+  onSelectionChange?: (ids: number[]) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -36,8 +44,13 @@ export function DataTable<TData, TValue>({
   pageIndex = 0,
   onPageChange,
   onSortingChange,
+  onGroupActionClick,
+  selectedRowIds,
+  onSelectionChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [rowSelection, setRowSelection] = useState({});
+  // O controle de modal e descrição agora será feito fora do DataTable
   const table = useReactTable({
     data,
     columns,
@@ -45,8 +58,10 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     manualPagination: true,
     pageCount,
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
+      rowSelection
     },
     onSortingChange: (updater) => {
       if (typeof updater === 'function') {
@@ -61,8 +76,24 @@ export function DataTable<TData, TValue>({
     manualSorting: true,
   });
 
+  // Obter linhas selecionadas
+  const selectedRows = table.getFilteredSelectedRowModel().rows;
+
+  useEffect(() => {
+  if (onSelectionChange) {
+    const selectedIds = selectedRows.map(row => (row.original as any).id);
+    onSelectionChange(selectedIds);
+  }
+}, [selectedRows, onSelectionChange]);
+
+  // Não há mais função de envio aqui
+
   return (
     <div className="rounded-md">
+      <div className="text-muted-foreground flex-1 text-sm">
+        {selectedRows.length} de {table.getFilteredRowModel().rows.length} linha(s) selecionada(s).
+      </div>
+      {/* O botão/modal de passeio em grupo deve ser renderizado fora deste componente */}
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

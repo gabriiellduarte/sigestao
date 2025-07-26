@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Play, Plus, Users, UserCheck, Timer, ChevronUp, ChevronDown, FastForward, Rewind, MoreVertical, ArrowDownAZ } from 'lucide-react';
+import { Clock, Play, Plus, Users, UserCheck, Timer, ChevronUp, ChevronDown, FastForward, Rewind, MoreVertical, ArrowDownAZ, Check } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { TipoPasseio, Parceiro } from '@/types';
@@ -14,7 +14,9 @@ import { Input } from '@/components/ui/input';
 import ItemTabelaFila from './ItemTabelaFilaRealizados';
 import ItemTabelaFilaAtual from './ItemTabelaFilaAtual';
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable } from '@/pages/Administracao/Pessoas/TabelaStack/Tabela';
+import { Checkbox } from '@/components/ui/checkbox';
+import { set } from 'lodash';
+import { TabelaFilaBugueiros } from '../components/TabelaFilas';
 
 interface BugueiroFila {
   id: number;
@@ -49,6 +51,8 @@ interface PageProps {
 }
 
 export const FilaBugueiros: React.FC = () => {
+  // Estados para passeio em grupo
+
   const { props } = usePage<PageProps>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [bugueiroSelecionado, setBugueiroSelecionado] = useState<string>('');
@@ -225,6 +229,11 @@ export const FilaBugueiros: React.FC = () => {
   const emPasseio = bugueirosFila.filter(f => f.fez_passeio === true);
   const adiantados = bugueirosFila.filter(f => f.adiantamento === 1);
   const atraso = bugueirosFila.filter(f => f.atraso === 1);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    console.log('Selected IDs changed:', selectedIds);
+  }, [selectedIds]);
 
   const getStatusFilaColor = (status: string) => {
     switch (status) {
@@ -299,7 +308,26 @@ export const FilaBugueiros: React.FC = () => {
 
   const colunas: ColumnDef<BugueiroFila>[] = [
     {
-      accessorKey: 'bugueiro.bugueiro_posicao_oficial',
+      id:'select',
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Selecionar todos"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()} 
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Selecionar"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: 'posicao_fila',
       header: 'Posição',
       cell: info => {
         const posicao = info.getValue();
@@ -425,45 +453,43 @@ export const FilaBugueiros: React.FC = () => {
 
         </div>
         {/* Cards de Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:grid-cols-2">
-          <Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:grid-cols-2">
+          <Card className='flex justify-center'>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Na Fila</CardTitle>
+              <div className="flex flex-col space-x-2">
+                <CardTitle className="text-sm font-medium">Na Fila</CardTitle>
+                <p className="text-xs text-muted-foreground">Aguardando passeio</p>
+              </div>
               <div className="text-2xl font-bold">{filaNaFila.length}</div>
             </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">Aguardando passeio</p>
-            </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Realizados</CardTitle>
+          <Card className='flex justify-center'>
+            <CardHeader className="flex flex-row items-center justify-center justify-between space-y-0 pb-2">
+              
+              <div className="flex flex-col space-x-2">
+                <CardTitle className="text-sm font-medium">Realizados</CardTitle>
+                <p className="text-xs text-muted-foreground">Fizeram passeio</p>
+              </div>
               <div className="text-2xl font-bold">{emPasseio.length}</div>
             </CardHeader>
-            <CardContent>
-
-              <p className="text-xs text-muted-foreground">Fizeram passeio</p>
-            </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Adiantados</CardTitle>
+          <Card className='flex justify-center'>
+            <CardHeader className="flex flex-row items-center justify-center justify-between space-y-0 pb-2">
+              <div className="flex flex-col space-x-2">
+                <CardTitle className="text-sm font-medium">Adiantados</CardTitle>
+                <p className="text-xs text-muted-foreground">Bugueiros com passeio adiantado nessa fila</p>
+              </div>
               <div className="text-2xl font-bold">{adiantados.length}</div>
             </CardHeader>
-            <CardContent>
-
-              <p className="text-xs text-muted-foreground">Bugueiros com passeio adiantado nessa fila</p>
-            </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Atrasados</CardTitle>
+          <Card className='flex justify-center'>
+            <CardHeader className="flex flex-row items-center justify-center justify-between space-y-0 pb-2">
+              <div className="flex flex-col space-x-2">
+                <CardTitle className="text-sm font-medium">Atrasados</CardTitle>
+                <p className="text-xs text-muted-foreground">Bugueiros com passeio atrasado nessa fila</p>
+              </div>
               <div className="text-2xl font-bold">{atraso.length}</div>
             </CardHeader>
-            <CardContent>
-
-              <p className="text-xs text-muted-foreground">Bugueiros com passeio atrasado nessa fila</p>
-            </CardContent>
           </Card>
         </div>
         {/* Fila Atual */}
@@ -476,12 +502,7 @@ export const FilaBugueiros: React.FC = () => {
               </div>
 
               <div className="flex gap-2">
-                {bugueirosFila.filter(f => f.fez_passeio === false && !f.removido).length === 0 && (
-                  <Button onClick={iniciarNovaFila} className="flex items-center space-x-2" variant="secondary">
-                    <Plus className="h-4 w-4" />
-                    <span>Iniciar nova fila</span>
-                  </Button>
-                )}
+                
                 {/* Dropdown para adicionar todos/adicionar à fila */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -514,10 +535,14 @@ export const FilaBugueiros: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
-              <DataTable
+              
+              <TabelaFilaBugueiros
                 data={bugueirosFila.filter(item => item.fez_passeio === false && !item.removido)}
                 columns={colunas}
+                tiposPasseio={tiposPasseio}
+                filaId={fila_id}
               />
+              {/* Modal de passeio em grupo */}
               
             </div>
           </CardContent>
@@ -535,7 +560,7 @@ export const FilaBugueiros: React.FC = () => {
           </div>
         )}
         {/* Lista de Bugueiros - Mobile Card Layout */}
-        <div className="space-y-3 md:hiddenn">
+        <div className="space-y-3 md:hidden">
           {bugueirosFila.filter(item => item.fez_passeio === false && !item.removido).map((item) => (
             <Card key={`${item.id}-${item.hora_entrada}`} className="p-4">
               <div className="flex items-center justify-between mb-3">
