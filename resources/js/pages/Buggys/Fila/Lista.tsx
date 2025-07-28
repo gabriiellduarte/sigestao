@@ -340,33 +340,29 @@ export const FilaBugueiros: React.FC = () => {
       accessorKey: 'bugueiro.bugueiro_nome',
       header: 'Nome',
       cell: info => {
+        const adiantamentos = info.row.original.bugueiro.bugueiro_fila_adiantamentos;
+        const atrasos = info.row.original.bugueiro.bugueiro_fila_atrasos;
         const nome = info.getValue();
         const posicao = info.row.original.bugueiro.bugueiro_posicao_oficial;
-        return <span className="text-sm font-medium text-gray-900">{String(posicao)} - {String(nome)}</span>;
-      }
-    },
-    {
-      accessorKey: 'bugueiro.bugueiro_fila_adiantamentos',
-      header: 'Adiantamentos/Atrasos',
-      cell: info => {
-        const adiantamentos = info.getValue();
-        const atrasos = info.row.original.bugueiro.bugueiro_fila_atrasos;
-        
-        return <div className="flex items-center space-x-2">
+        return <div className="flex-col items-center space-x-2">
+                <span className="text-sm font-medium text-gray-900">{String(posicao)} - {String(nome)}</span>
                 <div className="flex items-center space-x-1">
-                  <FastForward className="h-3 w-3 text-green-600" />
-                  <span className="text-sm font-medium text-green-600">{String(adiantamentos)}</span>
+                  <div className="flex items-center space-x-1">
+                    <FastForward className="h-3 w-3 text-green-600" />
+                    <span className="text-sm font-medium text-green-600">{String(adiantamentos)}</span>
+                  </div>
+                  <span className="text-gray-400">|</span>
+                  <div className="flex items-center space-x-1">
+                    <Rewind className="h-3 w-3 text-red-600" />
+                    <span className="text-sm font-medium text-red-600">{String(atrasos)}</span>
+                  </div>
                 </div>
-                <span className="text-gray-400">|</span>
-                <div className="flex items-center space-x-1">
-                  <Rewind className="h-3 w-3 text-red-600" />
-                  <span className="text-sm font-medium text-red-600">{String(atrasos)}</span>
-                </div>
+                
               </div>;
       }
     },
     {
-      header: 'Atrasos',
+      header: 'Ações',
       cell: info => {
         const atraso = info.row.original.atraso;
         const item = info.row.original;
@@ -449,7 +445,7 @@ export const FilaBugueiros: React.FC = () => {
     <AppLayout>
       <div className="space-y-6 p-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Fila - Bugueiros</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Gerenciamento de Fila</h1>
 
         </div>
         {/* Cards de Estatísticas */}
@@ -534,7 +530,10 @@ export const FilaBugueiros: React.FC = () => {
             <CardDescription>Controle da fila de bugueiros para passeios</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border">
+            
+          </CardContent>
+        </Card>
+        <div className="rounded-md border bg-white p-4 shadow-sm">
               
               <TabelaFilaBugueiros
                 data={bugueirosFila.filter(item => item.fez_passeio === false && !item.removido)}
@@ -545,8 +544,6 @@ export const FilaBugueiros: React.FC = () => {
               {/* Modal de passeio em grupo */}
               
             </div>
-          </CardContent>
-        </Card>
         {/* Exibe a mensagem gerada e resposta mockada da API */}
         {mensagemWhatsapp && (
           <div className="mt-4 p-3 bg-gray-50 border rounded text-sm whitespace-pre-wrap">

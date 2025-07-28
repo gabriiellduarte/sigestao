@@ -14,6 +14,8 @@ use App\Models\Buggys\Bugueiros;
 use App\Models\Buggys\FilaBugueiro;
 use App\Models\Parceiro;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FilaBugueirosController extends Controller
 {
@@ -356,6 +358,7 @@ class FilaBugueirosController extends Controller
             
             DB::commit();
             
+
             //return redirect()->back()->with('sucesso', 'Sucesso ao criar passeio ');
         } catch (Exception $e) {
             DB::rollBack();
@@ -572,19 +575,57 @@ class FilaBugueirosController extends Controller
             'descricao' => 'required|string',
         ]);
 
-        // Aqui você pode salvar o passeio em grupo conforme sua lógica de negócio
-        // Exemplo: criar um registro de passeio para cada id
-        
+        // Salva o passeio em grupo conforme sua lógica de negócio
         foreach ($data['ids'] as $idfila) {
             $this->salvaPasseioGrupo($request, $idfila);
-            //Passeio::create([
-            //    'pessoa_id' => $id,
-            //    'descricao' => $data['descricao'],
-                // Adicione outros campos necessários
-            //]);
         }
-        $this->reordenarFila($request->filaId,true);
+        $this->reordenarFila($request->filaId, true);
+
+        // Monta mensagem do grupo para WhatsApp
+        $bugueiros = \App\Models\Buggys\FilaBugueiro::with('bugueiro')
+            ->whereIn('id', $data['ids'])
+            ->get();
+        $nomes = $bugueiros->map(function($item) {
+            return $item->bugueiro ? $item->bugueiro->bugueiro_nome : 'Desconhecido';
+        })->implode(", ");
+        $msg = "🚨 Passeio em Grupo Iniciado!\n";
+        $msg .= "Descrição: " . $data['descricao'] . "\n";
+        $msg .= "Participantes: " . $nomes . "\n";
+        $msg .= "Data/Hora: " . now()->format('d/m/Y H:i');
+
+        // Chama o método de envio WhatsApp
+        $this->enviarMensagemWhatsapp(new Request(['mensagem' => $msg]));
 
         return to_route('bugueiros.filas.index')->with('sucesso', 'Passeio em grupo adicionado com sucesso!');
+    }
+    /**
+     * Envia mensagem WhatsApp para API externa (similar ao frontend)
+     */
+    public function enviarMensagemWhatsapp(Request $request)
+    {
+        $mensagem = $request->input('mensagem');
+        if (!$mensagem) {
+            return response()->json(['error' => 'Mensagem não informada'], 400);
+        }
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post('https://n8n.aracati.ce.gov.br/webhook/25739f51-29e1-4dfe-9954-51fb559b56e9', [
+                'mensagem' => $mensagem
+            ]);
+            if ($response->successful()) {
+                Log::info('Mensagem enviada com sucesso', [
+                    'mensagem' => $mensagem,
+                    'response' => $response->json()
+                ]);
+            } else {
+                Log::error('Erro ao enviar mensagem', [
+                    'mensagem' => $mensagem,
+                    'response' => $response->body()
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erro ao enviar mensagem: ' . $e->getMessage()], 500);
+        }
     }
 }

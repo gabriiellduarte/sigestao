@@ -3,12 +3,12 @@ import { useState, useEffect } from 'react';
 import { FormEventHandler } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, Building2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type LoginForm = {
     email: string;
@@ -22,7 +22,7 @@ interface LoginProps {
 }
 interface FlashProps {
     flash?: {
-      message?: string;
+      erro?: string;
     };
     [key: string]: unknown;
   }
@@ -38,10 +38,10 @@ export default function Login({ status, canResetPassword}: LoginProps) {
 
     const { flash } = usePage<FlashProps>().props;
     useEffect(() => {
-        if (flash?.message) {
-          setCustomErrors({ email: flash.message });
+        if (flash?.erro) {
+          setCustomErrors({ email: flash.erro });
         }
-      }, [flash?.message]);
+      }, [flash?.erro]);
 
 
     const [showPassword, setShowPassword] = useState(false);
@@ -68,7 +68,6 @@ export default function Login({ status, canResetPassword}: LoginProps) {
             <div className="w-full max-w-md">
                 <div className="flex justify-center mb-8">
                     <img src='imagens/logo-horizontal-preta.png' className='max-w-8/12'></img>
-                    
                 </div>
 
                 <Card className="shadow-lg border-0">

@@ -29,7 +29,12 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        try {
+            $request->authenticate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Retorna com flash 'erro' se falhar autenticação
+            return back()->with('erro', 'Email ou senha incorretos.');
+        }
 
         $user = Auth::user();
 
@@ -40,9 +45,7 @@ class AuthenticatedSessionController extends Controller
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return back()->withErrors([
-                'email' => 'Você não tem permissão para acessar o sistema.',
-            ]);
+            return back()->with('erro', 'Você não tem permissão para acessar o sistema.');
         }
         
         $request->session()->regenerate();
