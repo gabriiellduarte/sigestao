@@ -68,6 +68,17 @@ export interface Usuario {
     [key: string]: unknown; // This allows for additional properties...
 }
 
+export interface ModuloMenu {
+    nome: string;
+    prefixo: string;
+    urlinicial?: string;
+    menus: NavItem[];
+}
+
+export interface Modulos {
+    [key: string]: ModuloMenu;
+}
+
 export interface PageProps {
     auth: {
         user: User;
@@ -87,7 +98,9 @@ export interface PageProps {
         defaults: Record<string, any>;
         routes: Record<string, string>;
     };
-} 
+    modulos: Modulos;
+    [key: string]: any;
+}
 export interface User {
     id: number;
     name: string;

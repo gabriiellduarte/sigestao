@@ -1,122 +1,62 @@
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
-import { PageProps } from '@inertiajs/core';
-import { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+"use client"
 
-interface CustomPageProps extends PageProps {
-    auth: {
-        can: {
-            [key: string]: boolean;
-        };
-    };
-}
+import { ChevronRight, type LucideIcon } from "lucide-react"
 
-export function NavMain({ items = [], ...props }: { items: NavItem[] }) {
-    const { auth } = usePage<CustomPageProps>().props;
-    const page = usePage();
-    const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+} from "@/components/ui/sidebar"
+import { Modulos } from "@/types"
 
-    const hasPermission = (permissions: string | string[] | undefined) => {
-        if (!permissions) return true;
-        if (auth.can['Super Administrador']) return true;
-        
-        const requiredPermissions = Array.isArray(permissions) ? permissions : [permissions];
-        return requiredPermissions.some(permission => auth.can[permission]);
-    };
-
-    const toggleExpand = (title: string) => {
-        setExpandedItems(prev => ({
-            ...prev,
-            [title]: !prev[title]
-        }));
-    };
-
-    useEffect(() => {
-        const newExpandedItems: Record<string, boolean> = {};
-        
-        items.forEach(item => {
-            if (item.children) {
-                const shouldExpand = page.url.includes(item.href.replace('#', ''));
-                if (shouldExpand) {
-                    newExpandedItems[item.title] = true;
-                }
-            }
-        });
-
-        setExpandedItems(prev => ({
-            ...prev,
-            ...newExpandedItems
-        }));
-    }, [page.url, items]);
-
-    const filteredItems = items.filter(item => hasPermission(item.permissions));
-    console.info(items);
-    console.info('page', page);
-    return (
-        <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Módulos</SidebarGroupLabel>
-            <SidebarMenu>
-                {filteredItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                        <div className="flex items-center justify-between">
-                            {item.children && item.children.length > 0 ? (
-                                <SidebarMenuButton
-                                    isActive={page.url.startsWith(item.href)}
-                                    tooltip={{ children: item.title }}
-                                    onClick={() => toggleExpand(item.title)}
-                                >
-                                    {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
-                                </SidebarMenuButton>
-                            ) : (
-                                <SidebarMenuButton
-                                    asChild
-                                    isActive={page.url.startsWith(item.href)}
-                                    tooltip={{ children: item.title }}
-                                >
-                                    <Link href={item.href} prefetch>
-                                        {item.icon && <item.icon />}
-                                        <span>{item.title}</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            )}
-                            {item.children && item.children.length > 0 && (
-                                <button
-                                    onClick={() => toggleExpand(item.title)}
-                                    className="p-1 hover:bg-accent rounded-md"
-                                >
-                                    <ChevronDown
-                                        className={`h-4 w-4 transition-transform ${
-                                            expandedItems[item.title] ? 'rotate-180' : ''
-                                        }`}
-                                    />
-                                </button>
-                            )}
-                        </div>
-                        {item.children && item.children.length > 0 && expandedItems[item.title] && (
-                            <SidebarMenu className="ml-4">
-                                {item.children
-                                    .filter(child => hasPermission(child.permissions))
-                                    .map((child) => (
-                                        <SidebarMenuItem key={child.title}>
-                                            <SidebarMenuButton
-                                                asChild
-                                                isActive={page.url.startsWith(child.href)}
-                                                tooltip={{ children: child.title }}
-                                            >
-                                                <Link href={child.href} prefetch>
-                                                    <span>{child.title}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    ))}
-                            </SidebarMenu>
-                        )}
-                    </SidebarMenuItem>
-                ))}
-            </SidebarMenu>
-        </SidebarGroup>
-    );
+export function NavMain({items}: Modulos) {
+  console.log("NavMain items:", items);
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarMenu>
+        {items.map((item) => (
+          <Collapsible
+            key={item.title}
+            asChild
+            defaultOpen={item.isActive}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip={item.title}>
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {item.items?.map((subItem) => (
+                    <SidebarMenuSubItem key={subItem.title}>
+                      <SidebarMenuSubButton asChild>
+                        <a href={subItem.url}>
+                          <span>{subItem.title}</span>
+                        </a>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
+  )
 }

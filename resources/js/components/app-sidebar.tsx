@@ -1,69 +1,98 @@
-import { NavFooter } from '@/components/nav-footer';
-import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, HomeIcon, UsersIcon, ClipboardListIcon, Building2, Briefcase, UserCircle, ScrollText, Car } from 'lucide-react';
-import AppLogo from './app-logo';
+import * as React from "react"
+import {
+  AudioWaveform,
+  BookOpen,
+  Bot,
+  Briefcase,
+  Building2,
+  Car,
+  ClipboardListIcon,
+  Command,
+  Frame,
+  GalleryVerticalEnd,
+  HomeIcon,
+  Map,
+  PieChart,
+  ScrollText,
+  Settings2,
+  SquareTerminal,
+  UserCircle,
+  Users2Icon,
+} from "lucide-react"
 
-const mainNavItems: NavItem[] = [
+import { NavMain } from "@/components/nav-main"
+import { NavProjects } from "@/components/nav-projects"
+import { NavUser } from "@/components/nav-user"
+import { TeamSwitcher } from "@/components/team-switcher"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
+} from "@/components/ui/sidebar"
+import { NavItem, PageProps, User } from "@/types"
+import { usePage } from "@inertiajs/react"
+import { ModulosSwitcher } from "./modulos-switcher"
+
+const mainNavItems = {
+    navMain:[
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        url: '/dashboard',
         icon: HomeIcon,
         permissions: 'acessar sistema'
     },
     {
         title: 'Usuários',
-        href: '/users',
-        icon: UsersIcon,
+        url: '/users',
+        icon: Users2Icon,
         permissions: 'gerenciar usuários'
     },
     {
         title: 'Portarias',
-        href: '/documentos/portarias',
+        url: '/documentos/portarias',
         icon: ScrollText,
         permissions: 'portarias.visualizar'
     },
     {
         title: 'Administração',
-        href: 'administracao',
+        url: 'administracao',
         icon: Building2,
         permissions: 'acessar sistema',
-        children: [
+        items: [
             {
                 title: 'Servidores',
-                href: '/administracao/servidores',
+                url: '/administracao/servidores',
                 icon: UserCircle,
                 permissions: 'acessar sistema'
             },
             {
                 title: 'Logs',
-                href: '/administracao/logs',
+                url: '/administracao/logs',
                 icon: UserCircle,
                 permissions: 'acessar sistema'
             },
             {
                 title: 'Pessoas',
-                href: '/administracao/pessoas',
+                url: '/administracao/pessoas',
                 icon: UserCircle,
                 permissions: 'acessar sistema'
             },
             {
                 title: 'Cargos',
-                href: '/administracao/cargos',
+                url: '/administracao/cargos',
                 icon: Briefcase,
                 permissions: 'acessar sistema'
             },
             {
                 title: 'Localidades',
-                href: '/administracao/localidades',
+                url: '/administracao/localidades',
                 permissions: 'acessar sistema'
             },
             {
                 title: 'Secretarias',
-                href: '/administracao/secretarias',
+                url: '/administracao/secretarias',
                 icon: Building2,
                 permissions: 'acessar sistema'
             }
@@ -71,44 +100,44 @@ const mainNavItems: NavItem[] = [
     },
     {
         title:'Passeios de Buggy',
-        href:'#',
+        url:'#',
         icon: Car,
         permissions: 'buggy.visualizar',
-        children:[
+        items:[
             {
                 title: 'DashBoard',
-                href:'/bugueiros/dashboard',
+                url:'/bugueiros/dashboard',
                 permissions:'buggy.dashboard'
             },
             {
                 title: 'Fila de Bugueiros',
-                href:'/bugueiros/filas',
+                url:'/bugueiros/filas',
                 permissions:'buggy.dashboard'
             },
             {
                 title: 'Bugueiros',
-                href:'/bugueiros/cadastro',
+                url:'/bugueiros/cadastro',
                 permissions:'buggy.dashboard'
             },
             {
                 title: 'Passeios',
-                href:'/bugueiros/passeios',
+                url:'/bugueiros/passeios',
                 permissions:'buggy.dashboard'
             },
             {
                 title: 'Tipos de Passeios',
-                href:'/bugueiros/tipodepasseio',
+                url:'/bugueiros/tipodepasseio',
                 permissions:'buggy.dashboard'
             },
             {
                 title: 'Parceiros',
-                href: '/bugueiros/parceiros',
+                url: '/bugueiros/parceiros',
                 icon: UserCircle,
                 permissions: 'acessar sistema'
             },
             {
                 title: 'Crachá',
-                href: '/cracha',
+                url: '/cracha',
                 icon: UserCircle,
                 permissions: 'acessar sistema'
             }
@@ -116,85 +145,215 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Regulação',
-        href: 'regulacao',
+        url: 'regulacao',
         icon: ClipboardListIcon,
         permissions: 'regulacao.dashboard.visualizar',
-        children: [
+        items: [
             {
                 title: 'Dashboard',
-                href: '/regulacao/dashboard',
+                url: '/regulacao/dashboard',
                 permissions: 'regulacao.dashboard.visualizar'
             },
             {
                 title: 'Lista de Atendimentos',
-                href: '/regulacao/atendimentos',
+                url: '/regulacao/atendimentos',
                 permissions: 'regulacao.atendimentos.visualizar'
             },
             {
                 title: 'Agendamentos',
-                href: '/regulacao/agendamentos',
+                url: '/regulacao/agendamentos',
                 permissions: 'regulacao.agendamentos.visualizar'
             },
             {
                 title: 'Pacientes',
-                href: '/regulacao/pacientes',
+                url: '/regulacao/pacientes',
                 permissions: 'regulacao.pacientes.visualizar'
             },
             {
                 title: 'Grupos de Procedimentos',
-                href: '/regulacao/grupoprocedimentos',
+                url: '/regulacao/grupoprocedimentos',
                 permissions: 'regulacao.gprocedimentos.visualizar'
             },
             {
                 title: 'Procedimentos',
-                href: '/regulacao/procedimentos',
+                url: '/regulacao/procedimentos',
                 permissions: 'regulacao.procedimentos.visualizar'
             },
             {
                 title: 'Médicos',
-                href: '/regulacao/medicos',
+                url: '/regulacao/medicos',
                 permissions: 'acessar sistema'
             },
             {
                 title: 'Unidades de Saúde',
-                href: '/regulacao/unidadessaude',
+                url: '/regulacao/unidadessaude',
                 permissions: 'acessar sistema'
             },
             {
                 title: 'ACS',
-                href: '/regulacao/acs',
+                url: '/regulacao/acs',
                 permissions: 'acessar sistema'
             },
             {
                 title: 'Tipos de Atendimento',
-                href: '/regulacao/tiposatendimento',
+                url: '/regulacao/tiposatendimento',
                 permissions: 'acessar sistema'
             }
         ]
     }
-];
+]};
+// This is sample data.
+const data = {
+  user: {
+    name: "shadcn",
+    email: "m@example.com",
+    avatar: "/avatars/shadcn.jpg",
+  },
+  teams: [
+    {
+      name: "Acme Inc",
+      logo: GalleryVerticalEnd,
+      plan: "Enterprise",
+    },
+    {
+      name: "Acme Corp.",
+      logo: AudioWaveform,
+      plan: "Startup",
+    },
+    {
+      name: "Evil Corp.",
+      logo: Command,
+      plan: "Free",
+    },
+  ],
+  navMain: [
+    {
+      title: "Teste",
+      url: "#",
+      icon: SquareTerminal,
+      isActive: true,
+    },
+    {
+      title: "Playground",
+      url: "#",
+      icon: SquareTerminal,
+      isActive: true,
+      items: [
+        {
+          title: "History",
+          url: "#",
+        },
+        {
+          title: "Starred",
+          url: "#",
+        },
+        {
+          title: "Settings",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Models",
+      url: "#",
+      icon: Bot,
+      items: [
+        {
+          title: "Genesis",
+          url: "#",
+        },
+        {
+          title: "Explorer",
+          url: "#",
+        },
+        {
+          title: "Quantum",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Documentation",
+      url: "#",
+      icon: BookOpen,
+      items: [
+        {
+          title: "Introduction",
+          url: "#",
+        },
+        {
+          title: "Get Started",
+          url: "#",
+        },
+        {
+          title: "Tutorials",
+          url: "#",
+        },
+        {
+          title: "Changelog",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Settings",
+      url: "#",
+      icon: Settings2,
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+        {
+          title: "Team",
+          url: "#",
+        },
+        {
+          title: "Billing",
+          url: "#",
+        },
+        {
+          title: "Limits",
+          url: "#",
+        },
+      ],
+    },
+  ],
+  projects: [
+    {
+      name: "Design Engineering",
+      url: "#",
+      icon: Frame,
+    },
+    {
+      name: "Sales & Marketing",
+      url: "#",
+      icon: PieChart,
+    },
+    {
+      name: "Travel",
+      url: "#",
+      icon: Map,
+    },
+  ],
+}
 
-export function AppSidebar() {
-    return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
-
-            <SidebarContent>
-                <NavMain items={mainNavItems} />
-            </SidebarContent>
-
-
-        
-        </Sidebar>
-    );
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const propss = usePage<PageProps>().props;
+    console.log("props", propss);
+  return (
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        <ModulosSwitcher/>
+      </SidebarHeader>
+      <SidebarContent>
+        <NavMain items={propss.modulos} />
+        <NavProjects projects={data.projects} />
+      </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={propss.auth.user as any} />
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+  )
 }

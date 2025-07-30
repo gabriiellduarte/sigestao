@@ -1,4 +1,3 @@
-
 <?php
 
 use App\Http\Controllers\Administracao\LogsController;
@@ -22,6 +21,7 @@ use App\Http\Controllers\Regulacao\RegPacienteController;
 use App\Http\Controllers\Administracao\PessoaController;
 use App\Http\Controllers\Administracao\CargoController;
 use App\Http\Controllers\Administracao\SecretariaController;
+use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Regulacao\AtendimentosController;
 use App\Http\Controllers\Regulacao\RegGrupoProcedimentoController;
 use App\Http\Controllers\Regulacao\RegProcedimentoController;
@@ -38,6 +38,8 @@ Route::get('cracha', function(){
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('menus', MenuController::class);
+
     Route::redirect('/', destination: 'dashboard');
     Route::get('/dashboard', function () {
         $user = auth()->user();
@@ -47,7 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     // Rotas de Administração
-    Route::prefix('administracao')->name('administracao.')->group(function () {
+    Route::prefix(config('padroes.modulos.administracao.prefixo'))->name('administracao.')->group(function () {
         Route::resource('pessoas', PessoaController::class);
         Route::get('pessoas-search', [PessoaController::class, 'search'])->name('pessoas.search');
         Route::resource('cargos', CargoController::class);
@@ -57,7 +59,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('logs', LogsController::class);
         Route::get('servidores-search', [ServidoresController::class, 'search'])->name('servidores.search');
     });
-    Route::prefix('documentos')->name('documentos.')->group(function () {
+    Route::prefix(config('padroes.modulos.documentos.prefixo'))->name('documentos.')->group(function () {
         Route::get('portarias/dashboard', [PortariasController::class,'dashboard'])->name('portarias.dashboard');
         Route::get('portarias/porservidor', [PortariasController::class,'listaporservidor'])->name('portarias.porservidor');
         
@@ -71,7 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     // Rotas Regulação
-    Route::prefix('regulacao')->name('regulacao.')->group(function () {
+    Route::prefix(config('padroes.modulos.regulacao.prefixo'))->name('regulacao.')->group(function () {
         Route::get('listaatendimentos', function(){
             return Inertia::render('regulacao/atendimentos_lista',['nome'=>'testss']);
         });
@@ -107,7 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('tiposatendimento', RegTipoAtendimentoController::class)->parameters(['tiposatendimento' => 'tiposatendimento']);
     });
 
-    Route::prefix('bugueiros')->name('bugueiros.')->group(function () {
+    Route::prefix(config('padroes.modulos.bugueiros.prefixo'))->name('bugueiros.')->group(function () {
        Route::resource('cadastro', BugueirosController::class);
        Route::post('passeios/adicionarpasseioemgrupo', [FilaBugueirosController::class, 'adicionarPasseioEmGrupo']);
        Route::resource('passeios', PasseiosController::class);

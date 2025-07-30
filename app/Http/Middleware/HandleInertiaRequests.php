@@ -40,13 +40,43 @@ class HandleInertiaRequests extends Middleware
     {
         $sessao = $request->session();
 
+        $user = $request->user();
+        $isAdmin = $user && ($user->hasRole('Super Administrador'));
+        $allModulos = config('padroes.modulos');
+        $userPermissions = $user ? $user->getAllPermissions()->pluck('name')->toArray() : [];
+
+        // Filtra módulos conforme permissões do usuário
+        $filteredModulos = [];
+        if ($isAdmin) {
+            $filteredModulos = $allModulos; // Admin vê todos os módulos
+        } else {
+            foreach ($allModulos as $key => $modulo) {
+                $prefixo = $modulo['prefixo'] ?? null;
+                if (!$prefixo) continue;
+                // Verifica se alguma permissão do usuário contém o prefixo do módulo
+                $temPermissao = false;
+                foreach ($userPermissions as $perm) {
+                    if (stripos($perm, $prefixo) !== false) {
+                        $temPermissao = true;
+                        break;
+                    }
+                }
+                if ($temPermissao) {
+                    $filteredModulos[$key] = $modulo;
+                }
+            }
+        }
+
+        // Captura a url base do sistema
+        $baseUrl = $request->getSchemeAndHttpHost();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
-                'can'=>  $request->user()?->getAllPermissions()?->pluck('name')?->flatMap(function ($permissionName) use ($request) {
-                    return [$permissionName => $request->user()->can($permissionName)];
+                'user' => $user,
+                'can'=>  $user?->getAllPermissions()?->pluck('name')?->flatMap(function ($permissionName) use ($user) {
+                    return [$permissionName => $user->can($permissionName)];
                 }) ?? [],
             ],
             'ziggy' => fn (): array => [
@@ -57,6 +87,8 @@ class HandleInertiaRequests extends Middleware
                 'erro' => fn () => $request->session()->get('erro'),
                 'sucesso' => fn()=> $request->session()->get('sucesso')
             ],
+            'modulos'=> fn() => $filteredModulos,
+            'baseUrl' => $baseUrl,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
