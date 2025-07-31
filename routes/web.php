@@ -38,12 +38,11 @@ Route::get('cracha', function(){
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('menus', MenuController::class);
 
     Route::redirect('/', destination: 'dashboard');
     Route::get('/dashboard', function () {
-        $user = auth()->user();
-        $permissoes = $user->getAllPermissions();
+        //$user = auth()->user();
+        //$permissoes = $user->getAllPermissions();
 
         return Inertia::render('dashboard');
     })->name('dashboard');

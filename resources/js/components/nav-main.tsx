@@ -17,36 +17,40 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { Modulos } from "@/types"
+import { Menu } from "@/types"
 
-export function NavMain({items}: Modulos) {
-  console.log("NavMain items:", items);
+export function NavMain({items}: {items: Menu[]}) {
+  console.log("NavMain items2:", items);
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>Funções</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
+        {items?.map((item) => (
           <Collapsible
-            key={item.title}
+            key={item.nome}
             asChild
-            defaultOpen={item.isActive}
+            /*defaultOpen={item.isActive}*/
             className="group/collapsible"
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                <SidebarMenuButton tooltip={item.nome}>
+                  {/*item.icon && <item.icon />*/}
+                  <span>{item.nome}</span>
+                  {
+                    item.submenus && item.submenus.length > 0 && (
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    )
+                  }
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
-                  {item.items?.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.title}>
+                  {item.submenus?.map((subItem) => (
+                    <SidebarMenuSubItem key={subItem.nome}>
                       <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
-                          <span>{subItem.title}</span>
+                        <a href={route(subItem.prefixo_rota)}>
+                          <span>{subItem.nome}</span>
                         </a>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>

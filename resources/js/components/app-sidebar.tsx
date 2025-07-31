@@ -347,8 +347,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <ModulosSwitcher/>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={propss.modulos} />
-        <NavProjects projects={data.projects} />
+        <NavMain items={propss.menuatual} />
+        {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={propss.auth.user as any} />

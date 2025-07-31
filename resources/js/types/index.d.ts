@@ -78,6 +78,11 @@ export interface ModuloMenu {
 export interface Modulos {
     [key: string]: ModuloMenu;
 }
+export interface Menu{
+    nome: string;
+    prefixo_rota: string;
+    submenus?: Menu[];
+}
 
 export interface PageProps {
     auth: {

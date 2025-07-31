@@ -121,66 +121,50 @@ class PortariasController extends Controller
 
     public function index(Request $request)
     {
+        if ($request->hasHeader('X-Inertia')) {
+            $search = $request->input('buscar');
+            $sort = $request->input('sort', 'doc_portarias_data');
+            
+            $direction = $request->input('direction', 'desc');
+            $query = Portaria::query();
 
-        $search = $request->input('buscar');
-        $sort = $request->input('sort', 'doc_portarias_data');
-        
-        $direction = $request->input('direction', 'desc');
-        $query = Portaria::query();
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('doc_portarias_servidor_nome', 'like', "%{$search}%")
+                    ->orWhere('doc_portarias_servidor_cpf', 'like', "%{$search}%")
+                    ->orWhere('doc_portarias_numero','like',"%{$search}%");
+                });
+            }
 
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('doc_portarias_servidor_nome', 'like', "%{$search}%")
-                  ->orWhere('doc_portarias_servidor_cpf', 'like', "%{$search}%")
-                  ->orWhere('doc_portarias_numero','like',"%{$search}%");
-            });
-        }
+            // Permitir ordenação apenas por campos válidos
+            $allowedSorts = ['doc_portarias_servidor_nome', 'doc_portarias_numero', 'adm_cargos_id', 'adm_secretarias_id'];
+            if (!in_array($sort, $allowedSorts)) {
+                $sort = 'doc_portarias_data';
+            }
+            $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
 
-        // Permitir ordenação apenas por campos válidos
-        $allowedSorts = ['doc_portarias_servidor_nome', 'doc_portarias_numero', 'adm_cargos_id', 'adm_secretarias_id'];
-        if (!in_array($sort, $allowedSorts)) {
-            $sort = 'doc_portarias_data';
-        }
-        $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
+            $pessoas = $query->with(['cargo','secretaria'])->orderBy($sort, $direction)->paginate(10)->withQueryString();
 
-        $pessoas = $query->with(['cargo','secretaria'])->orderBy($sort, $direction)->paginate(10)->withQueryString();
-
-        // Se for requisição JSON (ag-grid), retorna apenas os dados e o total
-        if (request()->wantsJson()) {
-            return response()->json([
-                'data' => $pessoas->items(),
-                'total' => $pessoas->total(),
-            ]);
-        }
-
-        return Inertia::render('Portarias/index2', [
+            // Se for requisição JSON (ag-grid), retorna apenas os dados e o total
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'data' => $pessoas->items(),
+                    'total' => $pessoas->total(),
+                ]);
+            }
+            return Inertia::render('Portarias/index2', [
             'pessoas' => $pessoas,
             'filters' => $request->only('buscar'),
         ]);
-        $query = Portaria::with(['servidor.pessoa', 'cargo', 'secretaria', 'tipoPortaria', 'user'])
-            ->orderByDesc('doc_portarias_data');
-
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('doc_portarias_servidor_nome', 'like', "%$search%")
-                  ->orWhereHas('tipoPortaria', function($q2) use ($search) {
-                      $q2->where('doc_tiposportaria_nome', 'like', "%$search%");
-                  })
-                  ->orWhereHas('cargo', function($q2) use ($search) {
-                      $q2->where('adm_cargos_nome', 'like', "%$search%");
-                  })
-                  ->orWhereHas('secretaria', function($q2) use ($search) {
-                      $q2->where('adm_secretarias_nome', 'like', "%$search%");
-                  });
-            });
-        }
-
-        $portarias = $query->paginate(10)->withQueryString();
-
-        return Inertia::render('Portarias/index2', [
-            'portarias' => $portarias
+        }else{
+            return Inertia::render('Portarias/index2', [
+            'pessoas' => ['data' => [], 'last_page' => 0],
+            'filters' => $request->only('buscar'),
         ]);
+        }
+        
+
+        
     }
 
     public function show(){

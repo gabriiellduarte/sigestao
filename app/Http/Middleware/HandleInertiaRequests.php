@@ -41,7 +41,7 @@ class HandleInertiaRequests extends Middleware
         $sessao = $request->session();
 
         $user = $request->user();
-        $isAdmin = $user && ($user->hasRole('Super Administrador'));
+        $isAdmin = $user && $user->hasPermissionTo('Super Administrador');
         $allModulos = config('padroes.modulos');
         $userPermissions = $user ? $user->getAllPermissions()->pluck('name')->toArray() : [];
 
@@ -70,6 +70,35 @@ class HandleInertiaRequests extends Middleware
         // Captura a url base do sistema
         $baseUrl = $request->getSchemeAndHttpHost();
 
+        // Descobre o módulo atual pelo primeiro segmento da URL
+        $moduloAtualKey = $request->uri()->pathSegments()[0] ?? null;
+        $menusFiltrados = [];
+        if ($moduloAtualKey && isset($filteredModulos[$moduloAtualKey])) {
+            $menus = $filteredModulos[$moduloAtualKey]['menus'] ?? [];
+            // Se admin, mostra todos os menus
+            if ($isAdmin) {
+                $menusFiltrados = $menus;
+            } else {
+                foreach ($menus as $menu) {
+                    // Se não houver permissão definida, mostra
+                    if (empty($menu['permissoes'])) {
+                        $menusFiltrados[] = $menu;
+                        continue;
+                    }
+                    // Se o usuário tem pelo menos uma permissão do menu, mostra
+                    $perms = is_array($menu['permissoes']) ? $menu['permissoes'] : [$menu['permissoes']];
+                    foreach ($perms as $perm) {
+                        foreach ($userPermissions as $userPerm) {
+                            if (stripos($userPerm, $perm) !== false) {
+                                $menusFiltrados[] = $menu;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -88,6 +117,8 @@ class HandleInertiaRequests extends Middleware
                 'sucesso' => fn()=> $request->session()->get('sucesso')
             ],
             'modulos'=> fn() => $filteredModulos,
+            'moduloatual'=> $moduloAtualKey,
+            'menuatual'=> fn() => $menusFiltrados,
             'baseUrl' => $baseUrl,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

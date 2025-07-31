@@ -32,10 +32,14 @@ export function ModulosSwitcher() {
                             size="lg"
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
-                            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg"></div>
+                            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                                {/*<activeTeam.logo className="size-4" />*/}
+                                <img src="/imagens/brasao_branco.png" alt="Brasão" className="w-6 h-6 object-contain" />
+
+                            </div>
                             <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-medium">{modulosArr[0].nome}</span>
-                                <span className="truncate text-xs">Módulos disponíveis</span>
+                                <span className="truncate font-bold">SIA Gestão</span>
+                                <span className="truncate text-xs">{modulosArr[0].nome}</span>
                             </div>
                             {modulosArr.length > 1 && (
                                 <ChevronsUpDown className="ml-auto" />

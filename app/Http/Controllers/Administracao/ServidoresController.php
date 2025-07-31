@@ -110,7 +110,7 @@ class ServidoresController extends Controller
 
     public function search(Request $request)
     {
-        $term = $request->input('term');
+        /*$term = $request->input('term');
         $query = Servidores::with('pessoa');
         if ($term) {
             $query->whereHas('pessoa', function ($q) use ($term) {
@@ -124,6 +124,32 @@ class ServidoresController extends Controller
                 'adm_servidores_id' => $servidor->adm_servidores_id,
                 'ger_pessoas_nome' => $servidor->pessoa->ger_pessoas_nome,
                 'ger_pessoas_cpf' => $servidor->pessoa->ger_pessoas_cpf,
+            ];
+        });*/
+
+        $term = $request->input('term');
+
+        $query = Servidores::join('ger_pessoas as pessoa', 'pessoa.ger_pessoas_id', '=', 'adm_servidores.ger_pessoas_id')
+            ->select(
+                'adm_servidores.adm_servidores_id',
+                'pessoa.ger_pessoas_nome',
+                'pessoa.ger_pessoas_cpf'
+            );
+
+        if ($term) {
+            $query->where(function ($q) use ($term) {
+                $q->where('pessoa.ger_pessoas_nome', 'like', "%$term%")
+                ->orWhere('pessoa.ger_pessoas_cpf', 'like', "%$term%");
+            });
+        }
+
+        $servidores = $query->limit(20)->get();
+
+        $result = $servidores->map(function ($servidor) {
+            return [
+                'adm_servidores_id' => $servidor->adm_servidores_id,
+                'ger_pessoas_nome' => $servidor->ger_pessoas_nome,
+                'ger_pessoas_cpf' => $servidor->ger_pessoas_cpf,
             ];
         });
         return response()->json($result);

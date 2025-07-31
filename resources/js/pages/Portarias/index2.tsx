@@ -38,12 +38,7 @@ interface Portaria {
   user?: any;
 }
 
-type Payment = {
-    id: string
-    amount: number
-    status: "pending" | "processing" | "success" | "failed"
-    email: string
-  }
+
   const getStatusColor = (portaria: string) => {
     if (portaria == 'cancelado'){
       return 'bg-red-100 text-red-800';
@@ -90,7 +85,6 @@ type Payment = {
         header: 'Status',
         cell: ({row})=>{
             const portaria:string  = row.getValue("doc_portarias_status");
-            console.log(portaria);
             return <Badge className={getStatusColor(portaria)}>
                 {getStatusLabel(portaria)}
             </Badge>
@@ -162,7 +156,9 @@ export default function ListaPortarias({pessoas, filters}: Props) {
   // Buscar no backend ao digitar
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      router.get(route('documentos.portarias.index', { buscar: searchTerm }), undefined, { preserveState: true, replace: true });
+      //if (searchTerm && searchTerm.trim().length >= 3) {
+        router.get(route('documentos.portarias.index', { buscar: searchTerm }), undefined, { preserveState: true, replace: true });
+      //}
     }, 400);
     return () => clearTimeout(delayDebounce);
   }, [searchTerm]);
@@ -325,12 +321,7 @@ export default function ListaPortarias({pessoas, filters}: Props) {
                         />
             </div>
             </div>
-            
-        {pessoas.data.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Nenhuma portaria encontrada.</p>
-          </div>
-        )}
+          
         {showImportModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">

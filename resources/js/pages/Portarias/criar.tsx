@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
+  Select as Select2,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import Select from 'react-select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { Link, useForm, usePage, router } from '@inertiajs/react';
@@ -111,6 +112,7 @@ const CadastroPortarias: React.FC = () => {
   // Adicionar estados para busca dinâmica de servidores
   const [servidores, setServidores] = useState<Servidor[]>([]);
   const [buscaServidor, setBuscaServidor] = useState('');
+  const [debouncedBuscaServidor, setDebouncedBuscaServidor] = useState('');
   const [loadingServidores, setLoadingServidores] = useState(false);
 
   // Função para buscar servidores (agora retorna os resultados)
@@ -129,16 +131,24 @@ const CadastroPortarias: React.FC = () => {
 
   useEffect(()=>{
     console.info('Procurando próximo número de portaria...');
-    router.get(route('documentos.portarias.proximonumero'), 
+    /*router.get(route('documentos.portarias.proximonumero'), 
       {data: data.doc_portarias_data}, 
       {preserveState: true, replace: true }
-    );
+    );*/
   },[data.doc_portarias_data]);
+
+  // Debounce para buscaServidor
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedBuscaServidor(buscaServidor);
+    }, 700); // 400ms de espera
+    return () => clearTimeout(handler);
+  }, [buscaServidor]);
 
   // Buscar servidores ao digitar, garantindo que o selecionado sempre aparece
   useEffect(() => {
-    if (buscaServidor.length >= 6) {
-      buscarServidores(buscaServidor).then((resultados) => {
+    if (debouncedBuscaServidor.length >= 6) {
+      buscarServidores(debouncedBuscaServidor).then((resultados) => {
         if (data.adm_servidores_id && !resultados.some((s: any) => s.adm_servidores_id === data.adm_servidores_id)) {
           setServidores([
             {
@@ -163,7 +173,7 @@ const CadastroPortarias: React.FC = () => {
         setServidores([]);
       }
     }
-  }, [buscaServidor, data.adm_servidores_id, data.doc_portarias_servidor_nome, data.doc_portarias_servidor_cpf]);
+  }, [debouncedBuscaServidor, data.adm_servidores_id, data.doc_portarias_servidor_nome, data.doc_portarias_servidor_cpf]);
 
   // Garante que o servidor selecionado aparece no select em modo de edição
   useEffect(() => {
@@ -338,34 +348,30 @@ const CadastroPortarias: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="adm_servidores_id">Servidor *</Label>
                   <Select
-                    value={data.adm_servidores_id ? String(data.adm_servidores_id) : ''}
-                    onValueChange={value => setData('adm_servidores_id', Number(value))}
-                  >
-                    <SelectTrigger className={errors.adm_servidores_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione o servidor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <div className="p-2">
-                        <Input
-                          placeholder="Buscar servidor por nome ou CPF"
-                          value={buscaServidor}
-                          onChange={e => setBuscaServidor(e.target.value)}
-                          autoFocus
-                        />
-                      </div>
-                      {loadingServidores && (
-                        <div className="p-2 text-sm text-gray-500">Carregando...</div>
-                      )}
-                      {servidores.map(servidor => (
-                        <SelectItem key={servidor.adm_servidores_id} value={String(servidor.adm_servidores_id)}>
-                          {servidor.ger_pessoas_nome} ({servidor.ger_pessoas_cpf})
-                        </SelectItem>
-                      ))}
-                      {!loadingServidores && servidores.length === 0 && buscaServidor && (
-                        <div className="p-2 text-sm text-gray-500">Nenhum servidor encontrado</div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                    inputId="adm_servidores_id"
+                    classNamePrefix={errors.adm_servidores_id ? 'border-red-500' : ''}
+                    isLoading={loadingServidores}
+                    placeholder="Buscar servidor por nome ou CPF"
+                    value={
+                      servidores.find(s => s.adm_servidores_id === Number(data.adm_servidores_id))
+                        ? {
+                            value: data.adm_servidores_id,
+                            label: servidores.find(s => s.adm_servidores_id === Number(data.adm_servidores_id))?.ger_pessoas_nome +
+                              ' (' + servidores.find(s => s.adm_servidores_id === Number(data.adm_servidores_id))?.ger_pessoas_cpf + ')'
+                          }
+                        : null
+                    }
+                    onInputChange={value => setBuscaServidor(value)}
+                    onChange={option => {
+                      setData('adm_servidores_id', option ? option.value : '');
+                    }}
+                    options={servidores.map(servidor => ({
+                      value: servidor.adm_servidores_id,
+                      label: `${servidor.ger_pessoas_nome} (${servidor.ger_pessoas_cpf})`
+                    }))}
+                    noOptionsMessage={() => buscaServidor.length < 6 ? 'Digite pelo menos 6 caracteres' : 'Nenhum servidor encontrado'}
+                    isClearable
+                  />
                   {errors.adm_servidores_id && (
                     <p className="text-sm text-red-500">{errors.adm_servidores_id}</p>
                   )}
@@ -380,7 +386,7 @@ const CadastroPortarias: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="doc_portarias_status">Status *</Label>
-                  <Select
+                  <Select2
                     value={data.doc_portarias_status}
                     onValueChange={value => setData('doc_portarias_status', value)}
                   >
@@ -392,7 +398,7 @@ const CadastroPortarias: React.FC = () => {
                       <SelectItem value="pendente">Pendente</SelectItem>
                       <SelectItem value="cancelado">Cancelado</SelectItem>
                     </SelectContent>
-                  </Select>
+                  </Select2>
                   {errors.doc_portarias_status && (
                     <p className="text-sm text-red-500">{errors.doc_portarias_status}</p>
                   )}
@@ -400,7 +406,7 @@ const CadastroPortarias: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="adm_cargos_id">Cargo *</Label>
                   <div className="flex gap-2 items-center">
-                    <Select
+                    <Select2
                       value={data.adm_cargos_id ? String(data.adm_cargos_id) : ''}
                       onValueChange={value => setData('adm_cargos_id', Number(value))}
                     >
@@ -425,7 +431,7 @@ const CadastroPortarias: React.FC = () => {
                           <div className="p-2 text-sm text-gray-500">Nenhum cargo encontrado</div>
                         )}
                       </SelectContent>
-                    </Select>
+                    </Select2>
                     <Button type="button" variant="outline" size="sm" onClick={() => setShowModalCargo(true)}>
                       + Novo
                     </Button>
@@ -436,7 +442,7 @@ const CadastroPortarias: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="adm_secretarias_id">Secretaria *</Label>
-                  <Select
+                  <Select2
                     value={data.adm_secretarias_id ? String(data.adm_secretarias_id) : ''}
                     onValueChange={value => setData('adm_secretarias_id', Number(value))}
                   >
@@ -450,7 +456,7 @@ const CadastroPortarias: React.FC = () => {
                         </SelectItem>
                       ))}
                     </SelectContent>
-                  </Select>
+                  </Select2>
                   {errors.adm_secretarias_id && (
                     <p className="text-sm text-red-500">{errors.adm_secretarias_id}</p>
                   )}

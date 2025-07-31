@@ -50,6 +50,12 @@ class PermissionSeeder extends Seeder
             // Outros
             'regulacao.relatorios.gerar',
             'regulacao.dashboard.visualizar',
+
+            //Portarias
+            'documentos.portarias.visualizar',
+            'documentos.portarias.criar',
+            'documentos.portarias.editar',
+            'documentos.portarias.excluir',
         ];
 
         foreach ($permissions as $permission) {
