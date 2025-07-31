@@ -463,7 +463,7 @@ const CadastroPortarias: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="doc_tiposportaria_id">Tipo de Portaria *</Label>
-                  <Select
+                  <Select2
                     value={data.doc_tiposportaria_id ? String(data.doc_tiposportaria_id) : ''}
                     onValueChange={value => setData('doc_tiposportaria_id', Number(value))}
                   >
@@ -477,7 +477,7 @@ const CadastroPortarias: React.FC = () => {
                         </SelectItem>
                       ))}
                     </SelectContent>
-                  </Select>
+                  </Select2>
                   {errors.doc_tiposportaria_id && (
                     <p className="text-sm text-red-500">{errors.doc_tiposportaria_id}</p>
                   )}
