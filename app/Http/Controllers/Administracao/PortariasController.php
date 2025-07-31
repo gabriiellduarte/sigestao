@@ -158,7 +158,7 @@ class PortariasController extends Controller
         ]);
         }else{
             return Inertia::render('Portarias/index2', [
-            'pessoas' => ['data' => [], 'last_page' => 0],
+            'pessoas' => ['data' => [], 'last_page' => 0,'current_page' => 1],
             'filters' => $request->only('buscar'),
         ]);
         }

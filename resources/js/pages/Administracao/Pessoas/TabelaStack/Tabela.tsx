@@ -50,6 +50,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
+  console.log('chegou index: ',pageIndex)
   // O controle de modal e descrição agora será feito fora do DataTable
   const table = useReactTable({
     data,

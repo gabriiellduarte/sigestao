@@ -143,6 +143,8 @@ export default function ListaPortarias({pessoas, filters}: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  console.log('tem index: ',pessoas.current_page);
+
   // Ordenação
   const handleSortingChange = (sorting: any) => {
     if (sorting.length > 0) {
