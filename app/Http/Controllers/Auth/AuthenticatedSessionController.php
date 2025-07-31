@@ -49,8 +49,69 @@ class AuthenticatedSessionController extends Controller
         }
         
         $request->session()->regenerate();
+        $geraMenus = $this->geraMenusModulosNaSessao($user);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(route('documentos.portarias.index', absolute: false));
+    }
+
+    public function geraMenusModulosNaSessao($user){
+        $isAdmin = $user->hasPermissionTo('Super Administrador');
+        $allModulos = config('padroes.modulos');
+        $userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
+
+        $filteredModulos = [];
+
+        if ($isAdmin) {
+            $filteredModulos = $allModulos;
+        } else {
+            foreach ($allModulos as $key => $modulo) {
+                $prefixo = $modulo['prefixo'] ?? null;
+                if (!$prefixo) continue;
+
+                foreach ($userPermissions as $perm) {
+                    if (stripos($perm, $prefixo) !== false) {
+                        $filteredModulos[$key] = $modulo;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Monta todos os menus possíveis por módulo
+        $menusPorModulo = [];
+
+        foreach ($filteredModulos as $key => $modulo) {
+            $menus = $modulo['menus'] ?? [];
+
+            if ($isAdmin) {
+                $menusPorModulo[$key] = $menus;
+            } else {
+                foreach ($menus as $menu) {
+                    if (empty($menu['permissoes'])) {
+                        $menusPorModulo[$key][] = $menu;
+                        continue;
+                    }
+
+                    $perms = is_array($menu['permissoes']) ? $menu['permissoes'] : [$menu['permissoes']];
+                    foreach ($perms as $perm) {
+                        foreach ($userPermissions as $userPerm) {
+                            if (stripos($userPerm, $perm) !== false) {
+                                $menusPorModulo[$key][] = $menu;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        $permissions = $user->getAllPermissions()->pluck('name')->toArray();
+
+        // Salva tudo na sessão
+        session([
+            'modulos_ativos' => $filteredModulos,
+            'menus_por_modulo' => $menusPorModulo,
+            'permissoes_usuario' => $permissions,
+        ]);
     }
 
     /**

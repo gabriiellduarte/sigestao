@@ -26,7 +26,7 @@ import SettingsLayout from '@/layouts/settings/layout';
 interface Permission {
     id: number;
     name: string;
-    description: string;
+    descricao: string;
 }
 
 interface Props {

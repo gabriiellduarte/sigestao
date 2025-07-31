@@ -30,7 +30,7 @@ use App\Http\Controllers\Regulacao\RegUnidadeSaudeController;
 use App\Http\Controllers\Regulacao\RegAcsController;
 use App\Http\Controllers\Regulacao\RegTipoAtendimentoController;
 use App\Http\Controllers\ParceirosController;
-
+use Google\Service\Docs\Request;
 
 Route::get('cracha', function(){
     return Inertia::render('Buggys/CrachaVirtual');
@@ -38,14 +38,13 @@ Route::get('cracha', function(){
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/', function (Request $request) {
+        // Redireciona para a rota de dashboard
+        $teste = "Teste";
+        return redirect()->route('documentos.portarias.index');
 
-    Route::redirect('/', destination: 'dashboard');
-    Route::get('/dashboard', function () {
-        //$user = auth()->user();
-        //$permissoes = $user->getAllPermissions();
-
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    });
+    
 
     // Rotas de Administração
     Route::prefix(config('padroes.modulos.administracao.prefixo'))->name('administracao.')->group(function () {
