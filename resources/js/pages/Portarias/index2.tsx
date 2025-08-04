@@ -281,6 +281,12 @@ export default function ListaPortarias({pessoas, filters}: Props) {
                             Pessoas
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={route('documentos.portarias.cadastro-servidor')} className="flex items-center">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Cadastrar Pessoa/Servidor
+                        </Link>
+                      </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Link href={route('documentos.portarias.create')}>

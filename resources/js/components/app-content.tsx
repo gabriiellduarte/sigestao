@@ -1,5 +1,6 @@
-import { SidebarInset } from '@/components/ui/sidebar';
+import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import * as React from 'react';
+import { Separator } from './ui/separator';
 
 interface AppContentProps extends React.ComponentProps<'main'> {
     variant?: 'header' | 'sidebar';
@@ -7,7 +8,9 @@ interface AppContentProps extends React.ComponentProps<'main'> {
 
 export function AppContent({ variant = 'header', children, ...props }: AppContentProps) {
     if (variant === 'sidebar') {
-        return <SidebarInset {...props}>{children}</SidebarInset>;
+        return <SidebarInset {...props}>
+            {children}
+            </SidebarInset>;
     }
 
     return (

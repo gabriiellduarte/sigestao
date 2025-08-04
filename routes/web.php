@@ -44,6 +44,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('documentos.portarias.index');
 
     });
+
+    Route::get('/dashboard', function () {
+        // Redireciona para a rota de dashboard
+        return Inertia::render('dashboard');
+    })->name('dashboard');
     
 
     // Rotas de Administração
@@ -60,7 +65,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix(config('padroes.modulos.documentos.prefixo'))->name('documentos.')->group(function () {
         Route::get('portarias/dashboard', [PortariasController::class,'dashboard'])->name('portarias.dashboard');
         Route::get('portarias/porservidor', [PortariasController::class,'listaporservidor'])->name('portarias.porservidor');
-        
+        // Cadastro rápido de pessoa/servidor para portarias
+        Route::get('portarias/cadastro-servidor', [PortariasController::class, 'cadastroPessoaServidorForm'])->name('portarias.cadastro-servidor');
+        Route::post('portarias/cadastro-servidor', [PortariasController::class, 'cadastroPessoaServidor'])->name('portarias.cadastro-servidor');
+
         Route::resource('tiposdeportaria', TipoPortariaController::class);
         Route::get('/portarias/proximonumero', [PortariasController::class, 'proximoNumero'])->name('portarias.proximonumero');
 

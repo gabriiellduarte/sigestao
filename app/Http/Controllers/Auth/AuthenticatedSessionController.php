@@ -33,7 +33,7 @@ class AuthenticatedSessionController extends Controller
             $request->authenticate();
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Retorna com flash 'erro' se falhar autenticação
-            return back()->with('erro', 'Email ou senha incorretos.');
+            return redirect()->route('login')->with('erro', 'Email ou senha incorretos.');
         }
 
         $user = Auth::user();

@@ -18,7 +18,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
         //window.location.href = "/logout"
     }
     return (
-        <header className="flex h-16 shrink-0 bg-white items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
+        <header className="flex h-10 shrink-0 bg-white items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
             <div className="flex items-center space-x-2 justify-between gap-2 w-full">
                 <SidebarTrigger className="-ml-1" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
@@ -26,8 +26,8 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                 
                 
 
-                <div className="flex items-center space-x-1 md:space-x-2">
-                {/* Botão de busca para mobile */}
+                {/*<div className="flex items-center space-x-1 md:space-x-2">
+                 Botão de busca para mobile
                     <Button variant="ghost" size="sm" className="sm:hidden">
                         <Search className="h-5 w-5 text-gray-600" />
                     </Button>
@@ -49,7 +49,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                             <LogOut className="h-4 w-4 text-gray-600" />
                         </Button>
                     </div>
-                </div>
+                </div>*/}
             </div>
         </header>
 

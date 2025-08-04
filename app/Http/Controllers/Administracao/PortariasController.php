@@ -91,6 +91,56 @@ class PortariasController extends Controller
         ]);
     }
 
+    // Exibe o formulário de cadastro rápido de pessoa/servidor
+    public function cadastroPessoaServidorForm()
+    {
+        return Inertia::render('Portarias/CadastroPessoaServidor');
+    }
+
+    // Salva pessoa e servidor
+    public function cadastroPessoaServidor(Request $request)
+    {
+
+        try {
+            DB::beginTransaction();
+
+            $validated = $request->validate([
+                'nome' => 'required|string|max:255',
+                'cpf' => [
+                    'required',
+                    'string',
+                    'max:14',
+                    'unique:ger_pessoas,ger_pessoas_cpf',
+                    function($attribute, $value, $fail) {
+                        if (!preg_match('/^\d{11}$/', preg_replace('/[^0-9]/', '', $value))) {
+                            $fail('O CPF deve conter exatamente 11 números.');
+                        }
+                    }
+                ],
+            ]);
+
+            // Limpa o CPF para conter apenas números
+            $cpfNumeros = preg_replace('/[^0-9]/', '', $validated['cpf']);
+
+            // Cria pessoa
+            $pessoa = new \App\Models\Pessoa();
+            $pessoa->ger_pessoas_nome = $validated['nome'];
+            $pessoa->ger_pessoas_cpf = $cpfNumeros;
+            $pessoa->save();
+
+            // Cria servidor vinculado à pessoa
+            $servidor = new \App\Models\Servidores();
+            $servidor->ger_pessoas_id = $pessoa->ger_pessoas_id;
+            $servidor->save();
+
+            DB::commit();
+            return redirect()->back()->with('sucesso', 'Cadastro realizado com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('documentos.portarias.cadastro-servidor')->with('erro', 'Erro ao cadastrar: ' . $e->getMessage());
+        }
+    }
+
     public function proximoNumero(Request $request){
         $data = $request->input('data');
         try {
