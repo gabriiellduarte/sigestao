@@ -123,7 +123,7 @@ class PortariasController extends Controller
     {
         if ($request->hasHeader('X-Inertia')) {
             $search = $request->input('buscar');
-            $sort = $request->input('sort', 'doc_portarias_data');
+            $sort = $request->input('sort');
             
             $direction = $request->input('direction', 'desc');
             $query = Portaria::query();
@@ -138,12 +138,22 @@ class PortariasController extends Controller
 
             // Permitir ordenação apenas por campos válidos
             $allowedSorts = ['doc_portarias_servidor_nome', 'doc_portarias_numero', 'adm_cargos_id', 'adm_secretarias_id'];
-            if (!in_array($sort, $allowedSorts)) {
-                $sort = 'doc_portarias_data';
-            }
+            
             $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
 
-            $pessoas = $query->with(['cargo','secretaria'])->orderBy($sort, $direction)->paginate(10)->withQueryString();
+            if (!$sort) {
+                // Ordenação padrão se sort estiver vazio
+                $query->orderBy('doc_portarias_data', $direction)
+                    ->orderBy('doc_portarias_numero', $direction);
+            } else {
+                // Validação do campo sort
+                if (!in_array($sort, $allowedSorts)) {
+                    $sort = 'doc_portarias_data';
+                }
+                $query->orderBy($sort, $direction);
+            }
+
+            $pessoas = $query->with(['cargo','secretaria'])->paginate(10)->withQueryString();
 
             // Se for requisição JSON (ag-grid), retorna apenas os dados e o total
             if (request()->wantsJson()) {

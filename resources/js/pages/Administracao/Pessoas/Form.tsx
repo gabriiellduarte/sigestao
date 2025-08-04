@@ -107,13 +107,14 @@ export default function Form({ pessoa, localidades, isEditing = false }: Props) 
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="ger_pessoas_telefone1">WhatsApp/Número Principal</Label>
+                    <Label htmlFor="ger_pessoas_telefone1">WhatsApp/Número Principal *</Label>
                     <Input
                         id="ger_pessoas_telefone1"
                         value={data.ger_pessoas_telefone1}
                         maxLength={11}
                         inputMode="numeric"
                         pattern="[0-9]*"
+                        required
                         onChange={e => {
                             // Remove tudo que não for número e limita a 11 caracteres
                             const onlyNums = e.target.value.replace(/\D/g, '').slice(0, 11);

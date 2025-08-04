@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Log;
@@ -74,6 +75,7 @@ class GoogleController extends Controller
                         ->with('message', 'Seu acesso está pendente de liberação pelo administrador. Por favor, aguarde.');
                 }else{
                     Auth::login(user: $finduser);
+                    $geraMenus = AuthenticatedSessionController::geraMenusModulosNaSessao($finduser);
                     Log::info('Usuário existente encontrado e logado: ' . $finduser->email);
                 }
             } else {
@@ -102,6 +104,7 @@ class GoogleController extends Controller
 
                 if($tempermissao){
                     Auth::login($finduser);
+                    $geraMenus = AuthenticatedSessionController::geraMenusModulosNaSessao($finduser);
                     Log::info('Usuário existente encontrado e logado: ' . $finduser->email);
                 }else{
                     //Auth::logout();

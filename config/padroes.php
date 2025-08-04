@@ -46,12 +46,7 @@ return [
                             'nome'=>'Por Servidor',
                             'prefixo_rota'=>'documentos.portarias.porservidor',
                             'permissoes'=>['documentos.portarias.porservidor.visualizar'],
-                        ],
-                        [
-                            'nome'=>'Tipos de Portaria',
-                            'prefixo_rota'=>'documentos.tiposdeportaria.index',
-                            'permissoes'=>['documentos.tiposdeportaria.visualizar', 'documentos.tiposdeportaria.criar', 'documentos.tiposdeportaria.editar', 'documentos.tiposdeportaria.excluir'],
-                        ],
+                        ]
                     ]
                 ],
                 

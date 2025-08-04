@@ -54,7 +54,7 @@ class AuthenticatedSessionController extends Controller
         return redirect()->intended(route('documentos.portarias.index', absolute: false));
     }
 
-    public function geraMenusModulosNaSessao($user){
+    public static function geraMenusModulosNaSessao($user){
         $isAdmin = $user->hasPermissionTo('Super Administrador');
         $allModulos = config('padroes.modulos');
         $userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
