@@ -129,13 +129,17 @@ const CadastroPortarias: React.FC = () => {
     }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     console.info('Procurando próximo número de portaria...');
-    /*router.get(route('documentos.portarias.proximonumero'), 
-      {data: data.doc_portarias_data}, 
-      {preserveState: true, replace: true }
-    );*/
-  },[data.doc_portarias_data]);
+    fetch(route('documentos.portarias.proximonumero') + `?data=${encodeURIComponent(data.doc_portarias_data)}`)
+      .then(res => res.json())
+      .then(res => {
+        console.info('Próximo número de portaria encontrado:', res);
+        if (res && res.next_numero_portaria) {
+          setData('doc_portarias_numero', String(res.next_numero_portaria));
+        }
+      });
+  }, [data.doc_portarias_data]);
 
   // Debounce para buscaServidor
   useEffect(() => {

@@ -150,7 +150,7 @@ class PortariasController extends Controller
         }
         $numeroFormatado = $this->formataProximoNumero($dataCarbon);
         // Redireciona para a rota de criação passando os parâmetros
-        return redirect()->route('documentos.portarias.create', [
+        return response()->json([
             'next_numero_portaria' => $numeroFormatado,
             'data' => $dataCarbon->toDateString()
         ]);

@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import AsyncCreatableSelect from 'react-select/async-creatable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { Link, useForm } from '@inertiajs/react';
@@ -24,7 +25,7 @@ interface Servidor {
 }
 
 interface PessoaFiltro {
-  adm_servidores_id: number;
+  ger_pessoas_id: number;
   ger_pessoas_nome?: string;
   ger_pessoas_cpf?: string | null;
 }
@@ -35,17 +36,6 @@ interface CadastroServidoresProps {
   onBack: () => void;
   onSave: (servidor: Servidor) => void;
 }
-
-const secretarias = [
-  'Secretaria de Administração',
-  'Secretaria de Educação',
-  'Secretaria de Saúde',
-  'Secretaria de Obras',
-  'Secretaria de Assistência Social',
-  'Secretaria de Cultura',
-  'Secretaria de Esportes',
-  'Secretaria de Meio Ambiente'
-];
 
 export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
   servidor,
@@ -60,73 +50,38 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [cpfEditable, setCpfEditable] = useState(false);
 
   const handleInputChange = (field: keyof typeof data, value: string | number) => {
     setData(field, value);
-    if (formErrors[field]) {
-      setFormErrors(prev => ({ ...prev, [field]: '' }));
-    }
   };
   // Adicionar estados para busca dinâmica de servidores
-  const [pessoas, setPessoas] = useState<PessoaFiltro[]>([]);
-  const [buscaServidor, setBuscaServidor] = useState('');
   const [loadingServidores, setLoadingServidores] = useState(false);
-  // Função para buscar servidores (agora retorna os resultados)
-  const buscarServidores = async (termo: string) => {
-    setLoadingServidores(true);
-    try {
-      const response = await fetch(`/administracao/pessoas-search?term=${encodeURIComponent(termo)}`);
-      const data = await response.json();
-      setLoadingServidores(false);
-      return data;
-    } catch (e) {
-      setLoadingServidores(false);
-      return [];
-    }
-  };
+  // Função para buscar servidores como uma Promise (para react-select async)
+  const buscarServidores = (termo: string) =>
+    new Promise<any[]>((resolve) => {
+      setLoadingServidores(true);
+      fetch(`/administracao/pessoas-search?term=${encodeURIComponent(termo)}`)
+        .then(response => response.json())
+        .then(data => {
+          setLoadingServidores(false);
+          // Mapeia para o formato esperado pelo AsyncCreatableSelect
+          const mapped = Array.isArray(data)
+            ? data.map((item: any) => ({
+                value: item.ger_pessoas_id,
+                label: item.ger_pessoas_nome,
+                cpf: item.ger_pessoas_cpf || '',
+                ...item
+              }))
+            : [];
+          resolve(mapped);
+        })
+        .catch(() => {
+          setLoadingServidores(false);
+          resolve([]);
+        });
+    });
 
-  // Buscar servidores ao digitar, garantindo que o selecionado sempre aparece
-  useEffect(() => {
-    if (buscaServidor.length >= 6) {
-      buscarServidores(buscaServidor).then((resultados) => {
-        if (data.ger_pessoas_id && !resultados.some((s: any) => s.adm_servidores_id === data.ger_pessoas_id)) {
-          console.log('Adicionando servidor selecionado:', resultados);
-          setPessoas([
-            {
-              ger_pessoas_id: Number(data.ger_pessoas_id)
-            },
-            ...resultados
-          ]);
-          console.log('Pessoas após adição:', resultados);
-        } else {
-          console.log('Resultados encontrados:', resultados);
-          setPessoas(resultados);
-        }
-      });
-    } else {
-      if (data.ger_pessoas_id) {
-        setPessoas([{
-          adm_servidores_id: Number(data.ger_pessoas_id)
-        }]);
-      } else {
-        setPessoas([]);
-      }
-    }
-  }, [buscaServidor, data.ger_pessoas_id]);
-
-  function atribuiPessoa_CPF(value: number) {
-    setData('ger_pessoas_id', value);
-    // Busca a pessoa correspondente e atualiza o CPF
-    console.log(value);
-    const pessoa = pessoas.find(p => p.adm_servidores_id === value);
-
-    if (pessoa) {
-      setData('cpf', pessoa.ger_pessoas_cpf || '');
-    } else {
-      setData('cpf', '');
-    }
-
-  }
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -136,9 +91,6 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
     }
     if (!data.cpf.trim()) {
       newErrors.cpf = 'CPF é obrigatório';
-    }
-    if (!data.email.trim()) {
-      newErrors.email = 'Email é obrigatório';
     }
 
     setFormErrors(newErrors);
@@ -188,35 +140,24 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="adm_servidores_id">Servidor *</Label>
-                  <Select
-                    value={data.ger_pessoas_id ? String(data.ger_pessoas_id) : ''}
-                    onValueChange={(value) => atribuiPessoa_CPF(parseInt(value))}
-                  >
-                    <SelectTrigger className={errors.ger_pessoas_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione o servidor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <div className="p-2">
-                        <Input
-                          placeholder="Buscar servidor por nome ou CPF"
-                          value={buscaServidor}
-                          onChange={e => setBuscaServidor(e.target.value)}
-                          autoFocus
-                        />
-                      </div>
-                      {loadingServidores && (
-                        <div className="p-2 text-sm text-gray-500">Carregando...</div>
-                      )}
-                      {pessoas.map(servidor => (
-                        <SelectItem key={servidor.adm_servidores_id} value={String(servidor.adm_servidores_id)}>
-                          {servidor.ger_pessoas_nome} ({servidor.ger_pessoas_cpf})
-                        </SelectItem>
-                      ))}
-                      {!loadingServidores && pessoas.length === 0 && buscaServidor && (
-                        <div className="p-2 text-sm text-gray-500">Nenhum servidor encontrado</div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <AsyncCreatableSelect
+                    cacheOptions
+                    loadOptions={buscarServidores}
+                    formatCreateLabel={(inputValue) => `Criar servidor: ${inputValue}`}
+                    onChange={(option: any, actionMeta: any) => {
+                      //console.log('Option selected:', option, actionMeta);
+                      if (option && option.__isNew__ === true) {
+                        // Novo servidor, habilita CPF
+                        setData('ger_pessoas_id', 0);
+                        setData('cpf', '');
+                        setCpfEditable(true);
+                      } else {
+                        setData('ger_pessoas_id', option.value);
+                        setData('cpf', option.cpf || '');
+                        setCpfEditable(false);
+                    }
+                  }}
+                  />
                   {errors.ger_pessoas_id && (
                     <p className="text-sm text-red-500">{errors.ger_pessoas_id}</p>
                   )}
@@ -230,7 +171,8 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
                     value={data.cpf}
                     placeholder="000.000.000-00"
                     className={formErrors.cpf || errors.cpf ? 'border-red-500' : ''}
-                    disabled
+                    disabled={!cpfEditable ? true : false}
+                    onChange={e => cpfEditable && setData('cpf', e.target.value)}
                   />
                   {(formErrors.cpf || errors.cpf) && (
                     <p className="text-sm text-red-500">{formErrors.cpf || errors.cpf}</p>
@@ -238,12 +180,11 @@ export const CadastroServidores: React.FC<CadastroServidoresProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     value={data.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="email@aracati.ce.gov.br"
                     className={formErrors.email || errors.email ? 'border-red-500' : ''}
                   />
