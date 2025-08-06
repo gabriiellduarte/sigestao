@@ -21,9 +21,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(125);
-        Gate::before(function ($user, $ability) {
-            $permissao = $user->can('Super Administrador');
-            return $user->can('Super Administrador') ? true : null;
-        });
+        //Gate::before(function ($user, $ability) {
+        //    $permissao = $user->can('Super Administrador');
+        //    return $user->can('Super Administrador') ? true : null;
+        //});
     }
 }
