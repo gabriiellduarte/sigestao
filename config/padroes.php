@@ -134,25 +134,34 @@ return [
                         'permissoes'=>['bugueiros.dashboard.visualizar'],
                     ],
                     [
-                        'nome'=>'Cadastro de Bugueiros',
-                        'prefixo_rota'=>'cadastro.index',
-                        'permissoes'=>['bugueiros.cadastro.visualizar', 'bugueiros.cadastro.editar', 'bugueiros.cadastro.criar'],
-                    ],
-                    [
-                        'nome'=>'Parceiros',
-                        'prefixo_rota'=>'parceiros.index',
-                        'permissoes'=>['bugueiros.parceiros.visualizar', 'bugueiros.parceiros.editar', 'bugueiros.parceiros.criar'],
-                    ],
-                    [
-                        'nome'=>'Passeios',
-                        'prefixo_rota'=>'passeios.index',
-                        'permissoes'=>['bugueiros.passeios.visualizar', 'bugueiros.passeios.editar', 'bugueiros.passeios.criar'],
-                    ],
-                    [
                         'nome'=>'Filas',
-                        'prefixo_rota'=>'filas.index',
+                        'prefixo_rota'=>'bugueiros.filas.index',
                         'permissoes'=>['bugueiros.filas.visualizar', 'bugueiros.filas.editar', 'bugueiros.filas.criar'],
                     ],
+                    [
+                        'nome'=>'Cadastros',
+                        'prefixo_rota'=>'bugueiros.cadastro.index',
+                        'permissoes'=>['bugueiros.cadastro.visualizar', 'bugueiros.cadastro.editar', 'bugueiros.cadastro.criar'],
+                        'submenus'=>[
+                            [
+                                'nome'=>'Novo Bugueiro',
+                                'prefixo_rota'=>'bugueiros.cadastro.index',
+                                'permissoes'=>['bugueiros.cadastro.visualizar', 'bugueiros.cadastro.editar', 'bugueiros.cadastro.criar'],
+                            ],
+                            [
+                                'nome'=>'Parceiros',
+                                'prefixo_rota'=>'bugueiros.parceiros.index',
+                                'permissoes'=>['bugueiros.parceiros.visualizar', 'bugueiros.parceiros.editar', 'bugueiros.parceiros.criar'],
+                            ],
+                        ]
+                    ],
+                    
+                    [
+                        'nome'=>'Passeios',
+                        'prefixo_rota'=>'bugueiros.passeios.index',
+                        'permissoes'=>['bugueiros.passeios.visualizar', 'bugueiros.passeios.editar', 'bugueiros.passeios.criar'],
+                    ],
+                    
                     
                     // Add other bugueiros menus here
                 

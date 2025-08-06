@@ -21,6 +21,7 @@ use App\Http\Controllers\Regulacao\RegPacienteController;
 use App\Http\Controllers\Administracao\PessoaController;
 use App\Http\Controllers\Administracao\CargoController;
 use App\Http\Controllers\Administracao\SecretariaController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Regulacao\AtendimentosController;
 use App\Http\Controllers\Regulacao\RegGrupoProcedimentoController;
@@ -44,6 +45,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('documentos.portarias.index');
 
     });
+
+    Route::get('/atualizamenussessao', function () {
+        // Atualiza os menus na sessão
+        $user = Auth::user();
+        $menus = AuthenticatedSessionController::geraMenusModulosNaSessao($user);
+        return redirect()->back()->with('success', 'Menus atualizados com sucesso!');
+    })->name('atualizamenussen');
 
     Route::get('/dashboard', function () {
         // Redireciona para a rota de dashboard
