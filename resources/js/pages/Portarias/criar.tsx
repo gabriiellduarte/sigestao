@@ -536,6 +536,11 @@ const CadastroPortarias: React.FC = () => {
                 </div>
               </div>
               <div className="flex flex-col md:flex-row justify-end gap-2 pt-4">
+                <Link href={route('documentos.portarias.create')}>
+                  <Button type="button" variant="outline" className="w-full md:w-auto">
+                    Criar nova portaria
+                  </Button>
+                </Link>
                 <Link href={route('documentos.portarias.index')}>
                   <Button type="button" variant="outline" className="w-full md:w-auto">
                     Cancelar

@@ -127,6 +127,37 @@ return [
             'prefixo'=>'bugueiros',
             'nome'=>'Bugueiros',
             'urlinicial'=>'/bugueiros/dashboard',
+            'menus'=>[
+                    [
+                        'nome'=>'Dashboard',
+                        'prefixo_rota'=>'dashboard',
+                        'permissoes'=>['bugueiros.dashboard.visualizar'],
+                    ],
+                    [
+                        'nome'=>'Cadastro de Bugueiros',
+                        'prefixo_rota'=>'cadastro.index',
+                        'permissoes'=>['bugueiros.cadastro.visualizar', 'bugueiros.cadastro.editar', 'bugueiros.cadastro.criar'],
+                    ],
+                    [
+                        'nome'=>'Parceiros',
+                        'prefixo_rota'=>'parceiros.index',
+                        'permissoes'=>['bugueiros.parceiros.visualizar', 'bugueiros.parceiros.editar', 'bugueiros.parceiros.criar'],
+                    ],
+                    [
+                        'nome'=>'Passeios',
+                        'prefixo_rota'=>'passeios.index',
+                        'permissoes'=>['bugueiros.passeios.visualizar', 'bugueiros.passeios.editar', 'bugueiros.passeios.criar'],
+                    ],
+                    [
+                        'nome'=>'Filas',
+                        'prefixo_rota'=>'filas.index',
+                        'permissoes'=>['bugueiros.filas.visualizar', 'bugueiros.filas.editar', 'bugueiros.filas.criar'],
+                    ],
+                    
+                    // Add other bugueiros menus here
+                
+            ]
+            
         ],
         'configuracoes'=>[
             'prefixo'=>'configuracoes',

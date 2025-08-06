@@ -56,6 +56,11 @@ class PermissionSeeder extends Seeder
             'documentos.portarias.criar',
             'documentos.portarias.editar',
             'documentos.portarias.excluir',
+
+            'bugueiros.visualizar',
+            'bugueiros.criar',
+            'bugueiros.editar',
+            'bugueiros.excluir'
         ];
 
         foreach ($permissions as $permission) {

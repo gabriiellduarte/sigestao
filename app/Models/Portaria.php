@@ -6,9 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+
 class Portaria extends Model
 {
     use HasFactory;
+    use LogsActivity;
 
     protected $table = 'doc_portarias';
     protected $primaryKey = 'doc_portarias_id';
@@ -34,6 +38,14 @@ class Portaria extends Model
         'doc_portarias_criadoem' => 'datetime',
         'doc_portarias_publicadoem' => 'datetime',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+        ->logOnly(['*'])
+        ->useLogName('documentos.portarias');
+        // Chain fluent methods for configuration options
+    }
 
     public function servidor(): BelongsTo
     {
