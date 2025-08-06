@@ -18,9 +18,10 @@ import { PageProps } from "@/types";
 
 export function ModulosSwitcher() {
     const { isMobile } = useSidebar();
-    const { modulos } = usePage<PageProps>().props;
+    const { modulos, moduloatual } = usePage<PageProps>().props;
     const modulosArr = Object.values(modulos || {});
 
+    console.log("ModulosSwitcher modulos:", modulos);
     if (!modulosArr.length) return null;
 
     return (
@@ -39,7 +40,7 @@ export function ModulosSwitcher() {
                             </div>
                             <div className="grid flex-1 text-left text-sm leading-tight">
                                 <span className="truncate font-bold">SIA Gestão</span>
-                                <span className="truncate text-xs">{modulosArr[0].nome}</span>
+                                <span className="truncate text-xs">{modulos[moduloatual].nome}</span>
                             </div>
                             {modulosArr.length > 1 && (
                                 <ChevronsUpDown className="ml-auto" />

@@ -64,12 +64,12 @@ return [
                 ],
                 [
                     'nome'=>'Atendimentos',
-                    'prefixo_rota'=>'atendimentos.index',
-                    'permissoes'=>['regulacao.atendimentos.visualizar', 'regulacao.editar', 'regulacao.criar'],
+                    'prefixo_rota'=>'regulacao.atendimentos.index',
+                    'permissoes'=>['regulacao.atendimentos.visualizar', 'regulacao.atendimentos.editar', 'regulacao.atendimentos.criar'],
                     'submenus'=>[
                         [
                             'nome'=>'Lista de Espera',
-                            'prefixo_rota'=>'atendimentos.espera',
+                            'prefixo_rota'=>'regulacao.atendimentos.espera',
                             'permissoes'=>['regulacao.atendimentos.ver', 'regulacao.atendimentos.editar', 'regulacao.atendimentos.criar'],
                         ],
                     ]
@@ -131,27 +131,27 @@ return [
                     [
                         'nome'=>'Dashboard',
                         'prefixo_rota'=>'dashboard',
-                        'permissoes'=>['bugueiros.dashboard.visualizar'],
+                        'permissoes'=>['bugueiros.visualizar'],
                     ],
                     [
                         'nome'=>'Filas',
                         'prefixo_rota'=>'bugueiros.filas.index',
-                        'permissoes'=>['bugueiros.filas.visualizar', 'bugueiros.filas.editar', 'bugueiros.filas.criar'],
+                        'permissoes'=>['bugueiros.visualizar'],
                     ],
                     [
                         'nome'=>'Cadastros',
                         'prefixo_rota'=>'bugueiros.cadastro.index',
-                        'permissoes'=>['bugueiros.cadastro.visualizar', 'bugueiros.cadastro.editar', 'bugueiros.cadastro.criar'],
+                        'permissoes'=>['bugueiros.visualizar'],
                         'submenus'=>[
                             [
                                 'nome'=>'Novo Bugueiro',
                                 'prefixo_rota'=>'bugueiros.cadastro.index',
-                                'permissoes'=>['bugueiros.cadastro.visualizar', 'bugueiros.cadastro.editar', 'bugueiros.cadastro.criar'],
+                                'permissoes'=>['bugueiros.visualizar'],
                             ],
                             [
                                 'nome'=>'Parceiros',
                                 'prefixo_rota'=>'bugueiros.parceiros.index',
-                                'permissoes'=>['bugueiros.parceiros.visualizar', 'bugueiros.parceiros.editar', 'bugueiros.parceiros.criar'],
+                                'permissoes'=>['bugueiros.visualizar'],
                             ],
                         ]
                     ],
@@ -159,7 +159,7 @@ return [
                     [
                         'nome'=>'Passeios',
                         'prefixo_rota'=>'bugueiros.passeios.index',
-                        'permissoes'=>['bugueiros.passeios.visualizar', 'bugueiros.passeios.editar', 'bugueiros.passeios.criar'],
+                        'permissoes'=>['bugueiros.visualizar'],
                     ],
                     
                     

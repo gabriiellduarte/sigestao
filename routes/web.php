@@ -39,11 +39,18 @@ Route::get('cracha', function(){
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/', function (Request $request) {
-        // Redireciona para a rota de dashboard
-        $teste = "Teste";
-        return redirect()->route('documentos.portarias.index');
-
+    Route::get('/', function () {
+        // Recupera os módulos ativos da sessão
+        $modulosAtivos = session('modulos_ativos', []);
+        // Se for array associativo, transforma em array simples de valores
+        if (!empty($modulosAtivos)) {
+            //$modulosArray = array_values($modulosAtivos); // Garante que todos os valores sejam strings
+            $configModulos = json_encode(config('padroes.modulos', []));
+            $primeiroModulo = reset($modulosAtivos);
+            return redirect($primeiroModulo['urlinicial']);
+        }
+        // Fallback: redireciona para login ou dashboard
+        return redirect('/login');
     });
 
     Route::get('/atualizamenussessao', function () {

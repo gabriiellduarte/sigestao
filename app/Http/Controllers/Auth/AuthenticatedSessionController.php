@@ -59,28 +59,37 @@ class AuthenticatedSessionController extends Controller
         $allModulos = config('padroes.modulos');
         $userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
 
-        $filteredModulos = [];
+        $modulosdousuario = [];
 
+        // Filtra os módulos com base nas permissões do usuário
         if ($isAdmin) {
-            $filteredModulos = $allModulos;
+            $modulosdousuario = $allModulos;
         } else {
-            foreach ($allModulos as $key => $modulo) {
-                $prefixo = $modulo['prefixo'] ?? null;
-                if (!$prefixo) continue;
+            $prefixos = collect($userPermissions)
+                ->filter(fn($p) => str_contains($p, '.')) // mantém apenas permissões com ponto
+                ->map(fn($p) => explode('.', $p)[0])      // extrai o prefixo antes do ponto
+                ->unique()                                // remove duplicados
+                ->values();
 
-                foreach ($userPermissions as $perm) {
-                    if (stripos($perm, $prefixo) !== false) {
-                        $filteredModulos[$key] = $modulo;
-                        break;
-                    }
-                }
+            
+            foreach ($prefixos as $modulo) {
+                $moduloobtido = $allModulos[$modulo] ?? null;
+                if (!$moduloobtido) continue;
+                $modulosdousuario[$modulo] = $moduloobtido;
+
+                //foreach ($userPermissions as $perm) {
+                //    if (stripos($perm, $prefixo) !== false) {
+                //        $filteredModulos[$key] = $modulo;
+                //        break;
+                //    }
+                //}
             }
         }
 
         // Monta todos os menus possíveis por módulo
         $menusPorModulo = [];
 
-        foreach ($filteredModulos as $key => $modulo) {
+        foreach ($modulosdousuario as $key => $modulo) {
             $menus = $modulo['menus'] ?? [];
 
             if ($isAdmin) {
@@ -108,7 +117,7 @@ class AuthenticatedSessionController extends Controller
 
         // Salva tudo na sessão
         session([
-            'modulos_ativos' => $filteredModulos,
+            'modulos_ativos' => $modulosdousuario,
             'menus_por_modulo' => $menusPorModulo,
             'permissoes_usuario' => $permissions,
         ]);

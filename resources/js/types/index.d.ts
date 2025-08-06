@@ -104,6 +104,7 @@ export interface PageProps {
         routes: Record<string, string>;
     };
     modulos: Modulos;
+    moduloatual: string;
     [key: string]: any;
 }
 export interface User {

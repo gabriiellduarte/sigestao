@@ -21,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(125);
+
+        //GD Se for ativar dnv ver a questão de um loop que estava dando no handleinertia pode ser que seja por causa disso dava problema no usuário da relciana dos bugueiros
         //Gate::before(function ($user, $ability) {
         //    $permissao = $user->can('Super Administrador');
         //    return $user->can('Super Administrador') ? true : null;
