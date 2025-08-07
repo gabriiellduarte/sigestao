@@ -70,7 +70,7 @@ function gerarDescricao(tipo: string, nome: string, cpf: string, cargo: string, 
   if (!tipo || !nome || !cpf || !cargo || !secretaria) return '';
   if(tipo === 'Nomeação'){
     tipo = 'Nomear';
-    return `Nomear ${nome}, CPF: ${cpf} para exercer o cargo em comissão de ${cargo} ${secretaria}, com atribuições e competências contidas na Lei Complementar Municipal Nº 003/2017.`
+    return `Nomear ${nome}, CPF: ${cpf} para exercer o cargo em comissão de ${cargo} da ${secretaria}, com atribuições e competências contidas na Lei Complementar Municipal Nº 003/2017.`
   }else if(tipo === 'Exoneração'){
     return `Exonerar ${nome}, CPF: ${cpf} a partir da presente data, do cargo de ${cargo} da ${secretaria}, para que surtam os efeitos legais.`
   }

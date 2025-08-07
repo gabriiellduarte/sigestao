@@ -9,13 +9,13 @@ return [
             'menus'=>[
                 [
                     'nome'=>'Pessoas',
-                    'prefixo_rota'=>'pessoas.index',
+                    'prefixo_rota'=>'administracao.pessoas.index',
                     'middleware'=>'auth',
                     'permissoes'=>['viewAny', 'view', 'create', 'update', 'delete'],
                 ],
                 [
                     'nome'=>'Cargos',
-                    'prefixo_rota'=>'cargos.index',
+                    'prefixo_rota'=>'administracao.cargos.index',
                     'middleware'=>'auth',
                     'permissoes'=>['viewAny', 'view', 'create', 'update', 'delete'],
                 ],
@@ -29,7 +29,7 @@ return [
             'menus'=>[
                 [
                     'nome'=>'Portarias',
-                    'prefixo_rota'=>'portarias.index',
+                    'prefixo_rota'=>'documentos.portarias.index',
                     'permissoes'=>['portarias.visualizar', 'portarias.criar', 'portarias.editar', 'portarias.excluir'],
                     'submenus'=>[
                         [
