@@ -102,7 +102,7 @@ export const FilaBugueiros: React.FC = () => {
   const adicionarBugueiroFila = () => {
     if (!bugueiroSelecionado) return;
     router.post(
-      `/bugueiros/filas/${fila_id}/adicionar`,
+      route('bugueiros.filas.adicionarBugueiro', fila_id),
       {
         bugueiro_id: [Number(bugueiroSelecionado)],
       },

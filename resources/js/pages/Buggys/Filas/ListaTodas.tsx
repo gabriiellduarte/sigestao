@@ -139,10 +139,10 @@ const ListaTodasFilas: React.FC = () => {
                     <td className="p-2">{fila.fila_status}</td>
                     <td className="p-2">{fila.fila_obs || '-'}</td>
                     <td className="flex p-2 gap-2">
-                      <Button variant="outline" size="sm" onClick={() => router.get(`/bugueiros/filas/${fila.fila_id}/ver-completa`)}>
+                      <Button variant="outline" size="sm" onClick={() => router.get(route('bugueiros.filas.verCompleta',fila.fila_id))}>
                         Ver Histórico
                       </Button>
-                      <Button size="sm" onClick={() => router.get(`/bugueiros/filas/${fila.fila_id}/ver-completa`)}>
+                      <Button size="sm" onClick={() => router.get(route('bugueiros.filas.show',fila.fila_id))}>
                         Ver Fila
                       </Button>
                     </td>

@@ -136,7 +136,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
        Route::resource('passeios', PasseiosController::class);
        // Rotas de Parceiros
        Route::resource('parceiros', ParceirosController::class);
-       Route::resource('filas', FilaBugueirosController::class);
+       
        // Rota para buscar bugueiros disponíveis para uma fila
        Route::get('filas/{fila_id}/bugueiros-disponiveis', [FilaBugueirosController::class, 'bugueirosDisponiveis']);
        Route::get('dashboard', [FilaBugueirosController::class, 'dashboard']);
@@ -151,13 +151,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
        Route::resource('tipodepasseio', TipoDePasseioController::class);
 
-       Route::post('filas/{fila_id}/adicionar', [FilaBugueirosController::class, 'adicionarBugueiro']);
+       Route::post('filas/{fila_id}/adicionar', [FilaBugueirosController::class, 'adicionarBugueiro'])->name('filas.adicionarBugueiro');
        Route::post('filas/{fila_id}/adicionartodos', [FilaBugueirosController::class, 'adicionarTodosBugueiros']);
        Route::put('filas/{fila_id}/atualizar/{id}', [FilaBugueirosController::class, 'atualizarBugueiro']);
        Route::delete('filas/{fila_id}/remover/{id}', [FilaBugueirosController::class, 'removerBugueiro']);
        Route::post('filas/{fila_id}/mover-cima/{id}', [FilaBugueirosController::class, 'moverCima']);
        Route::post('filas/{fila_id}/mover-baixo/{id}', [FilaBugueirosController::class, 'moverBaixo']);
-
+       Route::resource('filas', FilaBugueirosController::class);
        
 
     });
