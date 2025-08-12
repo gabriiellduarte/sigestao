@@ -51,6 +51,22 @@ interface PageProps {
 }
 
 export const FilaBugueiros: React.FC = () => {
+  // Estado para bugueiros disponíveis
+  const [bugueirosDisponiveis, setBugueirosDisponiveis] = useState<{bugueiro_id:number,bugueiro_nome:string}[]>([]);
+  const [loadingBugueiros, setLoadingBugueiros] = useState(false);
+
+  // Função para buscar bugueiros disponíveis
+  const fetchBugueirosDisponiveis = async () => {
+    setLoadingBugueiros(true);
+    try {
+      const res = await fetch(`/bugueiros/filas/${fila_id}/bugueiros-disponiveis`);
+      const data = await res.json();
+      setBugueirosDisponiveis(data);
+    } catch (e) {
+      setBugueirosDisponiveis([]);
+    }
+    setLoadingBugueiros(false);
+  };
   // Estados para passeio em grupo
 
   const { props } = usePage<PageProps>();
@@ -86,7 +102,7 @@ export const FilaBugueiros: React.FC = () => {
   const adicionarBugueiroFila = () => {
     if (!bugueiroSelecionado) return;
     router.post(
-      `/bugueiros/fila/${fila_id}/adicionar`,
+      `/bugueiros/filas/${fila_id}/adicionar`,
       {
         bugueiro_id: [Number(bugueiroSelecionado)],
       },
@@ -493,7 +509,7 @@ export const FilaBugueiros: React.FC = () => {
           <CardHeader>
             <div className="flex justify-between items-center gap-2">
               <div className='flex gap-2'>
-                <CardTitle>Fila Atual #{fila_id}</CardTitle>
+                <CardTitle>{props.fila_titulo} #{fila_id}</CardTitle>
                 <Badge className={getStatusFilaColor(statusFila)}>{statusFila.charAt(0).toUpperCase() + statusFila.slice(1)}</Badge>
               </div>
 
@@ -724,12 +740,23 @@ export const FilaBugueiros: React.FC = () => {
                 <Select
                   value={bugueiroSelecionado}
                   onValueChange={setBugueiroSelecionado}
+                  onOpenChange={open => { if (open) fetchBugueirosDisponiveis(); }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um bugueiro" />
+                    <SelectValue placeholder={loadingBugueiros ? "Carregando..." : "Selecione um bugueiro"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Remover o Select de bugueiros disponíveis do Dialog de adicionar à fila */}
+                    {loadingBugueiros && (
+                      <div className="p-2 text-gray-500 text-sm">Carregando...</div>
+                    )}
+                    {!loadingBugueiros && bugueirosDisponiveis.length === 0 && (
+                      <div className="p-2 text-gray-500 text-sm">Nenhum bugueiro disponível</div>
+                    )}
+                    {!loadingBugueiros && bugueirosDisponiveis.map(b => (
+                      <SelectItem key={b.bugueiro_id} value={String(b.bugueiro_id)}>
+                        {b.bugueiro_nome}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

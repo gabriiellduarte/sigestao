@@ -137,6 +137,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
        // Rotas de Parceiros
        Route::resource('parceiros', ParceirosController::class);
        Route::resource('filas', FilaBugueirosController::class);
+       // Rota para buscar bugueiros disponíveis para uma fila
+       Route::get('filas/{fila_id}/bugueiros-disponiveis', [FilaBugueirosController::class, 'bugueirosDisponiveis']);
        Route::get('dashboard', [FilaBugueirosController::class, 'dashboard']);
        Route::get('dashboard-dados-reais', [FilaBugueirosController::class, 'dashboardDadosReais']);
        Route::get('todas-filas', [FilaBugueirosController::class, 'listarFilas'])->name('filas.todas');

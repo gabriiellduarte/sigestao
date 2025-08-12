@@ -3,13 +3,22 @@ import { usePage, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger, } from '@/components/ui/alert-dialog';
 
 interface Fila {
   fila_id: number;
   fila_data: string;
   fila_status: string;
   fila_obs?: string;
-  titulo?: string;
+  fila_titulo?: string;
 }
 
 interface PageProps {
@@ -21,14 +30,90 @@ const ListaTodasFilas: React.FC = () => {
   const filas = props.filas || [];
 
   const [showModal, setShowModal] = React.useState(false);
+  const [titulo, setTitulo] = React.useState("");
+  const [obs, setObs] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    router.post(
+      '/bugueiros/filas',
+      { titulo, fila_obs: obs },
+      {
+        onSuccess: () => {
+          setShowModal(false);
+          setTitulo("");
+          setObs("");
+        },
+        onError: (errors: any) => {
+          setError(errors?.titulo || 'Erro ao criar fila.');
+        },
+        preserveScroll: true,
+        preserveState: false,
+      }
+    );
+    setLoading(false);
+  };
 
   return (
     <AppLayout>
       <div className="space-y-6 p-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Todas as Filas</h1>
-          <Button onClick={() => setShowModal(true)} size="sm">Nova Fila</Button>
+            {/* Botão para abrir o AlertDialog */}
+            <AlertDialog open={showModal} onOpenChange={setShowModal}>
+              <AlertDialogTrigger asChild>
+                <Button onClick={() => setShowModal(true)} size="sm">Nova Fila</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Criar Nova Fila</AlertDialogTitle>
+                </AlertDialogHeader>
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-3"
+                  // Evita submit duplo pelo enter no AlertDialog
+                  autoComplete="off"
+                >
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Título</label>
+                    <input
+                      type="text"
+                      className="border rounded w-full p-2"
+                      placeholder="Título da fila"
+                      value={titulo}
+                      onChange={e => setTitulo(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Observação</label>
+                    <input
+                      type="text"
+                      className="border rounded w-full p-2"
+                      placeholder="Observação"
+                      value={obs}
+                      onChange={e => setObs(e.target.value)}
+                    />
+                  </div>
+                  {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
+                  <AlertDialogFooter>
+                    <AlertDialogCancel type="button" disabled={loading}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction asChild>
+                      <Button type="submit" disabled={loading}>
+                        {loading ? 'Criando...' : 'Criar'}
+                      </Button>
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </form>
+              </AlertDialogContent>
+            </AlertDialog>
         </div>
+        {/* ...restante do código da tabela... */}
+      
         <Card>
           <CardHeader>
             <CardTitle>Histórico de Filas</CardTitle>
@@ -49,13 +134,16 @@ const ListaTodasFilas: React.FC = () => {
                 {filas.map(fila => (
                   <tr key={fila.fila_id} className="border-b">
                     <td className="p-2">{fila.fila_id}</td>
-                    <td className="p-2">{fila.titulo || '-'}</td>
+                    <td className="p-2">{fila.fila_titulo || '-'}</td>
                     <td className="p-2">{fila.fila_data ? new Date(fila.fila_data).toLocaleString('pt-BR') : '-'}</td>
                     <td className="p-2">{fila.fila_status}</td>
                     <td className="p-2">{fila.fila_obs || '-'}</td>
-                    <td className="p-2">
+                    <td className="flex p-2 gap-2">
+                      <Button variant="outline" size="sm" onClick={() => router.get(`/bugueiros/filas/${fila.fila_id}/ver-completa`)}>
+                        Ver Histórico
+                      </Button>
                       <Button size="sm" onClick={() => router.get(`/bugueiros/filas/${fila.fila_id}/ver-completa`)}>
-                        Ver detalhes
+                        Ver Fila
                       </Button>
                     </td>
                   </tr>
@@ -70,28 +158,8 @@ const ListaTodasFilas: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Modal de Nova Fila */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-              <h2 className="text-xl font-bold mb-4">Criar Nova Fila</h2>
-              <form>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium mb-1">Título</label>
-                  <input type="text" className="border rounded w-full p-2" placeholder="Título da fila" />
-                </div>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium mb-1">Observação</label>
-                  <input type="text" className="border rounded w-full p-2" placeholder="Observação" />
-                </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Cancelar</Button>
-                  <Button type="submit">Criar</Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+                
+        
       </div>
     </AppLayout>
   );

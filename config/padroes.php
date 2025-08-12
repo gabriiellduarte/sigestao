@@ -8,6 +8,11 @@ return [
             'urlinicial'=>'/administracao/secretarias',
             'menus'=>[
                 [
+                    'nome'=>'Secretarias',
+                    'prefixo_rota'=>'administracao.secretarias.index',
+                    'permissoes'=>['viewAny', 'view', 'create', 'update', 'delete'],
+                ],
+                [
                     'nome'=>'Pessoas',
                     'prefixo_rota'=>'administracao.pessoas.index',
                     'middleware'=>'auth',

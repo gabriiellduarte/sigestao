@@ -11,6 +11,7 @@ class Filas extends Model
     protected $primaryKey = 'fila_id';
     protected $fillable = [
         'fila_data',
+        'fila_titulo',
         'fila_qntd_normal',
         'fila_qntd_adiantados',
         'fila_qntd_atrasados',

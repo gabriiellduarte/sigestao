@@ -10,7 +10,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('bug_filas', function (Blueprint $table) {
-            $table->string('titulo')->nullable()->after('id');
+            $table->string('fila_titulo')->nullable()->after('fila_data');
         });
     }
 
@@ -20,7 +20,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('bug_filas', function (Blueprint $table) {
-            $table->dropColumn('titulo');
+            $table->dropColumn('fila_titulo');
         });
     }
 };

@@ -57,6 +57,19 @@ class FilaBugueirosController extends Controller
             'tiposPasseios' => $tiposPasseios,
         ]);
     }   
+    /**
+     * Retorna bugueiros disponíveis para adicionar à fila (não vinculados à fila atual)
+     */
+    public function bugueirosDisponiveis($fila_id)
+    {
+        // IDs dos bugueiros já na fila
+        $idsNaFila = FilaBugueiro::where('fila_id', $fila_id)->pluck('bugueiro_id')->toArray();
+        // Bugueiros disponíveis = todos menos os já na fila
+        $bugueiros = Bugueiros::whereNotIn('bugueiro_id', $idsNaFila)
+            ->orderBy('bugueiro_nome')
+            ->get(['bugueiro_id', 'bugueiro_nome']);
+        return response()->json($bugueiros);
+    }
     public function index()
     {
         // Busca fila aberta
@@ -68,6 +81,7 @@ class FilaBugueirosController extends Controller
         if (!$fila) {
             $fila = Filas::create([
                 'fila_data' => now(),
+                'fila_titulo' => 'GERAL',
                 'fila_qntd_normal' => 0,
                 'fila_qntd_adiantados' => 0,
                 'fila_qntd_atrasados' => 0,
@@ -101,15 +115,19 @@ class FilaBugueirosController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'fila_data' => 'required|date',
-            'fila_qntd_normal' => 'required|integer',
-            'fila_qntd_adiantados' => 'required|integer',
-            'fila_qntd_atrasados' => 'required|integer',
+            'titulo' => 'required|string|max:255',
             'fila_obs' => 'nullable|string',
-            'fila_status' => 'required|in:cancelada,finalizada,aberta',
         ]);
-        $fila = Filas::create($validated);
-        return response()->json($fila, 201);
+        $fila = Filas::create([
+            'fila_titulo' => $validated['titulo'],
+            'fila_obs' => $validated['fila_obs'] ?? null,
+            'fila_data' => now(),
+            'fila_status' => 'aberta',
+            'fila_qntd_normal' => 0,
+            'fila_qntd_adiantados' => 0,
+            'fila_qntd_atrasados' => 0,
+        ]);
+        return redirect(route('bugueiros.filas.todas'))->with('successo', 'Fila criada com sucesso.');
     }
 
     /**
@@ -117,6 +135,30 @@ class FilaBugueirosController extends Controller
      */
     public function show($id)
     {
+
+        // Busca fila aberta
+        $tipopasseio = TipoPasseio::all();
+        $parceiros = Parceiro::all();
+        $fila = Filas::with('bugueirosFila')->find($id);
+        
+
+        //dd($fila);
+        // Se não existir, cria uma nova
+        if (!$fila) {
+            return redirect()->back()->with('erro', 'Fila não encontrada.');
+        }else{
+            $bugueiros = FilaBugueiro::where('fila_id', $fila->fila_id)->with('bugueiro')->orderBy('posicao_fila')->get();
+        }
+        return Inertia::render('Buggys/Fila/Lista', [
+            'bugueiros_fila' => $bugueiros,
+            'fila_id'=>$fila->fila_id,
+            'fila_status'=>$fila->fila_status,
+            'fila_titulo'=>$fila->fila_titulo,
+            'passeios_tipo'=>$tipopasseio,
+            'parceiros'=>$parceiros,
+        ]);
+
+        return "ok";
         $fila = Filas::with('bugueiros')->findOrFail($id);
         return response()->json($fila);
     }
@@ -233,11 +275,11 @@ class FilaBugueirosController extends Controller
                 'atraso' => 0,
                 'adiantamento' => 0,
                 'fez_passeio' => false,
-                'hora_entrada' => now()->format('H:i'),
+                'hora_entrada' => now(),
                 'status' => 'na-fila',
             ]);
         }
-        return redirect()->route('bugueiros.filas.index');
+        return redirect()->back()->with('successo', 'Bugueiro(s) adicionado(s) à fila com sucesso.');
     }
 
     // Adicionar todos os bugueiros cadastrados à fila aberta
@@ -457,6 +499,7 @@ class FilaBugueirosController extends Controller
         // Cria nova fila
         $fila = Filas::create([
             'fila_data' => now(),
+            'fila_titulo' => 'GERAL',
             'fila_qntd_normal' => 0,
             'fila_qntd_adiantados' => 0,
             'fila_qntd_atrasados' => 0,
