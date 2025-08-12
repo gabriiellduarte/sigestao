@@ -151,7 +151,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
        Route::resource('tipodepasseio', TipoDePasseioController::class);
 
-       Route::get('filas/{fila_id}', [FilaBugueirosController::class, 'lista']);
        Route::post('filas/{fila_id}/adicionar', [FilaBugueirosController::class, 'adicionarBugueiro']);
        Route::post('filas/{fila_id}/adicionartodos', [FilaBugueirosController::class, 'adicionarTodosBugueiros']);
        Route::put('filas/{fila_id}/atualizar/{id}', [FilaBugueirosController::class, 'atualizarBugueiro']);
