@@ -43,6 +43,7 @@ interface PageProps {
   bugueiros_fila: BugueiroFila[];
   passeios_tipo: TipoPasseio[];
   fila_id: number;
+  fila_titulo:string;
   fila_status?: string;
   parceiros: Parceiro[];
   [key: string]: any; // Corrige o erro de tipagem do Inertia
