@@ -92,7 +92,7 @@ class FilaBugueirosController extends Controller
         }else{
             $bugueiros = FilaBugueiro::where('fila_id', $fila->fila_id)->with('bugueiro')->orderBy('posicao_fila')->get();
         }
-        return Inertia::render('Buggys/Fila/Lista', [
+        return Inertia::render('Buggys/Fila/ListaFilas', [
             'bugueiros_fila' => $bugueiros,
             'fila_id'=>$fila->fila_id,
             'fila_status'=>$fila->fila_status,
