@@ -4,9 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Play, Plus, Users, ChevronUp, ChevronDown, FastForward, Rewind, MoreVertical, ArrowDownAZ } from 'lucide-react';
+import { Play, Plus, Users, ChevronUp, ChevronDown, FastForward, Rewind, MoreVertical, ArrowDownAZ, Timer } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { TipoPasseio, Parceiro } from '@/types';
