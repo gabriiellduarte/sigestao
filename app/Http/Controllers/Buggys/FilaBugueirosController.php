@@ -96,6 +96,7 @@ class FilaBugueirosController extends Controller
             'bugueiros_fila' => $bugueiros,
             'fila_id'=>$fila->fila_id,
             'fila_status'=>$fila->fila_status,
+            'fila_titulo'=>$fila->fila_titulo,
             'passeios_tipo'=>$tipopasseio,
             'parceiros'=>$parceiros,
         ]);

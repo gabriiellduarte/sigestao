@@ -33,9 +33,9 @@ use App\Http\Controllers\Regulacao\RegTipoAtendimentoController;
 use App\Http\Controllers\ParceirosController;
 use Google\Service\Docs\Request;
 
-Route::get('cracha', function(){
+Route::get('cracha', function () {
     return Inertia::render('Buggys/CrachaVirtual');
-   });
+});
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -64,7 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Redireciona para a rota de dashboard
         return Inertia::render('dashboard');
     })->name('dashboard');
-    
+
 
     // Rotas de Administração
     Route::prefix(config('padroes.modulos.administracao.prefixo'))->name('administracao.')->group(function () {
@@ -78,8 +78,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('servidores-search', [ServidoresController::class, 'search'])->name('servidores.search');
     });
     Route::prefix(config('padroes.modulos.documentos.prefixo'))->name('documentos.')->group(function () {
-        Route::get('portarias/dashboard', [PortariasController::class,'dashboard'])->name('portarias.dashboard');
-        Route::get('portarias/porservidor', [PortariasController::class,'listaporservidor'])->name('portarias.porservidor');
+        Route::get('portarias/dashboard', [PortariasController::class, 'dashboard'])->name('portarias.dashboard');
+        Route::get('portarias/porservidor', [PortariasController::class, 'listaporservidor'])->name('portarias.porservidor');
         // Cadastro rápido de pessoa/servidor para portarias
         Route::get('portarias/cadastro-servidor', [PortariasController::class, 'cadastroPessoaServidorForm'])->name('portarias.cadastro-servidor');
         Route::post('portarias/cadastro-servidor', [PortariasController::class, 'cadastroPessoaServidor'])->name('portarias.cadastro-servidor');
@@ -89,20 +89,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::resource('portarias', PortariasController::class);
         Route::post('portarias/import', [PortariasController::class, 'import'])->name('portarias.import');
-
     });
 
 
     // Rotas Regulação
     Route::prefix(config('padroes.modulos.regulacao.prefixo'))->name('regulacao.')->group(function () {
-        Route::get('listaatendimentos', function(){
-            return Inertia::render('regulacao/atendimentos_lista',['nome'=>'testss']);
+        Route::get('listaatendimentos', function () {
+            return Inertia::render('regulacao/atendimentos_lista', ['nome' => 'testss']);
         });
-        Route::get('novoatendimento', function(){
+        Route::get('novoatendimento', function () {
             return Inertia::render('regulacao/atendimentos_novo');
         })->name('atendimento.novo');
 
-        Route::get('dashboard', function(){
+        Route::get('dashboard', function () {
             return Inertia::render('regulacao/dashboard');
         });
 
@@ -131,42 +130,42 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::prefix(config('padroes.modulos.bugueiros.prefixo'))->name('bugueiros.')->group(function () {
-       Route::resource('cadastro', BugueirosController::class);
-       Route::post('passeios/adicionarpasseioemgrupo', [FilaBugueirosController::class, 'adicionarPasseioEmGrupo']);
-       Route::resource('passeios', PasseiosController::class);
-       // Rotas de Parceiros
-       Route::resource('parceiros', ParceirosController::class);
-       
-       // Rota para buscar bugueiros disponíveis para uma fila
-       Route::get('filas/{fila_id}/bugueiros-disponiveis', [FilaBugueirosController::class, 'bugueirosDisponiveis']);
-       Route::get('dashboard', [FilaBugueirosController::class, 'dashboard']);
-       Route::get('dashboard-dados-reais', [FilaBugueirosController::class, 'dashboardDadosReais']);
-       Route::get('todas-filas', [FilaBugueirosController::class, 'listarFilas'])->name('filas.todas');
-       Route::get('filas/{fila}/ver-completa', [FilaBugueirosController::class, 'verFilaCompleta'])->name('filas.verCompleta');
-       Route::post('filas/nova-com-todos', [FilaBugueirosController::class, 'novaFilaComTodos'])->name('filas.novaComTodos');
-       Route::post('filas/{fila}/reordenar', [FilaBugueirosController::class, 'reordenarFila'])->name('filas.reordenar');
-       Route::post('filas/{fila}/remover-simples/{id}', [FilaBugueirosController::class, 'removerSimples'])->name('filas.removerSimples');
-       Route::post('filas/{fila}/remover-com-atraso/{id}', [FilaBugueirosController::class, 'removerComAtraso'])->name('filas.removerComAtraso');
-       
-        
-       Route::resource('tipodepasseio', TipoDePasseioController::class);
+        Route::resource('cadastro', BugueirosController::class);
+        Route::post('passeios/adicionarpasseioemgrupo', [FilaBugueirosController::class, 'adicionarPasseioEmGrupo']);
+        Route::resource('passeios', PasseiosController::class);
+        // Rotas de Parceiros
+        Route::resource('parceiros', ParceirosController::class);
+        Route::resource('tipodepasseio', TipoDePasseioController::class);
 
-       Route::post('filas/{fila_id}/adicionar', [FilaBugueirosController::class, 'adicionarBugueiro'])->name('filas.adicionarBugueiro');
-       Route::post('filas/{fila_id}/adicionartodos', [FilaBugueirosController::class, 'adicionarTodosBugueiros']);
-       Route::put('filas/{fila_id}/atualizar/{id}', [FilaBugueirosController::class, 'atualizarBugueiro']);
-       Route::delete('filas/{fila_id}/remover/{id}', [FilaBugueirosController::class, 'removerBugueiro']);
-       Route::post('filas/{fila_id}/mover-cima/{id}', [FilaBugueirosController::class, 'moverCima']);
-       Route::post('filas/{fila_id}/mover-baixo/{id}', [FilaBugueirosController::class, 'moverBaixo']);
-       Route::resource('filas', FilaBugueirosController::class);
-       
+        Route::get('dashboard', [FilaBugueirosController::class, 'dashboard']);
+        Route::get('dashboard-dados-reais', [FilaBugueirosController::class, 'dashboardDadosReais']);
 
+        // Rota para buscar bugueiros disponíveis para uma fila
+        Route::get('filas/{fila_id}/bugueiros-disponiveis', [FilaBugueirosController::class, 'bugueirosDisponiveis']);
+
+        Route::get('todas-filas', [FilaBugueirosController::class, 'listarFilas'])->name('filas.todas');
+        Route::get('filas/{fila}/ver-completa', [FilaBugueirosController::class, 'verFilaCompleta'])->name('filas.verCompleta');
+        Route::post('filas/nova-com-todos', [FilaBugueirosController::class, 'novaFilaComTodos'])->name('filas.novaComTodos');
+        Route::post('filas/{fila}/reordenar', [FilaBugueirosController::class, 'reordenarFila'])->name('filas.reordenar');
+        Route::post('filas/{fila}/remover-simples/{id}', [FilaBugueirosController::class, 'removerSimples'])->name('filas.removerSimples');
+        Route::post('filas/{fila}/remover-com-atraso/{id}', [FilaBugueirosController::class, 'removerComAtraso'])->name('filas.removerComAtraso');
+
+
+
+        Route::post('filas/{fila_id}/adicionar', [FilaBugueirosController::class, 'adicionarBugueiro'])->name('filas.adicionarBugueiro');
+        Route::post('filas/{fila_id}/adicionartodos', [FilaBugueirosController::class, 'adicionarTodosBugueiros']);
+        Route::put('filas/{fila_id}/atualizar/{id}', [FilaBugueirosController::class, 'atualizarBugueiro']);
+        Route::delete('filas/{fila_id}/remover/{id}', [FilaBugueirosController::class, 'removerBugueiro']);
+        Route::post('filas/{fila_id}/mover-cima/{id}', [FilaBugueirosController::class, 'moverCima']);
+        Route::post('filas/{fila_id}/mover-baixo/{id}', [FilaBugueirosController::class, 'moverBaixo']);
+        Route::resource('filas', FilaBugueirosController::class);
     });
 
-    
+
 
     // Rotas de Permissões
     Route::resource('permissions', PermissionController::class);
-    
+
     // Rotas de Perfis
     Route::resource('roles', RoleController::class);
 
@@ -179,5 +178,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
